@@ -1,4 +1,4 @@
-package de.zeos.cometd.app.v8;
+package de.zeos.script.v8;
 
 import java.io.Reader;
 import java.util.Date;
@@ -11,22 +11,23 @@ import javax.script.ScriptEngineManager;
 import javax.script.ScriptException;
 
 import lu.flier.script.V8ScriptEngine;
-import de.zeos.cometd.app.MapToScriptObjectConvertor;
-import de.zeos.cometd.app.ScriptEngineFacade;
+import de.zeos.script.MapToScriptObjectConvertor;
+import de.zeos.script.ScriptEngineFacade;
 
 public class V8ScriptEngineFacadeImpl implements ScriptEngineFacade {
 
     private V8ScriptEngine v8Engine;
-    private MapToScriptObjectConvertor convertor;
+    private V8ConversionRegistry registry;
 
     public V8ScriptEngineFacadeImpl(ScriptEngineManager manager) {
         this.v8Engine = (V8ScriptEngine) manager.getEngineByName("jav8");
-        this.convertor = new MapToScriptObjectConvertor(this);
+        this.registry = new V8ConversionRegistry(v8Engine);
     }
 
     @Override
     public Map<String, Object> createObject(Map<String, Object> source) {
-        return this.convertor.createScriptObject(source);
+        MapToScriptObjectConvertor convertor = new MapToScriptObjectConvertor(this, registry);
+        return convertor.convert(source);
     }
 
     @Override

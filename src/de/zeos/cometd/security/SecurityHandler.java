@@ -9,8 +9,8 @@ import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
 
 import de.zeos.cometd.app.ApplicationRegistry;
-import de.zeos.cometd.app.ScriptEngineCreator;
-import de.zeos.cometd.app.ScriptEngineFacade;
+import de.zeos.script.ScriptEngineCreator;
+import de.zeos.script.ScriptEngineFacade;
 
 @Component
 public class SecurityHandler {
@@ -27,8 +27,9 @@ public class SecurityHandler {
         try {
             Digester digester = new Digester("SHA-256", 1024);
             ScriptEngineFacade engine = engineCreator.createEngine();
-            engine.put("digest", digester);
+            engine.put("digester", digester);
             engine.put("credentials", engine.createObject(credentials));
+            engine.put("db", appRegistry.getMongoAccessor(app, engine));
             Object ret = engine.eval(script + ";authenticate();");
             logger.debug(ret.toString());
         } catch (Exception ex) {

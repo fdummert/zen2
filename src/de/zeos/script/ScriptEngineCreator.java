@@ -1,4 +1,4 @@
-package de.zeos.cometd.app;
+package de.zeos.script;
 
 
 public interface ScriptEngineCreator {

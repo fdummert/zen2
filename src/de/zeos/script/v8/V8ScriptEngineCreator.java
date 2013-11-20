@@ -1,4 +1,4 @@
-package de.zeos.cometd.app.v8;
+package de.zeos.script.v8;
 
 import java.io.IOException;
 import java.nio.charset.Charset;
@@ -14,8 +14,8 @@ import org.slf4j.LoggerFactory;
 import org.springframework.core.io.Resource;
 import org.springframework.util.StreamUtils;
 
-import de.zeos.cometd.app.ScriptEngineCreator;
-import de.zeos.cometd.app.ScriptEngineFacade;
+import de.zeos.script.ScriptEngineCreator;
+import de.zeos.script.ScriptEngineFacade;
 
 public class V8ScriptEngineCreator implements ScriptEngineCreator {
 

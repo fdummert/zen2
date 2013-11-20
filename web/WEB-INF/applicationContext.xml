@@ -12,7 +12,7 @@
         <prop key="dsChannelPrefix">/kio/ds</prop>
     </util:properties>
     
-    <bean class="de.zeos.cometd.app.v8.V8ScriptEngineCreator">
+    <bean class="de.zeos.script.v8.V8ScriptEngineCreator">
         <property name="scripts">
             <list>
                 <value>classpath:/js/toString.js</value>
@@ -21,7 +21,7 @@
         </property>
     </bean>
     
-    <context:component-scan base-package="de.zeos.cometd"/>
+    <context:component-scan base-package="de.zeos"/>
 
     <import resource="dbContext.xml"/>
 </beans>

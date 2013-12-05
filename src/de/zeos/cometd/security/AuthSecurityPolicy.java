@@ -34,14 +34,16 @@ public class AuthSecurityPolicy implements SecurityPolicy {
         if (session.isLocalSession())
             return true;
         Map<String, Object> ext = message.getExt();
-
         try {
+            String app = (String) ext.get(APP_KEY);
             @SuppressWarnings("unchecked")
-            Authorization auth = this.securityHandler.authenticate((String) ext.get(APP_KEY), (Map<String, Object>) ext.get(AUTH_KEY));
+            Authorization auth = this.securityHandler.authenticate(app, (Map<String, Object>) ext.get(AUTH_KEY));
             session.setAttribute(AUTH_KEY, auth);
+            session.setAttribute(APP_KEY, app);
             ServerMessage.Mutable handshakeReply = message.getAssociated();
             ext = handshakeReply.getExt(true);
             ext.put(AUTH_KEY, auth);
+            ext.put(APP_KEY, app);
         } catch (AuthenticationException e) {
             return false;
         }

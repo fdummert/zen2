@@ -3,6 +3,8 @@ package de.zeos.cometd.security;
 import java.util.Map;
 
 import javax.inject.Inject;
+import javax.script.Invocable;
+import javax.script.ScriptException;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -24,16 +26,24 @@ public class SecurityHandler {
 
     public Authorization authenticate(String app, Map<String, Object> credentials) throws AuthenticationException {
         String script = appRegistry.getSecurityHandler(app);
+        Digester digester = new Digester("SHA-256", 1024);
         try {
-            Digester digester = new Digester("SHA-256", 1024);
             ScriptEngineFacade engine = engineCreator.createEngine();
             engine.put("digester", digester);
             engine.put("credentials", engine.createObject(credentials));
             engine.put("db", appRegistry.getMongoAccessor(app, engine));
-            Object ret = engine.eval(script + ";authenticate();");
+            engine.eval(script);
+            Invocable invocable = (Invocable) engine;
+            Object ret = invocable.invokeFunction("authenticate");
             logger.debug(ret.toString());
+        } catch (ScriptException ex) {
+            logger.warn("Script error.", ex);
+            throw new AuthenticationException();
+        } catch (NoSuchMethodException ex) {
+            logger.warn("No authenticate method defined.", ex);
+            throw new AuthenticationException();
         } catch (Exception ex) {
-            logger.warn("Broken script.", ex);
+            logger.warn("General error", ex);
             throw new AuthenticationException();
         }
         return null;

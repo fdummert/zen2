@@ -25,6 +25,9 @@ public class AuthSecurityPolicy implements SecurityPolicy {
 
     public static final String AUTH_KEY = Configurer.ZEOS_KEY + ".security";
     public static final String APP_KEY = Configurer.ZEOS_KEY + ".application";
+    public static final String SERVICE_CHANNEL = "/service/";
+    public static final String APP_CHANNEL = "/app/";
+    public static final String PUBLIC_CHANNEL = "/public/";
 
     @Inject
     private SecurityHandler securityHandler;
@@ -82,6 +85,8 @@ public class AuthSecurityPolicy implements SecurityPolicy {
     }
 
     private boolean isAllowed(ServerSession session, String channel) {
+        if (!channel.startsWith(SERVICE_CHANNEL) && !channel.startsWith(APP_CHANNEL) && !channel.startsWith(PUBLIC_CHANNEL))
+            return false;
         Authorization auth = (Authorization) session.getAttribute(AUTH_KEY);
         if (auth.getChannels().contains(channel))
             return true;

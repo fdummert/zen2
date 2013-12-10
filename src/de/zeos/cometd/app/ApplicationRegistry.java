@@ -34,8 +34,8 @@ public class ApplicationRegistry {
 
     @PostConstruct
     private void temp() throws ScriptException {
-        storeSecurityHandler("zen2", "function authenticate() { console.log('log from js: ' + toString(credentials)); if (credentials.password) {console.log('digested pwd: ' + digester.digest(credentials.password)); }"
-                + " console.log(db.findOne({username: credentials.username}, 'user'));" + "return { 'foo': 1, 'bar': { 'yak': 'mist'}} };");
+        storeSecurityHandler("zen2", "function authenticate(credentials, db, digester) { " + "console.log('log from js: ' + toString(credentials));" + "if (credentials.password) {"
+                + "   console.log('digested pwd: ' + digester.digest(credentials.password)); " + "}" + "console.log(db.findOne({username: credentials.username}, 'user'));" + "return { getChannels: function() {return ['/service/foo'];} }; " + "}");
     }
 
     public String getSecurityHandler(String app) {

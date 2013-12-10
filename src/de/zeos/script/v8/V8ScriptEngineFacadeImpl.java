@@ -5,6 +5,7 @@ import java.util.Date;
 import java.util.Map;
 
 import javax.script.Bindings;
+import javax.script.CompiledScript;
 import javax.script.ScriptContext;
 import javax.script.ScriptEngineFactory;
 import javax.script.ScriptEngineManager;
@@ -148,6 +149,36 @@ public class V8ScriptEngineFacadeImpl implements ScriptEngineFacade {
     @Override
     public ScriptEngineFactory getFactory() {
         return v8Engine.getFactory();
+    }
+
+    @Override
+    public CompiledScript compile(String script) throws ScriptException {
+        return v8Engine.compile(script);
+    }
+
+    @Override
+    public CompiledScript compile(Reader script) throws ScriptException {
+        return v8Engine.compile(script);
+    }
+
+    @Override
+    public Object invokeMethod(Object thiz, String name, Object... args) throws ScriptException, NoSuchMethodException {
+        return v8Engine.invokeMethod(thiz, name, args);
+    }
+
+    @Override
+    public Object invokeFunction(String name, Object... args) throws ScriptException, NoSuchMethodException {
+        return v8Engine.invokeFunction(name, args);
+    }
+
+    @Override
+    public <T> T getInterface(Class<T> clasz) {
+        return v8Engine.getInterface(clasz);
+    }
+
+    @Override
+    public <T> T getInterface(Object thiz, Class<T> clasz) {
+        return v8Engine.getInterface(thiz, clasz);
     }
 
 }

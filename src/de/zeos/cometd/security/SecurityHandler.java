@@ -28,10 +28,6 @@ public class SecurityHandler {
 
     private Logger logger = LoggerFactory.getLogger(getClass());
 
-    private interface InternalAuthorization {
-        public List<String> getChannels();
-    }
-
     public Authorization authenticate(String app, Map<String, Object> credentials) throws AuthenticationException {
         String script = appRegistry.getSecurityHandler(app);
         if (script != null) {
@@ -41,14 +37,19 @@ public class SecurityHandler {
                 engine.eval(script);
                 Invocable invocable = (Invocable) engine;
                 Authenticator authenticator = invocable.getInterface(Authenticator.class);
-                final Map<String, Object> auth = authenticator.authenticate(credentials, appRegistry.getMongoAccessor(app, engine), digester);
-                InternalAuthorization authorization = invocable.getInterface(auth, InternalAuthorization.class);
-                List<String> channels = authorization.getChannels();
-                final Set<String> channelSet = new HashSet<String>(channels);
+                final Map<String, Object> auth = engine.toPlainMap(authenticator.authenticate(engine.createObject(credentials), appRegistry.getMongoAccessor(app, engine), digester));
+                @SuppressWarnings("unchecked")
+                List<String> channels = (List<String>) auth.get("channels");
+                final Set<String> channelSet = new HashSet<String>();
+                if (channels != null) {
+                    channelSet.addAll(channels);
+                }
+
                 return new Authorization() {
+                    @SuppressWarnings("unchecked")
                     @Override
                     public Map<String, Object> getData() {
-                        return auth;
+                        return (Map<String, Object>) auth.get("data");
                     }
 
                     @Override
@@ -60,7 +61,8 @@ public class SecurityHandler {
                 logger.warn("Script error.", ex);
                 throw new AuthenticationException();
             } catch (Exception ex) {
-                logger.warn("General error", ex);
+                if (!ex.getMessage().contains("auth.error"))
+                    logger.warn("General error", ex);
                 throw new AuthenticationException();
             }
         }

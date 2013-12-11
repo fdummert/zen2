@@ -12,6 +12,8 @@ public interface ScriptEngineFacade extends ScriptEngine, Compilable, Invocable 
 
     public Map<String, Object> createObject();
 
+    public Map<String, Object> toPlainMap(Map<String, Object> source);
+
     public Object createArray(Object[] data);
 
     public Object createArray(long[] data);

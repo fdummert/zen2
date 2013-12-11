@@ -12,8 +12,10 @@ import javax.script.ScriptEngineManager;
 import javax.script.ScriptException;
 
 import lu.flier.script.V8ScriptEngine;
+import de.zeos.conversion.DefaultConversionRegistry;
 import de.zeos.script.MapToScriptObjectConvertor;
 import de.zeos.script.ScriptEngineFacade;
+import de.zeos.script.ScriptObjectToMapConvertor;
 
 public class V8ScriptEngineFacadeImpl implements ScriptEngineFacade {
 
@@ -28,6 +30,13 @@ public class V8ScriptEngineFacadeImpl implements ScriptEngineFacade {
     @Override
     public Map<String, Object> createObject(Map<String, Object> source) {
         MapToScriptObjectConvertor convertor = new MapToScriptObjectConvertor(this, registry);
+        return convertor.convert(source);
+    }
+
+    @Override
+    public Map<String, Object> toPlainMap(Map<String, Object> source) {
+        //FIXME: no special converters registered. Do we need any?
+        ScriptObjectToMapConvertor convertor = new ScriptObjectToMapConvertor(new DefaultConversionRegistry());
         return convertor.convert(source);
     }
 

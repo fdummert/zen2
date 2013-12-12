@@ -4,6 +4,13 @@
         <script>
             var isomorphicDir = "js/isomorphic/";
             isc_useSimpleNames = false;
+            dojoConfig = {
+                parseOnLoad: false,
+                async: 1,
+                paths: {
+                    "fs": "../../fs"
+                }
+            };
         </script>
         <script src=js/isomorphic/system/modules-debug/ISC_Core.js></script>
         <script src=js/isomorphic/system/modules-debug/ISC_Foundation.js></script>
@@ -17,24 +24,34 @@
     <body>
         <script>
             isc.setAutoDraw(false);
-            require([ "de/zeos/cometd/cometdManager", "require" ], function(CometDManager, require) {
+            require([ "de/zeos/cometd/cometdManager", "require", "dojo/i18n!fs/zen2/nls/messages" ], function(CometDManager, require, msgs) {
+                var mainApp = null;
                 var warnImg = isc.Img.create({ size: 32, src: "[SKIN]Dialog/warn.png", autoDraw: true, left: -1000 });
                 var cm = new CometDManager("http://localhost:8080/zen2/cometd", null, {
                     initialized : function(success, clientId, err, msg) {
                         console.log("init", success, clientId, err, msg);
                         if (!success) {
                             if (err && err.indexOf("403:") == 0)
-                                err = "error.login";
+                                err = msgs.errorLogin;
                             loginForm.getField("feedback").setValue("<span style='color:red'>" + err + "</span>");                                
                         }
                         else {
                             console.log("logged in", cm.getAppProperties());
                             loginWin.hide();
+                            if (!mainApp) {
+                                require(["fs/zen2/main/app"], function(app) {
+                                    mainApp = app.start(cm);
+                                });
+                            }
                         }
                         loginForm.getField("submit").enable();
                     },
                     disconnected : function() {
                         loginWin.show();
+                        if (mainApp != null) {
+                            mainApp.destroy();
+                            mainApp = null;
+                        }
                     },
                     connected: function() {
                         var brokenWin = isc.Canvas.getById("brokenWin");
@@ -63,7 +80,7 @@
                                         membersMargin: 10,
                                         members: [
                                             warnImg,
-                                            isc.Label.create({height: 32, width: "*", contents: "error.connection"})
+                                            isc.Label.create({height: 32, width: "*", contents: msgs.errConnection})
                                         ]
                                     })
                                 
@@ -88,9 +105,9 @@
                             saveOnEnter: true,
                             autoFocus: true,
                             fields: [
-                                { name: "username", title: "Username" },
-                                { name: "password", title: "Password", type: "password" },
-                                { name: "submit", editorType: "SubmitItem", title: "Login", endRow: false },
+                                { name: "username", title: msgs.username },
+                                { name: "password", title: msgs.password, type: "password" },
+                                { name: "submit", editorType: "SubmitItem", title: msgs.login, endRow: false },
                                 { name: "feedback", showTitle: false, type: "blurb", startRow: false }
                             ],
                             submitValues: function(values) {

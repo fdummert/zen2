@@ -1,4 +1,4 @@
-package de.zeos.cometd.security;
+package de.zeos.zen2.security;
 
 import java.util.Map;
 import java.util.Set;
@@ -13,7 +13,7 @@ import org.cometd.bayeux.server.ServerMessage;
 import org.cometd.bayeux.server.ServerSession;
 import org.springframework.stereotype.Component;
 
-import de.zeos.cometd.Configurer;
+import de.zeos.zen2.Configurer;
 
 /**
  * @author ECT\dumer-fl

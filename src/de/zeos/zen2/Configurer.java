@@ -1,4 +1,4 @@
-package de.zeos.cometd;
+package de.zeos.zen2;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -19,12 +19,12 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.stereotype.Component;
 import org.springframework.web.context.ServletContextAware;
 
-import de.zeos.cometd.security.AuthSecurityPolicy;
+import de.zeos.zen2.security.AuthSecurityPolicy;
 
 @Component
 public class Configurer implements DestructionAwareBeanPostProcessor, ServletContextAware {
     
-    public static final String ZEOS_KEY = "de.zeos.cometd";
+    public static final String ZEOS_KEY = "de.zeos.zen2";
     
     @Inject
     private BayeuxServer bayeuxServer;

@@ -1,4 +1,4 @@
-package de.zeos.cometd.security;
+package de.zeos.zen2.security;
 
 import java.util.Map;
 import java.util.Set;

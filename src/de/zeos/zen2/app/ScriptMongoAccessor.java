@@ -1,4 +1,4 @@
-package de.zeos.cometd.app;
+package de.zeos.zen2.app;
 
 import java.util.Map;
 

@@ -8,10 +8,6 @@
        http://www.springframework.org/schema/util http://www.springframework.org/schema/util/spring-util.xsd
     ">
     
-    <util:properties id="appProperties">
-        <prop key="dsChannelPrefix">/kio/ds</prop>
-    </util:properties>
-    
     <bean class="de.zeos.script.v8.V8ScriptEngineCreator">
         <property name="scripts">
             <list>
@@ -21,7 +17,7 @@
         </property>
     </bean>
     
-    <context:component-scan base-package="de.zeos"/>
+    <context:component-scan base-package="de.zeos.zen2"/>
 
     <import resource="dbContext.xml"/>
 </beans>

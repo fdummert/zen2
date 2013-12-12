@@ -1,4 +1,4 @@
-package de.zeos.cometd.security;
+package de.zeos.zen2.security;
 
 public class AuthenticationException extends Exception {
 

@@ -17,7 +17,7 @@
  * NOTE: this class should be obsolete as soon as cometd supports jackson 2
  */
 
-package de.zeos.cometd;
+package de.zeos.zen2;
 
 import java.io.IOException;
 import java.io.InputStream;

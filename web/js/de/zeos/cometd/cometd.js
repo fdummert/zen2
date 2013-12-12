@@ -225,8 +225,8 @@ define(["dojo/_base/unload", "dojox/cometd", "dojo/_base/lang", "dojox/cometd/ac
                 
                 handshakeProps = {
                     ext : {
-                        "de.zeos.cometd.security" : cred,
-                        "de.zeos.cometd.application": application
+                        "de.zeos.zen2.security" : cred,
+                        "de.zeos.zen2.application": application
                     }
                 };
             }

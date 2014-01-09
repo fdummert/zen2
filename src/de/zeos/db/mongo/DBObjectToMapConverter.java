@@ -19,7 +19,7 @@ public class DBObjectToMapConverter implements Converter<DBObject, Map<String, O
     }
 
     @SuppressWarnings("unchecked")
-    public Map<String, Object> convert(DBObject result) {
+    public Map<String, Object> convert(DBObject result, Object... contexts) {
         Map<String, Object> map = result.toMap();
         for (String key : map.keySet()) {
             Object value = map.get(key);
@@ -29,11 +29,12 @@ public class DBObjectToMapConverter implements Converter<DBObject, Map<String, O
                 Converter converter = null;
                 if (registry != null) {
                     converter = registry.getConverter(value.getClass());
-                    if (converter != null)
-                        convertedValue = converter.convert(convertedValue);
+                    if (converter != null) {
+                        convertedValue = converter.convert(convertedValue, result, key, contexts[0]);
+                    }
                 }
                 if (value instanceof DBObject) {
-                    convertedValue = convert((DBObject) convertedValue);
+                    convertedValue = convert((DBObject) convertedValue, contexts);
                 }
                 if (convertedValue != value)
                     map.put(key, convertedValue);

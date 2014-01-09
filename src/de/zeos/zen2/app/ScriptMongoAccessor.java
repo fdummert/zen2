@@ -19,7 +19,7 @@ public class ScriptMongoAccessor extends MongoAccessor {
     }
 
     @Override
-    protected Map<String, Object> convert(DBObject dbObject) {
-        return facade.createObject(super.convert(dbObject));
+    protected Map<String, Object> convert(DBObject dbObject, String... joins) {
+        return facade.createObject(super.convert(dbObject, joins));
     }
 }

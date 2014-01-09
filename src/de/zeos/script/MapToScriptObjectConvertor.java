@@ -16,15 +16,15 @@ public class MapToScriptObjectConvertor implements Converter<Map<String, Object>
     }
 
     @SuppressWarnings("unchecked")
-    public Map<String, Object> convert(Map<String, Object> sourceObject) {
+    public Map<String, Object> convert(Map<String, Object> sourceObject, Object... context) {
         Map<String, Object> destObject = engine.createObject();
         for (String key : sourceObject.keySet()) {
             Object value = sourceObject.get(key);
             if (value != null) {
                 @SuppressWarnings("rawtypes")
-                Converter converter = registry.getConverter(value.getClass());
+                Converter converter = (Converter) registry.getConverter(value.getClass());
                 if (converter != null) {
-                    value = converter.convert(value);
+                    value = converter.convert(value, (Object) context);
                 }
                 if (value instanceof Map) {
                     value = convert((Map<String, Object>) value);

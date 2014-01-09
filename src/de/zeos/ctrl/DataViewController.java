@@ -37,19 +37,21 @@ public class DataViewController {
             if (fields == null || fields.isEmpty()) {
                 this.fields.addAll(entity.getFields());
             } else {
-                for (FieldView fv : fields) {
-                    Field field = null;
-                    for (Field f : entity.getFields()) {
+                for (Field f : entity.getFields()) {
+                    FieldView field = null;
+                    for (FieldView fv : fields) {
                         if (f.getName().equals(fv.getName())) {
-                            field = f;
+                            field = fv;
                             break;
                         }
                     }
-                    if (fv.getMandatory() != null)
-                        field.setMandatory(fv.getMandatory());
-                    if (fv.getReadOnly() != null)
-                        field.setReadOnly(fv.getReadOnly());
-                    this.fields.add(field);
+                    if (field != null) {
+                        if (field.getMandatory() != null)
+                            f.setMandatory(field.getMandatory());
+                        if (field.getReadOnly() != null)
+                            f.setReadOnly(field.getReadOnly());
+                        this.fields.add(f);
+                    }
                 }
             }
         }

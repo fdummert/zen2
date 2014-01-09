@@ -15,16 +15,18 @@ import com.mongodb.DB;
 import com.mongodb.DBCollection;
 import com.mongodb.DBCursor;
 import com.mongodb.DBObject;
+import com.mongodb.DBRef;
 import com.mongodb.Mongo;
 import com.mongodb.WriteResult;
 
 import de.zeos.db.DBAccessor;
+import de.zeos.db.Ref;
 
 public class MongoAccessor implements DBAccessor {
 
     private MongoDbFactory factory;
-    private MapToDBObjectConverter queryConverter = new MapToDBObjectConverter();
-    private DBObjectToMapConverter resultConverter = new DBObjectToMapConverter(new MongoConversionRegistry());
+    private MapToDBObjectConverter queryConverter;
+    private DBObjectToMapConverter resultConverter;
     private final MongoExceptionTranslator exceptionTranslator = new MongoExceptionTranslator();
 
     public MongoAccessor(Mongo mongo, String app, String username, String password) {
@@ -33,22 +35,35 @@ public class MongoAccessor implements DBAccessor {
 
     public MongoAccessor(MongoDbFactory factory) {
         this.factory = factory;
+        this.resultConverter = new DBObjectToMapConverter(new MongoConversionRegistry(factory));
+        this.queryConverter = new MapToDBObjectConverter();
     }
 
-    public Map<String, Object> selectSingle(Map<String, Object> query, String collection) {
+    @Override
+    public boolean exists(Map<String, Object> query, String collection) {
+        try {
+            DBCollection coll = getCollection(collection);
+            DBObject result = coll.findOne(queryConverter.convert(query));
+            return result != null;
+        } catch (RuntimeException e) {
+            throw potentiallyConvertRuntimeException(e);
+        }
+    }
+
+    public Map<String, Object> selectSingle(Map<String, Object> query, String collection, String... joins) {
         try {
             DBCollection coll = getCollection(collection);
             DBObject result = coll.findOne(queryConverter.convert(query));
             if (result == null)
                 return null;
-            return convert(result);
+            return convert(result, joins);
         } catch (RuntimeException e) {
             throw potentiallyConvertRuntimeException(e);
         }
     }
 
     @Override
-    public List<Map<String, Object>> select(Map<String, Object> query, Integer pageFrom, Integer pageTo, String[] sortCols, String collection) {
+    public List<Map<String, Object>> select(Map<String, Object> query, Integer pageFrom, Integer pageTo, String[] sortCols, String collection, String... joins) {
         try {
             DBCollection coll = getCollection(collection);
             DBCursor cursor = coll.find(queryConverter.convert(query));
@@ -71,7 +86,7 @@ public class MongoAccessor implements DBAccessor {
             List<Map<String, Object>> result = new ArrayList<Map<String, Object>>();
             while (cursor.hasNext()) {
                 DBObject obj = cursor.next();
-                result.add(convert(obj));
+                result.add(convert(obj, joins));
             }
             return result;
         } catch (RuntimeException e) {
@@ -95,18 +110,30 @@ public class MongoAccessor implements DBAccessor {
         try {
             DBCollection coll = getCollection(collection);
             WriteResult result = coll.remove(queryConverter.convert(query));
-            return result.getError() != null;
+            return result.getError() == null;
         } catch (RuntimeException e) {
             throw potentiallyConvertRuntimeException(e);
         }
     }
 
     @Override
-    public boolean insert(Map<String, Object> query, String collection) {
+    public Map<String, Object> insert(Map<String, Object> query, String collection, String... joins) {
+        try {
+            return convert(insertInternal(query, collection), joins);
+        } catch (RuntimeException e) {
+            throw potentiallyConvertRuntimeException(e);
+        }
+    }
+
+    private DBObject insertInternal(Map<String, Object> query, String collection) {
         try {
             DBCollection coll = getCollection(collection);
-            WriteResult result = coll.insert(queryConverter.convert(query));
-            return result.getError() != null;
+            DBObject dbObj = queryConverter.convert(query);
+            persistRefs(dbObj);
+            WriteResult result = coll.insert(dbObj);
+            if (result.getError() != null)
+                return null;
+            return dbObj;
         } catch (RuntimeException e) {
             throw potentiallyConvertRuntimeException(e);
         }
@@ -116,15 +143,42 @@ public class MongoAccessor implements DBAccessor {
     public boolean update(Map<String, Object> query, String collection) {
         try {
             DBCollection coll = getCollection(collection);
-            WriteResult result = coll.update(new BasicDBObject(Collections.singletonMap("_id", query.get("_id"))), queryConverter.convert(query));
-            return result.getError() != null;
+            DBObject queryObj = queryConverter.convert(query);
+            persistRefs(queryObj);
+            DBObject update = new BasicDBObject();
+            Object id = queryObj.removeField("_id");
+            update.put("$set", queryObj);
+            WriteResult result = coll.update(new BasicDBObject(Collections.singletonMap("_id", id)), update);
+            return result.getError() == null;
         } catch (RuntimeException e) {
             throw potentiallyConvertRuntimeException(e);
         }
     }
 
-    protected Map<String, Object> convert(DBObject dbObject) {
-        return resultConverter.convert(dbObject);
+    private void persistRefs(DBObject obj) {
+        for (String key : obj.keySet()) {
+            Object value = obj.get(key);
+            if (value instanceof Ref) {
+                Ref ref = (Ref) value;
+                Object id = null;
+                if (!ref.isLazy()) {
+                    Map<String, Object> refObj = ref.getRefObj();
+                    if (exists(refObj, ref.getEntity())) {
+                        update(refObj, ref.getEntity());
+                        id = refObj.get("_id");
+                    } else {
+                        id = insertInternal(refObj, ref.getEntity()).get("_id");
+                    }
+                } else {
+                    id = ref.getId();
+                }
+                obj.put(key, new DBRef(factory.getDb(), ref.getEntity(), id));
+            }
+        }
+    }
+
+    protected Map<String, Object> convert(DBObject dbObject, String... joins) {
+        return resultConverter.convert(dbObject, (Object) joins);
     }
 
     private DBCollection getCollection(String collection) {

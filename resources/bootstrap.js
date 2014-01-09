@@ -4,7 +4,7 @@ db.enumeration.insert( { _id: "securityModes", constants: [ "PUBLIC", "PROTECTED
 db.entity.insert( { _id: "application", embeddable: false, fields: [
       { name: "_id", pk: true, mandatory: true, type: { dataClass: "SCALAR", type: "STRING" } }, 
       { name: "securityMode", type: { dataClass: "ENUM", enumeration: { $ref: "enumeration", $id: "securityModes"} }}, 
-      { name: "securityHandler", type: { dataClass: "ENTITY", refEntity: { $ref: "entity", $id: "scriptHandler" } } }
+      { name: "securityHandler", type: { dataClass: "ENTITY", refEntity: { $ref: "entity", $id: "scriptHandler" }, lazy: false } }
  ], _class: "de.zeos.zen2.app.model.Entity" } );
 
 db.entity.insert( { _id: "scriptHandler", embeddable: false, fields: [

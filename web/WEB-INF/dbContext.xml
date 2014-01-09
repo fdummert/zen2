@@ -18,5 +18,5 @@
         <property name="writeResultChecking" value="EXCEPTION"/>
     </bean>
     
-    <bean id="dbAccessorFactory" class="de.zeos.db.mongo.MongoAccessorFactory"/>
+    <bean id="dbAccessorFactory" class="de.zeos.zen2.db.mongo.MongoAccessorFactory"/>
 </beans>

@@ -15,7 +15,7 @@ public class ScriptObjectToMapConvertor implements Converter<Map<String, Object>
         this.registry = registry;
     }
 
-    public Map<String, Object> convert(Map<String, Object> sourceObject) {
+    public Map<String, Object> convert(Map<String, Object> sourceObject, Object... contexts) {
         if (sourceObject == null)
             return null;
         Map<String, Object> destObject = new HashMap<String, Object>();

@@ -4,6 +4,7 @@ public class FieldView {
     private String name;
     private Boolean mandatory;
     private Boolean readOnly;
+    private Boolean lazy;
 
     public String getName() {
         return name;
@@ -27,5 +28,13 @@ public class FieldView {
 
     public void setReadOnly(Boolean readOnly) {
         this.readOnly = readOnly;
+    }
+
+    public Boolean getLazy() {
+        return lazy;
+    }
+
+    public void setLazy(Boolean lazy) {
+        this.lazy = lazy;
     }
 }

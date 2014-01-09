@@ -13,6 +13,7 @@
                 }
             };
         </script>
+        <script src="js/ace/src-min-noconflict/ace.js" type="text/javascript" charset="utf-8"></script>
         <script src=js/isomorphic/system/modules-debug/ISC_Core.js></script>
         <script src=js/isomorphic/system/modules-debug/ISC_Foundation.js></script>
         <script src=js/isomorphic/system/modules-debug/ISC_Containers.js></script>
@@ -33,7 +34,7 @@
                         console.log("init", success, clientId, err, msg);
                         if (!success) {
                             if (err && err.indexOf("403:") == 0)
-                                err = msgs.errorLogin;
+                                err = msgs.errLogin;
                             loginForm.getField("feedback").setValue("<span style='color:red'>" + err + "</span>");                                
                         }
                         else {

@@ -5,6 +5,7 @@ public class DataType {
     private ScalarDataType type;
     private Enumeration enumeration;
     private Entity refEntity;
+    private boolean lazy;
 
     public DataClass getDataClass() {
         return dataClass;
@@ -36,5 +37,13 @@ public class DataType {
 
     public void setRefEntity(Entity refEntity) {
         this.refEntity = refEntity;
+    }
+
+    public boolean isLazy() {
+        return lazy;
+    }
+
+    public void setLazy(boolean lazy) {
+        this.lazy = lazy;
     }
 }

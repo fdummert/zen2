@@ -31,6 +31,7 @@ define(["./cometdDataSource"], function() {
             }
             var fields = [];
             for (var j = 0; j < descr.entity.fields.length; j++) {
+                var skip = false;
                 var f = descr.entity.fields[j];
                 var field = {
                     name: f.name,
@@ -52,11 +53,27 @@ define(["./cometdDataSource"], function() {
                         field.valueMap[cnst] = msgs[f.type.enumeration.id + "_" + cnst] || cnst;
                     }
                     break;
+                case "ENTITY":
+                    var embeddable = f.type.refEntity.embeddable;
+                    if (embeddable === true) {
+                        type = f.type.refEntity._id;
+                    } else {
+                        field.foreignKey = f.type.refEntity._id;
+                    }
+                    break;
+                case "LIST":
+                    if (f.type.type != null || f.type.enumeration != null || (f.type.refEntity != null && f.type.refEntity.embeddable))
+                        field.multiple = true;
+                    else
+                        skip = true;
+                    break;
                 default:
                     throw "not implemented";
                 }
-                field.type = type;
-                fields.push(field);
+                if (!skip) {
+                    field.type = type;
+                    fields.push(field);
+                }
             }
             props.fields = fields;
             isc.CometDDataSource.create(props);

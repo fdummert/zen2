@@ -3,7 +3,6 @@ define(["dojo/_base/unload", "dojox/cometd", "dojo/_base/lang", "dojox/cometd/ac
         if ((this instanceof CometD) === false)
             throw "CometD must be instantiated: new CometD()";
         
-        var url = null;
         var commListener = null;
         var configured = false;
         var initialized = false;
@@ -17,14 +16,7 @@ define(["dojo/_base/unload", "dojox/cometd", "dojo/_base/lang", "dojox/cometd/ac
         var ch = null;
         var dh = null;
 
-        var cometD = null;
-        if (CometD.prototype.COMET_D == null) {
-            CometD.prototype.COMET_D = cometDInstance;
-            cometD = cometDInstance;
-        } else {
-            cometD = new dojox.Cometd();
-            cometD.registerExtension("ack", new org.cometd.AckExtension());
-        }
+        var cometD = cometDInstance;
         cometD.onListenerException = function(ex) {
             console.log("uncaught exception:", ex);
         };
@@ -170,22 +162,15 @@ define(["dojo/_base/unload", "dojox/cometd", "dojo/_base/lang", "dojox/cometd/ac
             clearSubscriptions();
         }
         
-        this.getUrl = function() {
-            return url;
-        };
-
         this.isConnected = function() {
             return connected && !cometD.isDisconnected();
         };
 
-        this.configure = function(cometDUrl, communicationListener) {
+        this.configure = function(communicationListener) {
             if (connected)
                 throw "already connected";
-            if (cometDUrl == null)
-                throw "url required";
             if (communicationListener == null)
                 throw "commListener required";
-            url = cometDUrl;
             commListener = communicationListener;
             configured = true;
         };
@@ -231,7 +216,7 @@ define(["dojo/_base/unload", "dojox/cometd", "dojo/_base/lang", "dojox/cometd/ac
                 };
             }
             cometD.init({
-                url : url,
+                url : "http://localhost:8080/zen2/cometd",
                 logLevel : "info",
                 autoBatch : true
             }, handshakeProps);
@@ -294,7 +279,6 @@ define(["dojo/_base/unload", "dojox/cometd", "dojo/_base/lang", "dojox/cometd/ac
                 connected = false;
                 clearConnection();
             }
-            url = null;
             commListener = null;
             configured = false;
             for (var name in extensionNames) {

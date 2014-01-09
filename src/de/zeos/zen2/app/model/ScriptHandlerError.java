@@ -2,16 +2,16 @@ package de.zeos.zen2.app.model;
 
 import java.util.Date;
 
-public class SecurityHandlerError {
+public class ScriptHandlerError {
     private Date date;
     private String error;
     private int lineNo;
     private int colNo;
 
-    public SecurityHandlerError() {
+    public ScriptHandlerError() {
     }
 
-    public SecurityHandlerError(Date date, String error, int lineNo, int colNo) {
+    public ScriptHandlerError(Date date, String error, int lineNo, int colNo) {
         this.date = date;
         this.error = error;
         this.lineNo = lineNo;

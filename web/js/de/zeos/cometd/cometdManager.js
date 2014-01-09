@@ -1,5 +1,5 @@
 define(["./cometd"], function(CometD) {
-    var CometDManager = function(cometDUrl, credentials, communicationListener) {
+    var CometDManager = function(credentials, communicationListener) {
         if ((this instanceof CometDManager) === false)
             throw "CometDManager must be instantiated: new CometDManager()";
         
@@ -8,6 +8,7 @@ define(["./cometd"], function(CometD) {
         
         var clientId = null;
         var appProperties = null;
+        var application = null;
         var topicSubscriptions = {};
         var connectionListeners = [];
         var msgId = 1;
@@ -16,11 +17,12 @@ define(["./cometd"], function(CometD) {
         var manualDisconnect = false;
         var cm = this;
         
-        cometD.configure(cometDUrl, {
+        cometD.configure({
             initialized: function(successful, clientId, error, msg) {
                 if (successful) {
                     var auth = getAuthorization(msg);
-                    initialize(clientId, auth);
+                    var app = getApplication(msg);
+                    initialize(clientId, auth, app);
                 } else {
                     status = CometDManager.Status.DISCONNECTED;
                 }
@@ -88,18 +90,28 @@ define(["./cometd"], function(CometD) {
             return Object.prototype.toString.call(f) === '[object Function]';
         }
         
+        function getApplication(msg) {
+            var ext = msg.ext;
+            var app = null;
+            if (ext != null) {
+                app = ext["de.zeos.zen2.application"];
+            }
+            return app;
+        }
+        
         function getAuthorization(msg) {
             var ext = msg.ext;
             var auth = null;
             if (ext != null) {
-                auth = ext["de.zeos.cometd.security"];
+                auth = ext["de.zeos.zen2.security"];
             }
             return auth;
         }
         
-        function initialize(id, props) {
+        function initialize(id, props, app) {
             clientId = id;
             appProperties = props;
+            application = app;
         }
         
         function connectionAvailable() {
@@ -223,16 +235,27 @@ define(["./cometd"], function(CometD) {
         
         this.ApplicationScope = function(property) {
             this.toString = function() {
-                var props = cm.getAppProperties();
-                if (props == null)
-                    return "<invalid>";
-                return props[property] || "<invalid>";
+                var scope = cm.getApplication();
+                if (property) {
+                    var props = cm.getAppProperties();
+                    var prop = null;
+                    if (props == null)
+                        prop = "<invalid>";
+                    else
+                        prop = props[property] || "<invalid>";
+                    scope += "/" + prop;
+                }
+                return scope;
             };
         };
         
         this.getClientId = function() {
             return clientId;
         };
+        
+        this.getApplication = function() {
+            return application;
+        }
         
         this.getAppProperties = function() {
             return appProperties;

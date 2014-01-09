@@ -6,5 +6,8 @@ import java.util.Set;
 public interface Authorization {
     public Map<String, Object> getData();
 
+    public Set<String> getDataViews();
+
     public Set<String> getChannels();
+
 }

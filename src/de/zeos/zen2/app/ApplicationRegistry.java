@@ -8,13 +8,13 @@ import javax.inject.Inject;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.data.mongodb.MongoDbFactory;
-import org.springframework.data.mongodb.core.MongoOperations;
 import org.springframework.stereotype.Component;
 
-import de.zeos.db.MongoAccessor;
+import de.zeos.db.DBAccessor;
 import de.zeos.script.ScriptEngineFacade;
 import de.zeos.zen2.app.model.Application;
+import de.zeos.zen2.db.DBAccessorFactory;
+import de.zeos.zen2.db.InternalDBAccessor;
 
 @Component
 public class ApplicationRegistry {
@@ -27,20 +27,17 @@ public class ApplicationRegistry {
     }
 
     private Map<String, Application> applications;
-
-    //@Inject
-    //private Mongo mongo;
-    @Inject
-    private MongoDbFactory dbFactory;
-
-    @Inject
-    private MongoOperations mongoOperations;
+    private Map<String, InternalDBAccessor> internalDBAccessors = new HashMap<>();
+    private Map<String, DBAccessor> dbAccessors = new HashMap<>();
 
     private Logger logger = LoggerFactory.getLogger(getClass());
 
+    @Inject
+    private DBAccessorFactory dbAccessorFactory;
+
     private void startup() {
         try {
-            List<Application> apps = mongoOperations.findAll(Application.class);
+            List<Application> apps = dbAccessorFactory.createInternalDBAccessor("zen2").getApplications();
             if (applications == null)
                 applications = new HashMap<>();
             for (Application app : apps) {
@@ -58,10 +55,25 @@ public class ApplicationRegistry {
         return this.applications.get(app);
     }
 
-    public MongoAccessor getMongoAccessor(String app, ScriptEngineFacade facade) {
-        if (app.equals("zen2")) {
-            return new ScriptMongoAccessor(dbFactory, facade);
+    public DBAccessor getDBAccessor(String app) {
+        DBAccessor accessor = this.dbAccessors.get(app);
+        if (accessor == null) {
+            accessor = dbAccessorFactory.createDBAccessor(app);
+            this.dbAccessors.put(app, accessor);
         }
-        throw new UnsupportedOperationException("No db access available yet");
+        return accessor;
+    }
+
+    public DBAccessor getDBAccessor(String app, ScriptEngineFacade facade) {
+        return dbAccessorFactory.createScriptableDBAccessor(app, facade);
+    }
+
+    public InternalDBAccessor getInternalDBAccessor(String app) {
+        InternalDBAccessor accessor = this.internalDBAccessors.get(app);
+        if (accessor == null) {
+            accessor = dbAccessorFactory.createInternalDBAccessor(app);
+            this.internalDBAccessors.put(app, accessor);
+        }
+        return accessor;
     }
 }

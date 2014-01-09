@@ -17,4 +17,6 @@
         <constructor-arg name="mongoDbFactory" ref="mongoDbFactory"/>
         <property name="writeResultChecking" value="EXCEPTION"/>
     </bean>
+    
+    <bean id="dbAccessorFactory" class="de.zeos.db.mongo.MongoAccessorFactory"/>
 </beans>

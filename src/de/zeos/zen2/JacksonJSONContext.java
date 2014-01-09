@@ -31,12 +31,29 @@ import org.cometd.common.JSONContext;
 import org.cometd.server.ServerMessageImpl;
 import org.eclipse.jetty.util.IO;
 
+import com.fasterxml.jackson.core.JsonGenerator;
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.JavaType;
+import com.fasterxml.jackson.databind.JsonSerializer;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
+import com.fasterxml.jackson.databind.SerializerProvider;
+import com.fasterxml.jackson.databind.module.SimpleModule;
 
 public class JacksonJSONContext implements JSONContext.Server {
+    public static class JsonContent {
+        private String content;
+
+        public JsonContent(String content) {
+            this.content = content;
+        }
+
+        public String getContent() {
+            return content;
+        }
+    }
+
     private final ObjectMapper objectMapper = new ObjectMapper();
     private final JavaType rootArrayType;
 
@@ -45,6 +62,14 @@ public class JacksonJSONContext implements JSONContext.Server {
     public JacksonJSONContext() {
         this.objectMapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
         this.objectMapper.configure(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS, false);
+
+        this.objectMapper.registerModule(new SimpleModule().addSerializer(JsonContent.class, new JsonSerializer<JsonContent>() {
+            @Override
+            public void serialize(JsonContent value, JsonGenerator jgen, SerializerProvider provider) throws IOException, JsonProcessingException {
+                jgen.writeRawValue(value.getContent());
+            }
+        }));
+
         this.rootArrayType = this.objectMapper.constructType(ServerMessageImpl[].class);
     }
 

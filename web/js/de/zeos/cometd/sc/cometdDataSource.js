@@ -5,37 +5,37 @@ define(["../cometdReqRes"], function(CometDRequestResponse) {
         dataFormat: "custom",
         clientOnly: true,
         
-        sendMetaData: true,
-        metaDataPrefix: "_",
-        dataSourceRootChannel: "/org/zeos/cometd/ds",
+        dataSourceRootChannel: "/service",
         dataSourceRequestChannel: null,
         dataSourceResponseChannel: null,
         dataSourcePushChannel: null,
-        requestClass: "de.zeos.ds.DataSourceRequest",
         timeout: 10000,
         scope: null,
         scopeResolver: null,
         messageResolver: null,
         pushScopes: null,
         cm: null,
+        dataView: null,
         
         transformRequest: function(dsRequest) {
             var that = this;
             function DSResponseListener(ds, requestId) {
                 this.success = function(dsResponse) {
-                    if (dsResponse.status == isc.DSResponse.STATUS_FAILURE) {
-                        if (that.messageResolver && dsResponse.data) {
-                            var err = that.messageResolver(dsResponse.data);
-                            dsResponse.data = err || dsResponse.data;
+                    if (dsResponse.error) {
+                        var err = dsResponse.error;
+                        if (that.messageResolver) err = that.messageResolver(err);
+                        dsResponse.data = err;
+                        
+                    } else if (dsResponse.validationErrors) {
+                        var errors = {};
+                        for (var field in dsResponse.validationErrors) {
+                            var err = dsResponse.validationErrors[field]; 
+                            if (that.messageResolver) err = that.messageResolver(err);
+                            errors[field] = err;
                         }
-                    } else if (dsResponse.status == isc.DSResponse.STATUS_VALIDATION_ERROR && dsResponse.errors && that.messageResolver) {
-                        for (var field in dsResponse.errors) {
-                            var err = that.messageResolver(dsResponse.errors[field]);
-                            dsResponse.errors[field] = err || dsResponse.errors[field];
-                        }
-                    } else if (dsResponse.status == isc.DSResponse.STATUS_SUCCESS) {
-                        if (dsResponse.data != null)
-                            dsResponse.data = ds.recordsFromObjects(dsResponse.data);
+                        dsResponse.errors = errors;
+                    } else if (dsResponse.result) {
+                        dsResponse.data = ds.recordsFromObjects(dsResponse.result);
                     }
                     this.finished();
                     ds.processResponse(requestId, dsResponse);
@@ -53,37 +53,47 @@ define(["../cometdReqRes"], function(CometDRequestResponse) {
             }
         
             var params = isc.addProperties({}, dsRequest.params);
-            params.data = isc.addProperties({}, params.data, dsRequest.data);
-            if (this.sendMetaData) {
-                if (!this.parameterNameMap) {
-                    var map = {};
-                    
-                    map[this.metaDataPrefix + "operationType"] = "operationType";
-                    map[this.metaDataPrefix + "startRow"] = "startRow";
-                    map[this.metaDataPrefix + "endRow"] = "endRow";
-                    map[this.metaDataPrefix + "sortBy"] = "sortBy";
-                    map[this.metaDataPrefix + "textMatchStyle"] = "textMatchStyle";
-                    map[this.metaDataPrefix + "oldValues"] = "oldValues";
-                    map[this.metaDataPrefix + "parentNode"] = "parentNode";
-
-                    this.parameterNameMap = map;
+            var data = isc.addProperties({}, params.data, dsRequest.data);
+            if (data._constructor) {
+                console.log("NEED TO IMPLEMENT ADVANCED CRIT", dsRequest.data.criteria);
+            } else {
+                params.criteria = {};
+                for (var p in data) {
+                    params.criteria[p] = data[p];
                 }
-                
-                for (var parameterName in this.parameterNameMap) {
-                    var value = dsRequest[this.parameterNameMap[parameterName]];
-                    if (value != null) {
-                        if (parameterName == "_parentNode") {
-                            params[parameterName] = isc.Tree.getCleanNodeData(value);
-                        } else {
-                            params[parameterName] = value;
-                        }
-                    }
-                }
-                params[this.metaDataPrefix + "dataSource"] = this.getID();
-                params["isc_metaDataPrefix"] = this.metaDataPrefix;
             }
-            if (this.requestClass)
-                params.className = this.requestClass;
+            
+            if (dsRequest.operationType) {
+                var val = dsRequest.operationType;
+                switch (val) {
+                    case "add":
+                        val = "CREATE";
+                        break;
+                    case "fetch":
+                        val = "READ";
+                        break;
+                    case "update":
+                        val = "UPDATE";
+                        break;
+                    case "remove":
+                        val = "DELETE";
+                        break;
+                }
+                params.mode = val;
+            }
+            if (dsRequest.startRow != null) {
+                params.pageFrom = dsRequest.startRow;
+            }
+            if (dsRequest.endRow != null) {
+                params.pageTo = dsRequest.endRow - 1;
+            }
+            if (dsRequest.sortBy) {
+                console.log("NEED TO IMPLEMENT SORTING", dsRequest.sortBy);
+                params.sorts = [];
+            }
+            if (dsRequest.parentNode != null) {
+                params.parent = isc.Tree.getCleanNodeData(value);
+            }
             var reqChannel = this.dataSourceRequestChannel || this.getChannel("/req");
             var resChannel = this.dataSourceResponseChannel || this.getChannel("/res");
             var scope = this.scope;
@@ -133,7 +143,7 @@ define(["../cometdReqRes"], function(CometDRequestResponse) {
         },
         
         getChannel: function(infix) {
-            return this.dataSourceRootChannel + infix + "/" + this.name;
+            return this.dataSourceRootChannel + "/" + this.cm.getApplication() + "/dv" + infix + "/" + this.dataView;
         }
     });
     return null;

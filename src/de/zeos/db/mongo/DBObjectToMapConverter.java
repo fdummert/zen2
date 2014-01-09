@@ -1,4 +1,4 @@
-package de.zeos.db;
+package de.zeos.db.mongo;
 
 import java.util.Map;
 

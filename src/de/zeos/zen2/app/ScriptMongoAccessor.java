@@ -6,7 +6,7 @@ import org.springframework.data.mongodb.MongoDbFactory;
 
 import com.mongodb.DBObject;
 
-import de.zeos.db.MongoAccessor;
+import de.zeos.db.mongo.MongoAccessor;
 import de.zeos.script.ScriptEngineFacade;
 
 public class ScriptMongoAccessor extends MongoAccessor {

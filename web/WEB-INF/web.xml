@@ -16,9 +16,9 @@
     <servlet-class>org.springframework.web.servlet.DispatcherServlet</servlet-class>
   </servlet>
   <servlet-mapping>
-        <servlet-name>spring</servlet-name>
-        <url-pattern>/fs/*</url-pattern>
-    </servlet-mapping>
+    <servlet-name>spring</servlet-name>
+    <url-pattern>/ctrl/*</url-pattern>
+  </servlet-mapping>
   <listener>
     <listener-class>org.springframework.web.context.ContextLoaderListener</listener-class>
   </listener>

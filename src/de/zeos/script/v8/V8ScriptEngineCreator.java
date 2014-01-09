@@ -19,14 +19,6 @@ import de.zeos.script.ScriptEngineFacade;
 
 public class V8ScriptEngineCreator implements ScriptEngineCreator {
 
-    public static class Console {
-        private Logger logger = LoggerFactory.getLogger(getClass());
-
-        public void log(String msg) {
-            logger.info(msg);
-        }
-    }
-
     private ScriptEngineManager manager = new ScriptEngineManager();
     private List<Resource> scripts;
     private LinkedHashMap<String, String> loadedScripts = new LinkedHashMap<String, String>();
@@ -50,7 +42,6 @@ public class V8ScriptEngineCreator implements ScriptEngineCreator {
     @Override
     public ScriptEngineFacade createEngine() {
         ScriptEngineFacade facade = new V8ScriptEngineFacadeImpl(manager);
-        facade.put("$console", new Console());
         for (String file : loadedScripts.keySet())
             try {
                 facade.eval(loadedScripts.get(file));

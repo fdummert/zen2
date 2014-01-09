@@ -23,9 +23,9 @@ import de.zeos.zen2.security.AuthSecurityPolicy;
 
 @Component
 public class Configurer implements DestructionAwareBeanPostProcessor, ServletContextAware {
-    
+
     public static final String ZEOS_KEY = "de.zeos.zen2";
-    
+
     @Inject
     private BayeuxServer bayeuxServer;
     @Inject

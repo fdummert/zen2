@@ -12,10 +12,10 @@ public interface DBAccessor {
 
     public long count(Map<String, Object> query, String from);
 
-    public Map<String, Object> insert(Map<String, Object> query, String into, String... joins);
+    public Map<String, Object> insert(Map<String, Object> query, String pkField, String into);
 
-    public boolean update(Map<String, Object> query, String from);
+    public boolean update(Map<String, Object> query, String pkField, String from);
 
-    public boolean delete(Map<String, Object> query, String from);
+    public boolean delete(Map<String, Object> query, String pkField, String from);
 
 }

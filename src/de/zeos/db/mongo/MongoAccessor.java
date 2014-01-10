@@ -106,7 +106,7 @@ public class MongoAccessor implements DBAccessor {
     }
 
     @Override
-    public boolean delete(Map<String, Object> query, String collection) {
+    public boolean delete(Map<String, Object> query, String pkField, String collection) {
         try {
             DBCollection coll = getCollection(collection);
             WriteResult result = coll.remove(queryConverter.convert(query));
@@ -117,57 +117,62 @@ public class MongoAccessor implements DBAccessor {
     }
 
     @Override
-    public Map<String, Object> insert(Map<String, Object> query, String collection, String... joins) {
+    public Map<String, Object> insert(Map<String, Object> query, String pkField, String collection) {
         try {
-            return convert(insertInternal(query, collection), joins);
+            Object id = insertInternal(query, pkField, collection);
+            query.put(pkField, id);
+            return query;
         } catch (RuntimeException e) {
             throw potentiallyConvertRuntimeException(e);
         }
     }
 
-    private DBObject insertInternal(Map<String, Object> query, String collection) {
+    private Object insertInternal(Map<String, Object> query, String pkField, String collection) {
         try {
             DBCollection coll = getCollection(collection);
             DBObject dbObj = queryConverter.convert(query);
-            persistRefs(dbObj);
+            persistRefs(dbObj, pkField);
             WriteResult result = coll.insert(dbObj);
             if (result.getError() != null)
                 return null;
-            return dbObj;
+            return dbObj.get(pkField);
         } catch (RuntimeException e) {
             throw potentiallyConvertRuntimeException(e);
         }
     }
 
     @Override
-    public boolean update(Map<String, Object> query, String collection) {
+    public boolean update(Map<String, Object> query, String pkField, String collection) {
         try {
             DBCollection coll = getCollection(collection);
             DBObject queryObj = queryConverter.convert(query);
-            persistRefs(queryObj);
+            persistRefs(queryObj, pkField);
             DBObject update = new BasicDBObject();
-            Object id = queryObj.removeField("_id");
+            Object id = queryObj.removeField(pkField);
             update.put("$set", queryObj);
-            WriteResult result = coll.update(new BasicDBObject(Collections.singletonMap("_id", id)), update);
+            WriteResult result = coll.update(new BasicDBObject(Collections.singletonMap(pkField, id)), update);
             return result.getError() == null;
         } catch (RuntimeException e) {
             throw potentiallyConvertRuntimeException(e);
         }
     }
 
-    private void persistRefs(DBObject obj) {
+    private void persistRefs(DBObject obj, String pkField) {
         for (String key : obj.keySet()) {
             Object value = obj.get(key);
             if (value instanceof Ref) {
                 Ref ref = (Ref) value;
                 Object id = null;
+                // FIXME how to handle oid?
                 if (!ref.isLazy()) {
                     Map<String, Object> refObj = ref.getRefObj();
                     if (exists(refObj, ref.getEntity())) {
-                        update(refObj, ref.getEntity());
-                        id = refObj.get("_id");
+                        update(refObj, pkField, ref.getEntity());
+                        id = refObj.get(pkField);
                     } else {
-                        id = insertInternal(refObj, ref.getEntity()).get("_id");
+                        // FIXME: take modeled pk type into account (builtin vs
+                        // string)
+                        id = insertInternal(refObj, pkField, ref.getEntity());
                     }
                 } else {
                     id = ref.getId();

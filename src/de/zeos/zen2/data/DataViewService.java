@@ -66,7 +66,7 @@ public class DataViewService {
         Map<String, Object> data = message.getDataAsMap();
         CommandMode mode = CommandMode.valueOf((String) data.get("mode"));
 
-        Map<String, Object> res = new HashMap<String, Object>();
+        Map<String, Object> res = new HashMap<>();
         res.put("requestId", data.get("requestId"));
         try {
             if (!view.getAllowedModes().contains(mode))
@@ -74,7 +74,8 @@ public class DataViewService {
 
             @SuppressWarnings("unchecked")
             Map<String, Object> criteria = (Map<String, Object>) data.get("criteria");
-
+            Field pkField = null;
+            ArrayList<String> joins = new ArrayList<>();
             Map<String, Field> fields = new HashMap<>();
             for (Field f : view.getEntity().getFields()) {
                 boolean add = true;
@@ -96,9 +97,19 @@ public class DataViewService {
                         add = false;
                 }
                 if (add) {
+                    if (f.isPk()) {
+                        if (pkField != null)
+                            throw new RuntimeException("only single pk field supported.");
+                        pkField = f;
+                    }
+                    if (f.getType().getDataClass() == DataClass.ENTITY && !f.getType().getRefEntity().isEmbeddable() && !f.getType().isLazy()) {
+                        joins.add(f.getName());
+                    }
                     fields.put(f.getName(), f);
                 }
             }
+            if (pkField == null)
+                throw new RuntimeException("each view must at least declare the pk field");
 
             String entity = view.getEntity().getId();
             Object result = null;
@@ -106,7 +117,7 @@ public class DataViewService {
             case CREATE:
                 filterCriteria(criteria, fields, true, true);
                 processRefs(accessor, criteria, fields);
-                result = accessor.insert(criteria, entity);
+                result = accessor.insert(criteria, pkField.getName(), entity);
                 break;
             case READ:
                 filterCriteria(criteria, fields, false, false);
@@ -114,7 +125,7 @@ public class DataViewService {
                 Integer pageTo = (Integer) data.get("pageTo");
                 String[] sorts = (String[]) data.get("sorts");
                 Integer count = null;
-                List<Map<String, Object>> rows = accessor.select(criteria, pageFrom, pageTo, sorts, entity);
+                List<Map<String, Object>> rows = accessor.select(criteria, pageFrom, pageTo, sorts, entity, joins.toArray(new String[joins.size()]));
                 if (pageFrom != null || pageTo != null) {
                     count = new Long(accessor.count(criteria, entity)).intValue();
                     res.put("pageFrom", pageFrom);
@@ -126,11 +137,11 @@ public class DataViewService {
             case UPDATE:
                 filterCriteria(criteria, fields, true, true);
                 processRefs(accessor, criteria, fields);
-                result = accessor.update(criteria, entity);
+                result = accessor.update(criteria, pkField.getName(), entity);
                 break;
             case DELETE:
                 filterCriteria(criteria, fields, false, false);
-                result = accessor.delete(criteria, entity);
+                result = accessor.delete(criteria, pkField.getName(), entity);
                 break;
             }
             res.put("result", result);

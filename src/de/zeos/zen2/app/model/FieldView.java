@@ -5,6 +5,7 @@ public class FieldView {
     private Boolean mandatory;
     private Boolean readOnly;
     private Boolean lazy;
+    private Boolean cascade;
 
     public String getName() {
         return name;
@@ -37,4 +38,13 @@ public class FieldView {
     public void setLazy(Boolean lazy) {
         this.lazy = lazy;
     }
+
+    public Boolean getCascade() {
+        return cascade;
+    }
+
+    public void setCascade(Boolean cascade) {
+        this.cascade = cascade;
+    }
+
 }

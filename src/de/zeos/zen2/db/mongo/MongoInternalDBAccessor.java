@@ -23,6 +23,11 @@ public class MongoInternalDBAccessor implements InternalDBAccessor {
     }
 
     @Override
+    public Application getApplication(String name) {
+        return this.operations.findById(name, Application.class);
+    }
+
+    @Override
     public List<DataView> getDataViews() {
         return this.operations.findAll(DataView.class);
     }
@@ -35,5 +40,10 @@ public class MongoInternalDBAccessor implements InternalDBAccessor {
     @Override
     public void updateScriptHandler(ScriptHandler scriptHandler) {
         this.operations.save(scriptHandler);
+    }
+
+    @Override
+    public ScriptHandler getScriptHandler(Object id) {
+        return this.operations.findById(id, ScriptHandler.class);
     }
 }

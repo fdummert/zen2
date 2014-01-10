@@ -6,8 +6,9 @@ import org.springframework.data.mongodb.MongoDbFactory;
 
 import com.mongodb.DBObject;
 
-import de.zeos.db.mongo.MongoAccessor;
 import de.zeos.script.ScriptEngineFacade;
+import de.zeos.zen2.data.EntityInfo;
+import de.zeos.zen2.db.mongo.MongoAccessor;
 
 public class ScriptMongoAccessor extends MongoAccessor {
 
@@ -19,7 +20,7 @@ public class ScriptMongoAccessor extends MongoAccessor {
     }
 
     @Override
-    protected Map<String, Object> convert(DBObject dbObject, String... joins) {
-        return facade.createObject(super.convert(dbObject, joins));
+    protected Map<String, Object> convert(DBObject dbObject, EntityInfo entityInfo) {
+        return facade.createObject(super.convert(dbObject, entityInfo));
     }
 }

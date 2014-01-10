@@ -1,5 +1,6 @@
 package de.zeos.zen2.security;
 
+import java.lang.reflect.UndeclaredThrowableException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Date;
@@ -57,6 +58,8 @@ public class SecurityHandler {
             final Map<String, Object> auth;
             try {
                 auth = engine.toPlainMap(authenticator.authenticate(engine.createObject(credentials), appRegistry.getDBAccessor(app, engine), digester));
+            } catch (UndeclaredThrowableException ex) {
+                throw new ScriptException("Security handler does not implement the authenicate function properly.");
             } catch (Exception ex) {
                 if (ex.getMessage().contains("auth.error"))
                     throw new AuthenticationException();

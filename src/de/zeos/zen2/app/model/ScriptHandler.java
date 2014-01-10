@@ -1,13 +1,14 @@
 package de.zeos.zen2.app.model;
 
+import java.util.ArrayList;
 import java.util.List;
 
 public class ScriptHandler {
     private String id;
     private String source;
     private boolean valid;
-    private List<ScriptHandlerError> errors;
-    private List<ScriptHandlerConsoleEntry> consoleEntries;
+    private List<ScriptHandlerError> errors = new ArrayList<>();
+    private List<ScriptHandlerConsoleEntry> consoleEntries = new ArrayList<>();
 
     public String getId() {
         return id;

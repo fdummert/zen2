@@ -52,7 +52,7 @@ define(["dojo/i18n!../nls/messages", "de/zeos/cometd/sc/cometdDataSource", "requ
                                 autoFetchData: true,
                                 contextMenu: appMenu,
                                 recordClick: function(viewer, record) {
-                                    content.addMember(isc.Label.create({contents: "click", height: 10}));
+                                    openModule("appManagement", record);
                                 }
                             }),
                             isc.Button.create({title: msgs.logout, width: 250, height: 20, click: function() { cm.stop(); }})

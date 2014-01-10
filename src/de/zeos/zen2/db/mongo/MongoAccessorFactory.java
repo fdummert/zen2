@@ -7,10 +7,9 @@ import org.springframework.data.mongodb.core.SimpleMongoDbFactory;
 
 import com.mongodb.Mongo;
 
-import de.zeos.db.DBAccessor;
-import de.zeos.db.mongo.MongoAccessor;
 import de.zeos.script.ScriptEngineFacade;
 import de.zeos.zen2.app.ScriptMongoAccessor;
+import de.zeos.zen2.db.DBAccessor;
 import de.zeos.zen2.db.DBAccessorFactory;
 import de.zeos.zen2.db.InternalDBAccessor;
 

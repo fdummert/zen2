@@ -6,6 +6,7 @@ public class DataType {
     private Enumeration enumeration;
     private Entity refEntity;
     private boolean lazy;
+    private boolean cascade;
 
     public DataClass getDataClass() {
         return dataClass;
@@ -45,5 +46,13 @@ public class DataType {
 
     public void setLazy(boolean lazy) {
         this.lazy = lazy;
+    }
+
+    public boolean isCascade() {
+        return cascade;
+    }
+
+    public void setCascade(boolean cascade) {
+        this.cascade = cascade;
     }
 }

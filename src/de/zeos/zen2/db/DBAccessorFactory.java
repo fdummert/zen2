@@ -1,6 +1,5 @@
 package de.zeos.zen2.db;
 
-import de.zeos.db.DBAccessor;
 import de.zeos.script.ScriptEngineFacade;
 
 public interface DBAccessorFactory {

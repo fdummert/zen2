@@ -17,5 +17,5 @@
             </bean>        
         </mvc:message-converters>
     </mvc:annotation-driven>
-    <context:component-scan base-package="de.zeos.ctrl"/>
+    <context:component-scan base-package="de.zeos.zen2.ctrl"/>
 </beans>

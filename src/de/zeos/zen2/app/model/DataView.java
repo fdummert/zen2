@@ -1,6 +1,5 @@
 package de.zeos.zen2.app.model;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 
@@ -19,10 +18,6 @@ public class DataView {
 
     private Set<CommandMode> allowedModes;
     private boolean pushable;
-
-    private String dataViewHandler;
-    private boolean dataViewHandlerValid;
-    private List<ScriptHandlerError> dataViewHandlerErrors = new ArrayList<>();
 
     public String getId() {
         return id;
@@ -78,29 +73,5 @@ public class DataView {
 
     public void setPushable(boolean pushable) {
         this.pushable = pushable;
-    }
-
-    public String getDataViewHandler() {
-        return dataViewHandler;
-    }
-
-    public void setDataViewHandler(String dataViewHandler) {
-        this.dataViewHandler = dataViewHandler;
-    }
-
-    public boolean isDataViewHandlerValid() {
-        return dataViewHandlerValid;
-    }
-
-    public void setDataViewHandlerValid(boolean dataViewHandlerValid) {
-        this.dataViewHandlerValid = dataViewHandlerValid;
-    }
-
-    public List<ScriptHandlerError> getDataViewHandlerErrors() {
-        return dataViewHandlerErrors;
-    }
-
-    public void setDataViewHandlerErrors(List<ScriptHandlerError> dataViewHandlerErrors) {
-        this.dataViewHandlerErrors = dataViewHandlerErrors;
     }
 }

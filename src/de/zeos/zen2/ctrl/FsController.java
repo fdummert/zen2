@@ -1,4 +1,4 @@
-package de.zeos.ctrl;
+package de.zeos.zen2.ctrl;
 
 import java.io.IOException;
 import java.io.InputStream;

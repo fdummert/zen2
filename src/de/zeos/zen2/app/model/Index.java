@@ -3,23 +3,13 @@ package de.zeos.zen2.app.model;
 import java.util.List;
 
 public class Index {
-    private String id;
-    private List<Field> fields;
+    private List<String> fields;
 
-    public String getId() {
-        return id;
-    }
-
-    public void setId(String id) {
-        this.id = id;
-    }
-
-    public List<Field> getFields() {
+    public List<String> getFields() {
         return fields;
     }
 
-    public void setFields(List<Field> fields) {
+    public void setFields(List<String> fields) {
         this.fields = fields;
     }
-
 }

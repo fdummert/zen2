@@ -1,8 +1,5 @@
 package de.zeos.zen2.ctrl;
 
-import java.util.ArrayList;
-import java.util.List;
-
 import javax.inject.Inject;
 
 import org.cometd.bayeux.server.BayeuxServer;
@@ -17,6 +14,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 
 import de.zeos.zen2.app.ApplicationRegistry;
 import de.zeos.zen2.data.DataViewInfo;
+import de.zeos.zen2.data.ModelInfo;
 import de.zeos.zen2.db.InternalDBAccessor;
 import de.zeos.zen2.security.AuthSecurityPolicy;
 import de.zeos.zen2.security.Authorization;
@@ -32,7 +30,7 @@ public class DataViewController {
 
     @RequestMapping(value = "/{app}/{id}", method = RequestMethod.GET, produces = "application/json")
     @ResponseBody
-    public List<DataViewInfo> getDataViews(@PathVariable String app, @PathVariable String id) throws JsonProcessingException {
+    public ModelInfo getDataViews(@PathVariable String app, @PathVariable String id) throws JsonProcessingException {
         ServerSession session = this.bayeuxServer.getSession(id);
         if (session == null)
             throw new IllegalStateException("Invalid session");
@@ -40,11 +38,11 @@ public class DataViewController {
         if (!sessionApp.equals(app))
             throw new IllegalStateException("Invalid application");
         Authorization auth = (Authorization) session.getAttribute(AuthSecurityPolicy.AUTH_KEY);
-        List<DataViewInfo> views = new ArrayList<>();
+        ModelInfo modelInfo = new ModelInfo();
         InternalDBAccessor accessor = appRegistry.getInternalDBAccessor(app);
         for (String view : auth.getDataViews()) {
-            views.add(new DataViewInfo(accessor.getDataView(view)));
+            new DataViewInfo(modelInfo, accessor, accessor.getDataView(view));
         }
-        return views;
+        return modelInfo;
     }
 }

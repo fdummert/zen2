@@ -9,9 +9,6 @@ define(["dojo/i18n!../../nls/messages", "require"], function(msgs, require) {
                     warnOnRemoval: true,
                     warnOnRemovalMessage: msgs.warnRemove,
                     showResizeBar: true,
-                    fields: [
-                        { name: "id", title: msgs.name }
-                    ],
                     recordClick: function(viewer, rec) {
                         entityManageForm.editRecord(rec);
                     }

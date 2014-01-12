@@ -4,6 +4,8 @@ import java.util.List;
 
 import de.zeos.zen2.app.model.Application;
 import de.zeos.zen2.app.model.DataView;
+import de.zeos.zen2.app.model.Entity;
+import de.zeos.zen2.app.model.Enumeration;
 import de.zeos.zen2.app.model.ScriptHandler;
 
 public interface InternalDBAccessor {
@@ -18,4 +20,8 @@ public interface InternalDBAccessor {
     public ScriptHandler getScriptHandler(Object id);
 
     public void updateScriptHandler(ScriptHandler scriptHandler);
+
+    public Enumeration getEnumeration(String name);
+
+    public Entity getEntity(String refEntityId);
 }

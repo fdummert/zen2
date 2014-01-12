@@ -505,6 +505,10 @@ overwritten by _base.scss.
 /*============================================================
     3) Menus 
 ============================================================*/
+.menuBorder {
+  border: 1px solid #ababab;
+}
+
 .menuMain {
   background-image: url(./images/Menu/menu_background.png);
   background: url('data:image/svg+xml;base64,PD94bWwgdmVyc2lvbj0iMS4wIiBlbmNvZGluZz0idXRmLTgiPz4gPHN2ZyB2ZXJzaW9uPSIxLjEiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PGRlZnM+PGxpbmVhckdyYWRpZW50IGlkPSJncmFkIiBncmFkaWVudFVuaXRzPSJ1c2VyU3BhY2VPblVzZSIgeDE9IjAlIiB5MT0iNTAlIiB4Mj0iMTAwJSIgeTI9IjUwJSI+PHN0b3Agb2Zmc2V0PSIwJSIgc3RvcC1jb2xvcj0iI2Y1ZjVmNSIvPjxzdG9wIG9mZnNldD0iMTAwJSIgc3RvcC1jb2xvcj0iI2RiZGJkYiIvPjwvbGluZWFyR3JhZGllbnQ+PC9kZWZzPjxyZWN0IHg9IjAiIHk9IjAiIHdpZHRoPSIxMDAlIiBoZWlnaHQ9IjEwMCUiIGZpbGw9InVybCgjZ3JhZCkiIC8+PC9zdmc+IA==') padding-box;
@@ -521,11 +525,11 @@ overwritten by _base.scss.
 
 .menuMainRTL {
   background-image: url(./images/Menu/menu_background_rtl.png);
+  background-position: right;
 }
 
 .menuMain,
 .menuMainRTL {
-  border: 1px solid #ababab;
   background-color: white;
   background-repeat: repeat-y;
   background-attachment: scroll;
@@ -1173,7 +1177,7 @@ overwritten by _base.scss.
 
 .sectionHeaderDisabledopened,
 .sectionHeaderDisabledclosed {
-  background-color: #f5f5f5;
+  background-color: whitesmoke;
   *zoom: 1;
   filter: progid:DXImageTransform.Microsoft.gradient(gradientType=0, startColorstr='#FFF5F5F5', endColorstr='#FFEBEBEB');
   background-image: url('data:image/svg+xml;base64,PD94bWwgdmVyc2lvbj0iMS4wIiBlbmNvZGluZz0idXRmLTgiPz4gPHN2ZyB2ZXJzaW9uPSIxLjEiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PGRlZnM+PGxpbmVhckdyYWRpZW50IGlkPSJncmFkIiBncmFkaWVudFVuaXRzPSJ1c2VyU3BhY2VPblVzZSIgeDE9IjUwJSIgeTE9IjAlIiB4Mj0iNTAlIiB5Mj0iMTAwJSI+PHN0b3Agb2Zmc2V0PSIwJSIgc3RvcC1jb2xvcj0iI2Y1ZjVmNSIvPjxzdG9wIG9mZnNldD0iMjIlIiBzdG9wLWNvbG9yPSIjZjVmNWY1Ii8+PHN0b3Agb2Zmc2V0PSI0OCUiIHN0b3AtY29sb3I9IiNlYmViZWIiLz48c3RvcCBvZmZzZXQ9IjEwMCUiIHN0b3AtY29sb3I9IiNlYmViZWIiLz48L2xpbmVhckdyYWRpZW50PjwvZGVmcz48cmVjdCB4PSIwIiB5PSIwIiB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSJ1cmwoI2dyYWQpIiAvPjwvc3ZnPiA=');
@@ -1234,6 +1238,8 @@ overwritten by _base.scss.
 .selectItemTextError,
 .selectItemTextDisabled,
 .selectItemTextFocused,
+.selectItemTextHint,
+.selectItemTextDisabledHint,
 .comboBoxItemPendingText,
 .pickListCell,
 .pickListCellSelected,
@@ -1305,13 +1311,17 @@ overwritten by _base.scss.
 .selectItemTextError,
 .selectItemTextFocused,
 .selectItemTextDisabled,
-.selectItemTextHint {
+.selectItemTextHint,
+.selectItemTextDisabledHint {
   background: white;
   border: 1px solid #ababab;
+  -webkit-border-radius: 0;
+  border-radius: 0;
   color: black;
   padding: 4px 2px 4px 2px;
   -o-text-overflow: ellipsis;
   text-overflow: ellipsis;
+  -webkit-appearance: none;
 }
 
 .comboBoxItemPendingText {
@@ -1323,11 +1333,13 @@ overwritten by _base.scss.
 .selectItemTextError,
 .selectItemTextFocused,
 .selectItemTextDisabled,
-.selectItemTextHint {
+.selectItemTextHint,
+.selectItemTextDisabledHint {
   border-right: 0;
 }
 
-.textItem {
+.textItem,
+.textItemHint {
   border-bottom: 1px solid #dedede;
   border-left: 1px solid #dedede;
   border-right: 1px solid #dedede;
@@ -1336,14 +1348,18 @@ overwritten by _base.scss.
 
 .textItemDisabled,
 .textItemDisabledHint,
-.selectItemTextDisabled {
+.selectItemTextDisabled,
+.selectItemTextDisabledHint {
   background-color: white;
   border: 1px solid #ababab;
   color: #ababab;
 }
 
 .textItemHint,
-.selectItemTextHint {
+.selectItemTextHint,
+.nativeDateItemInFieldHint,
+.nativeTimeItemInFieldHint,
+.nativeDatetimeItemInFieldHint {
   color: #204269;
 }
 
@@ -1389,7 +1405,9 @@ overwritten by _base.scss.
 .selectItemText,
 .selectItemTextError,
 .selectItemTextFocused,
-.selectItemTextDisabled {
+.selectItemTextDisabled,
+.selectItemTextHint,
+.selectItemTextDisabledHint {
   padding-top: 4px;
   padding-bottom: 4px;
   padding-left: 2px;
@@ -1603,6 +1621,113 @@ overwritten by _base.scss.
 .spinnerItemDecreaseFocused,
 .spinnerItemDecreaseFocusedOver {
   background-position: -80px 0px;
+}
+
+.nativeDateItem,
+.nativeDateItemFocused,
+.nativeDateItemDisabled,
+.nativeDateItemDisabledHint,
+.nativeDateItemError,
+.nativeDateItemHint,
+.nativeTimeItem,
+.nativeTimeItemFocused,
+.nativeTimeItemDisabled,
+.nativeTimeItemDisabledHint,
+.nativeTimeItemError,
+.nativeTimeItemHint,
+.nativeDatetimeItem,
+.nativeDatetimeItemFocused,
+.nativeDatetimeItemDisabled,
+.nativeDatetimeItemDisabledHint,
+.nativeDatetimeItemError,
+.nativeDatetimeItemHint {
+  border: 1px solid #ababab;
+  padding: 4px 2px 4px 2px;
+  background: transparent;
+  color: transparent;
+}
+
+.nativeDateItem,
+.nativeTimeItem,
+.nativeDatetimeItem {
+  outline: 0;
+}
+
+.nativeDateItem,
+.nativeDateItemFocused::-webkit-calendar-picker-indicator,
+.nativeDateItemError::-webkit-calendar-picker-indicator,
+.nativeDateItemHint::-webkit-calendar-picker-indicator,
+.nativeTimeItem,
+.nativeDatetimeItem,
+.nativeDatetimeItemFocused::-webkit-calendar-picker-indicator,
+.nativeDatetimeItemError::-webkit-calendar-picker-indicator,
+.nativeDatetimeItemHint::-webkit-calendar-picker-indicator {
+  color: black;
+}
+
+.nativeDateItemFocused,
+.nativeTimeItemFocused,
+.nativeDatetimeItemFocused {
+  color: black;
+}
+
+.nativeDateItemInFieldHint,
+.nativeDateItemInFieldHintDisabled,
+.nativeTimeItemInFieldHint,
+.nativeTimeItemInFieldHintDisabled,
+.nativeDatetimeItemInFieldHint,
+.nativeDatetimeItemInFieldHintDisabled {
+  position: absolute;
+  left: 0;
+  display: inline-block;
+  padding-right: 3px;
+  padding-left: 3px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  z-index: -1;
+}
+
+.nativeDateItemInFieldHint,
+.nativeDateItemInFieldHintDisabled,
+.nativeDatetimeItemInFieldHint,
+.nativeDatetimeItemInFieldHintDisabled {
+  right: 30px;
+}
+
+.nativeTimeItemInFieldHint,
+.nativeTimeItemInFieldHintDisabled {
+  right: 20px;
+}
+
+.nativeDateItemDisabled,
+.nativeDateItemDisabledHint::-webkit-calendar-picker-indicator,
+.nativeDateItemInFieldHintDisabled,
+.nativeTimeItemDisabled,
+.nativeTimeItemInFieldHintDisabled,
+.nativeDatetimeItemDisabled,
+.nativeDatetimeItemDisabledHint::-webkit-calendar-picker-indicator,
+.nativeDatetimeItemInFieldHintDisabled {
+  color: #ababab;
+}
+
+.nativeDateItem,
+.nativeDateItemHint,
+.nativeTimeItem,
+.nativeTimeItemHint,
+.nativeDatetimeItem,
+.nativeDatetimeItemHint {
+  border-bottom: 1px solid #dedede;
+  border-left: 1px solid #dedede;
+  border-right: 1px solid #dedede;
+  border-top: 1px solid #ababab;
+}
+
+.nativeDateItemDisabled::-webkit-calendar-picker-indicator,
+.nativeDateItemDisabledHint::-webkit-calendar-picker-indicator,
+.nativeDatetimeItemDisabled::-webkit-calendar-picker-indicator,
+.nativeDatetimeItemDisabledHint::-webkit-calendar-picker-indicator {
+  background: none;
 }
 
 /*============================================================
@@ -1964,12 +2089,12 @@ overwritten by _base.scss.
 
 /* CSS3 Mode */
 .hSliderTrack {
-  background: #f5f5f5;
+  background: whitesmoke;
   border: 1px solid #d4d4d4;
 }
 
 .vSliderTrack {
-  background: #f5f5f5;
+  background: whitesmoke;
   border: 1px solid #d4d4d4;
 }
 
@@ -2153,7 +2278,8 @@ overwritten by _base.scss.
 }
 
 .dragLine {
-  border-bottom: 2px dotted #ff7a75;
+  border-top: 2px dotted #ff7a75;
+  pointer-events: none;
 }
 
 /* for filterEditor */
@@ -2395,7 +2521,7 @@ overwritten by _base.scss.
 .headerButtonSelectedDown,
 .sorterButtonSelectedOver,
 .sorterButtonSelectedDown {
-  background-color: #f0f8ff;
+  background-color: aliceblue;
   color: black;
   font-family: Arial, Verdana, sans-serif;
   font-size: 11px;
@@ -2768,9 +2894,9 @@ overwritten by _base.scss.
   background-image: -o-linear-gradient(bottom, #f7f7f7 0%, #f7f7f7 2%, #f2f2f2 2%, #e0e0e0 100%);
   background-image: linear-gradient(bottom, #f7f7f7 0%, #f7f7f7 2%, #f2f2f2 2%, #e0e0e0 100%);
   border: 1px solid #ababab;
-  -webkit-box-shadow: #fffafa 0 1px 0 inset;
-  -moz-box-shadow: #fffafa 0 1px 0 inset;
-  box-shadow: #fffafa 0 1px 0 inset;
+  -webkit-box-shadow: snow 0 1px 0 inset;
+  -moz-box-shadow: snow 0 1px 0 inset;
+  box-shadow: snow 0 1px 0 inset;
 }
 
 .toolStripVertical {
@@ -5058,6 +5184,7 @@ IIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIII
   font-size: 11px;
 }
 
+.calendarWorkdaySelected,
 .calendarCellSelected {
   background-color: #cccccc;
   border-bottom: 1px solid #ababab;
@@ -5219,7 +5346,7 @@ a.calMonthEventLink:active {
 
 /* ----event window---- */
 .eventWindow {
-  background-color: #f0f8ff;
+  background-color: aliceblue;
   border: 1px solid #d0dff6;
   font-family: Arial, Verdana, sans-serif;
   font-size: 9px;
@@ -5233,7 +5360,7 @@ a.calMonthEventLink:active {
 }
 
 .eventWindowBody {
-  background-color: #f0f8ff;
+  background-color: aliceblue;
   color: black;
   font-family: Arial, Verdana, sans-serif;
   font-size: 9px;

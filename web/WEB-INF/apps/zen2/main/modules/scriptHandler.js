@@ -60,7 +60,7 @@ define(["dojo/i18n!../../nls/messages"], function(msgs) {
                                                 showHeader: false,
                                                 height: "*",
                                                 fields: [
-                                                    { name: "date", type: "date" },
+                                                    { name: "date", type: "datetime" },
                                                     { name: "line", type: "text" }
                                                 ] 
                                             }),
@@ -76,9 +76,9 @@ define(["dojo/i18n!../../nls/messages"], function(msgs) {
                                                 showHeader: false,
                                                 height: "*",
                                                 fields: [
-                                                    { name: "date", type: "date" },
-                                                    { name: "lineNo" },
-                                                    { name: "colNo" },
+                                                    { name: "date", type: "datetime", width: 110 },
+                                                    { name: "lineNo", width: 60 },
+                                                    { name: "colNo", width: 60 },
                                                     { name: "error" }
                                                 ]
                                             }),

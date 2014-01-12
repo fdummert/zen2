@@ -4,20 +4,33 @@ import java.util.List;
 
 import de.zeos.zen2.app.model.DataClass;
 import de.zeos.zen2.app.model.DataType;
-import de.zeos.zen2.app.model.Enumeration;
 import de.zeos.zen2.app.model.FieldView;
 import de.zeos.zen2.app.model.ScalarDataType;
+import de.zeos.zen2.db.InternalDBAccessor;
 
 public class DataTypeInfo {
+    private ModelInfo modelInfo;
+    private DataViewInfo dataViewInfo;
+
     private DataType dataType;
     private FieldView fieldView;
-    private EntityInfo entityInfo;
+    private String refEntityId;
+    private String enumerationId;
 
-    public DataTypeInfo(DataType dataType, FieldView fieldView, String prefix, String fieldName, List<FieldView> fieldViews) {
+    public DataTypeInfo(ModelInfo modelInfo, DataViewInfo dataViewInfo, InternalDBAccessor accessor, DataType dataType, FieldView fieldView, String prefix, String fieldName, List<FieldView> fieldViews) {
+        this.modelInfo = modelInfo;
+        this.dataViewInfo = dataViewInfo;
         this.dataType = dataType;
         this.fieldView = fieldView;
-        if (dataType.getRefEntity() != null)
-            this.entityInfo = new EntityInfo(this.dataType.getRefEntity(), prefix.length() == 0 ? fieldName : prefix + "." + fieldName, fieldViews);
+        this.enumerationId = dataType.getEnumerationId();
+        if (enumerationId != null && modelInfo.getEnumerations().get(enumerationId) == null)
+            modelInfo.addEnumeration(accessor.getEnumeration(enumerationId));
+        this.refEntityId = dataType.getRefEntityId();
+        if (refEntityId != null) {
+            if (modelInfo.getEntity(dataViewInfo.getId(), refEntityId) == null) {
+                modelInfo.addEntity(dataViewInfo, new EntityInfo(modelInfo, dataViewInfo, accessor, accessor.getEntity(refEntityId), prefix.length() == 0 ? fieldName : prefix + "." + fieldName, fieldViews));
+            }
+        }
     }
 
     public DataClass getDataClass() {
@@ -28,12 +41,16 @@ public class DataTypeInfo {
         return this.dataType.getType();
     }
 
-    public Enumeration getEnumeration() {
-        return this.dataType.getEnumeration();
+    public String getEnumerationId() {
+        return enumerationId;
     }
 
-    public EntityInfo getRefEntity() {
-        return this.entityInfo;
+    public String getRefEntityId() {
+        return refEntityId;
+    }
+
+    public EntityInfo resolveRefEntity() {
+        return this.modelInfo.getEntity(this.dataViewInfo.getId(), refEntityId);
     }
 
     public boolean isLazy() {

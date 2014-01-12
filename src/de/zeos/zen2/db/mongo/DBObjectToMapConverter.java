@@ -33,7 +33,7 @@ public class DBObjectToMapConverter implements Converter<DBObject, Map<String, O
                         convertedValue = converter.convert(convertedValue, result, key, contexts[0]);
                     }
                 }
-                if (value instanceof DBObject) {
+                if (convertedValue instanceof DBObject) {
                     convertedValue = convert((DBObject) convertedValue, contexts);
                 }
                 if (convertedValue != value)

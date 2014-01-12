@@ -1,15 +1,16 @@
 package de.zeos.zen2.data;
 
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 
 import de.zeos.zen2.app.model.DataClass;
 import de.zeos.zen2.app.model.Entity;
 import de.zeos.zen2.app.model.Field;
 import de.zeos.zen2.app.model.FieldView;
+import de.zeos.zen2.db.InternalDBAccessor;
 
 public class EntityInfo {
     private Entity entity;
@@ -17,8 +18,9 @@ public class EntityInfo {
     private LinkedHashMap<String, FieldInfo> fields = new LinkedHashMap<>();
     private String pkFieldName;
 
-    public EntityInfo(Entity entity, String prefix, List<FieldView> fieldViews) {
+    public EntityInfo(ModelInfo modelInfo, DataViewInfo dataViewInfo, InternalDBAccessor accessor, Entity entity, String prefix, List<FieldView> fieldViews) {
         this.entity = entity;
+        modelInfo.addEntity(dataViewInfo, this);
         this.prefix = prefix;
         boolean processFieldViews = !fieldViews.isEmpty();
         for (Field f : entity.getFields()) {
@@ -39,13 +41,13 @@ public class EntityInfo {
                     add = false;
             }
             if (add) {
-                this.fields.put(f.getName(), new FieldInfo(f, fieldView, prefix, fieldViews));
+                this.fields.put(f.getName(), new FieldInfo(modelInfo, dataViewInfo, accessor, f, fieldView, prefix, fieldViews));
             }
         }
     }
 
-    public EntityInfo(Entity entity, List<FieldView> fields) {
-        this(entity, "", fields);
+    public EntityInfo(ModelInfo modelInfo, DataViewInfo dataViewInfo, InternalDBAccessor accessor, Entity entity, List<FieldView> fields) {
+        this(modelInfo, dataViewInfo, accessor, entity, "", fields);
     }
 
     public String getPkFieldName() {
@@ -60,19 +62,24 @@ public class EntityInfo {
         return this.entity.isEmbeddable();
     }
 
-    public Collection<FieldInfo> getFields() {
-        return this.fields.values();
+    public Map<String, FieldInfo> getFields() {
+        return this.fields;
     }
 
-    public List<String> getFieldNames() {
+    public List<String> getFieldNames(boolean withPrefix) {
         ArrayList<String> fields = new ArrayList<>();
-        String p = this.prefix;
-        if (p.length() > 0)
-            p = p + ".";
-        for (FieldInfo fi : getFields()) {
+        String p = "";
+        if (withPrefix) {
+            p = this.prefix;
+            if (p.length() > 0)
+                p = p + ".";
+        }
+        for (FieldInfo fi : getFields().values()) {
             fields.add(p + fi.getName());
             if (fi.getType().getDataClass() == DataClass.ENTITY) {
-                fields.addAll(fi.getType().getRefEntity().getFieldNames());
+                EntityInfo info = fi.getType().resolveRefEntity();
+                if (info.isEmbeddable())
+                    fields.addAll(info.getFieldNames(true));
             }
         }
         return fields;
@@ -86,7 +93,8 @@ public class EntityInfo {
             FieldInfo fv = fields.get(prop);
             if (fv.getType().getDataClass() != DataClass.ENTITY)
                 return null;
-            return fv.getType().getRefEntity().getField(path);
+            EntityInfo info = fv.getType().resolveRefEntity();
+            return info.getField(path);
         }
         return fields.get(path);
     }

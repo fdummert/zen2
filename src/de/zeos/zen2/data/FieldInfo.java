@@ -4,16 +4,17 @@ import java.util.List;
 
 import de.zeos.zen2.app.model.Field;
 import de.zeos.zen2.app.model.FieldView;
+import de.zeos.zen2.db.InternalDBAccessor;
 
 public class FieldInfo {
     private Field field;
     private FieldView fieldView;
     private DataTypeInfo dataTypeInfo;
 
-    public FieldInfo(Field field, FieldView fieldView, String prefix, List<FieldView> fieldViews) {
+    public FieldInfo(ModelInfo modelInfo, DataViewInfo dataViewInfo, InternalDBAccessor accessor, Field field, FieldView fieldView, String prefix, List<FieldView> fieldViews) {
         this.field = field;
         this.fieldView = fieldView;
-        this.dataTypeInfo = new DataTypeInfo(field.getType(), fieldView, prefix, field.getName(), fieldViews);
+        this.dataTypeInfo = new DataTypeInfo(modelInfo, dataViewInfo, accessor, field.getType(), fieldView, prefix, field.getName(), fieldViews);
     }
 
     public String getName() {

@@ -5,14 +5,16 @@ import java.util.List;
 
 import de.zeos.zen2.app.model.DataView;
 import de.zeos.zen2.app.model.FieldView;
+import de.zeos.zen2.db.InternalDBAccessor;
 
 public class DataViewInfo {
     private DataView dataView;
     private EntityInfo entity;
 
-    public DataViewInfo(DataView dataView) {
+    public DataViewInfo(ModelInfo modelInfo, InternalDBAccessor accessor, DataView dataView) {
         this.dataView = dataView;
-        this.entity = new EntityInfo(dataView.getEntity(), dataView.getFields() == null ? new ArrayList<FieldView>() : new ArrayList<FieldView>(dataView.getFields()));
+        modelInfo.addDataView(this);
+        this.entity = new EntityInfo(modelInfo, this, accessor, dataView.getEntity(), dataView.getFields() == null ? new ArrayList<FieldView>() : new ArrayList<FieldView>(dataView.getFields()));
     }
 
     public String getId() {

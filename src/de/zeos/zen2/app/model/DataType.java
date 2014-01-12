@@ -3,9 +3,9 @@ package de.zeos.zen2.app.model;
 public class DataType {
     private DataClass dataClass;
     private ScalarDataType type;
-    private Enumeration enumeration;
-    private Entity refEntity;
-    private boolean lazy;
+    private String enumerationId;
+    private String refEntityId;
+    private boolean lazy = true;
     private boolean cascade;
 
     public DataClass getDataClass() {
@@ -24,20 +24,20 @@ public class DataType {
         this.type = type;
     }
 
-    public Enumeration getEnumeration() {
-        return enumeration;
+    public String getEnumerationId() {
+        return enumerationId;
     }
 
-    public void setEnumeration(Enumeration enumeration) {
-        this.enumeration = enumeration;
+    public void setEnumerationId(String enumerationId) {
+        this.enumerationId = enumerationId;
     }
 
-    public Entity getRefEntity() {
-        return refEntity;
+    public String getRefEntityId() {
+        return refEntityId;
     }
 
-    public void setRefEntity(Entity refEntity) {
-        this.refEntity = refEntity;
+    public void setRefEntityId(String refEntityId) {
+        this.refEntityId = refEntityId;
     }
 
     public boolean isLazy() {

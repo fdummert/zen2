@@ -173,7 +173,7 @@ with (theWindow) {
         if (isc.Menu) {
             isc.Menu.addProperties({
                 bodyBackgroundColor:null,
-                bodyStyleName:"gridBody",
+                bodyStyleName:"menuBody",
                 cellHeight:22,
                 checkmarkDisabledImage:{src:"[SKIN]check_disabled.png", width:7, height:6},
                 checkmarkImage:{src:"[SKIN]check.png", width:9, height:8},
@@ -521,6 +521,7 @@ with (theWindow) {
                 height:22,
                 pickerIconSrc:"[SKIN]/pickers/comboBoxPicker.png",
                 pickerIconWidth:18,
+                valueIconSize:12,
                 showFocusedPickerIcon:false,
                 textBoxStyle:"selectItemText"
             });
@@ -560,7 +561,7 @@ with (theWindow) {
                 textBoxStyle:"selectItemText"
             });
 
-            isc.SpinnerItem.INCREASE_ICON = isc.addProperties(isc.SpinnerItem.INCREASE_ICON,
+            isc.SpinnerItem.changeDefaults("increaseIconDefaults",
             {
                 height:11,
                 imgOnly:true,
@@ -570,7 +571,7 @@ with (theWindow) {
                 width:16
             });
 
-            isc.SpinnerItem.DECREASE_ICON = isc.addProperties(isc.SpinnerItem.DECREASE_ICON,
+            isc.SpinnerItem.changeDefaults("decreaseIconDefaults",
             {
                 height:11,
                 imgOnly:true,
@@ -1323,7 +1324,7 @@ with (theWindow) {
             submenuDisabledImage:{src:"[SKIN]submenu_disabled.png", height:7, width:4},
 	        checkmarkImage:{src:"[SKIN]check.png", width:9, height:8},
 	        checkmarkDisabledImage:{src:"[SKIN]check_disabled.png", width:7, height:6},
-            bodyStyleName:"gridBody",
+            bodyStyleName:"menuBody",
 			iconBodyStyleName:"menuMain",
             bodyBackgroundColor:null
         });
@@ -1515,7 +1516,8 @@ with (theWindow) {
         showFocusedPickerIcon:false,
         pickerIconSrc:"[SKIN]/pickers/comboBoxPicker.png",
         height:22,
-        pickerIconWidth:18
+        pickerIconWidth:18,
+        valueIconSize:12
     })}
 
     if (isc.ComboBoxItem) {isc.ComboBoxItem.addProperties({
@@ -1545,7 +1547,7 @@ with (theWindow) {
             textBoxStyle:"selectItemText",
             height:22
         });
-        isc.SpinnerItem.INCREASE_ICON = isc.addProperties(isc.SpinnerItem.INCREASE_ICON, {
+        isc.SpinnerItem.changeDefaults("increaseIconDefaults", {
             width:16,
             height:11,
             showFocused:true,
@@ -1553,7 +1555,7 @@ with (theWindow) {
             imgOnly:true,
             src:"[SKIN]/DynamicForm/spinner_control_increase.png"
         });
-        isc.SpinnerItem.DECREASE_ICON = isc.addProperties(isc.SpinnerItem.DECREASE_ICON, {
+        isc.SpinnerItem.changeDefaults("decreaseIconDefaults", {
             width:16,
             height:11,
             showFocused:true,
@@ -1807,6 +1809,11 @@ with (theWindow) {
     //----------------------------------------
     // 6) TabSets
     //----------------------------------------
+    if (isc.TabBar) {
+        isc.TabBar.changeDefaults("tabDefaults", {
+            showFocusOutline: !isc.Browser.isSafari
+        });
+    }
     if (isc.TabSet && useSpriting) {
         isc.TabSet.addMethods({
             getScrollerBackImgName : function skin_TabSet_getScrollerBackImgName() {
@@ -1847,6 +1854,15 @@ with (theWindow) {
     }
 
     //----------------------------------------
+    // 10) Menus
+    //----------------------------------------
+    if (isc.Menu) {
+        isc.Menu.addProperties({
+            styleName: "menuBorder"
+        });
+    }
+
+    //----------------------------------------
     // 12) ListGrids
     //----------------------------------------
     if (isc.ListGrid && useSpriting) {
@@ -1863,7 +1879,7 @@ with (theWindow) {
     //----------------------------------------
     // 14) Form controls
     //----------------------------------------
-    if (isc.ComboBoxItem && useSpriting) {
+    if (isc.ComboBoxItem) {
         isc.ComboBoxItem.addProperties({
             showFocusedPickerIcon: false
         });
@@ -1906,14 +1922,14 @@ with (theWindow) {
         }
     }
     if (isc.SpinnerItem) {
-        isc.SpinnerItem.INCREASE_ICON = isc.addProperties(isc.SpinnerItem.INCREASE_ICON, {
+        isc.SpinnerItem.changeDefaults("increaseIconDefaults", {
             width:16,
             height:11,
             showOver:false,
             showFocused:true,
             showFocusedWithItem:false
         });
-        isc.SpinnerItem.DECREASE_ICON = isc.addProperties(isc.SpinnerItem.DECREASE_ICON, {
+        isc.SpinnerItem.changeDefaults("decreaseIconDefaults", {
             width:16,
             height:11,
             showOver:false,
@@ -1921,11 +1937,11 @@ with (theWindow) {
             showFocusedWithItem:false
         });
         if (useSpriting) {
-            isc.SpinnerItem.INCREASE_ICON = isc.addProperties(isc.SpinnerItem.INCREASE_ICON, {
+            isc.SpinnerItem.changeDefaults("increaseIconDefaults", {
                 src:"blank",
                 baseStyle:"spinnerItemIncrease"
             });
-            isc.SpinnerItem.DECREASE_ICON = isc.addProperties(isc.SpinnerItem.DECREASE_ICON, {
+            isc.SpinnerItem.changeDefaults("decreaseIconDefaults", {
                 src:"blank",
                 baseStyle:"spinnerItemDecrease"
             });

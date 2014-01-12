@@ -6,15 +6,15 @@ db.enumeration.insert( { _id: "commandModes", constants: [ "CREATE", "READ", "UP
 
 db.entity.insert( { _id: "application", embeddable: false, fields: [
       { name: "_id", pk: true, mandatory: true, type: { dataClass: "SCALAR", type: "STRING" } }, 
-      { name: "securityMode", type: { dataClass: "ENUM", enumeration: { $ref: "enumeration", $id: "securityModes"} }}, 
-      { name: "securityHandler", type: { dataClass: "ENTITY", refEntity: { $ref: "entity", $id: "scriptHandler" }, lazy: false, cascade: true } }
+      { name: "securityMode", type: { dataClass: "ENUM", enumerationId: "securityModes" }}, 
+      { name: "securityHandler", type: { dataClass: "ENTITY", refEntityId: "scriptHandler", lazy: false, cascade: true } }
  ], _class: "de.zeos.zen2.app.model.Entity" } );
 
 db.entity.insert( { _id: "entity", embeddable: false, fields: [
       { name: "_id", pk: true, mandatory: true, type: { dataClass: "SCALAR", type: "STRING" } }, 
       { name: "embeddable", mandatory: true, type: { dataClass: "SCALAR", type: "BOOL" } },
-      { name: "fields", type: { dataClass: "LIST", refEntity: { $ref: "entity", $id: "field"} } },
-      { name: "indexes", type: { dataClass: "LIST", refEntity: { $ref: "entity", $id: "index"} } }
+      { name: "fields", type: { dataClass: "LIST", refEntityId: "field" } },
+      { name: "indexes", type: { dataClass: "LIST", refEntityId: "index" } }
  ], _class: "de.zeos.zen2.app.model.Entity" } );
 
 db.entity.insert( { _id: "field", embeddable: true, fields: [
@@ -22,14 +22,14 @@ db.entity.insert( { _id: "field", embeddable: true, fields: [
       { name: "pk", mandatory: true, type: { dataClass: "SCALAR", type: "BOOL" } },
       { name: "mandatory", mandatory: true, type: { dataClass: "SCALAR", type: "BOOL" } },
       { name: "readOnly", mandatory: true, type: { dataClass: "SCALAR", type: "BOOL" } },
-      { name: "type", type: { dataClass: "ENTITY", refEntity: { $ref: "entity", $id: "dataType"} } }
+      { name: "type", type: { dataClass: "ENTITY", refEntityId: "dataType" } }
  ], _class: "de.zeos.zen2.app.model.Entity" } );
 
 db.entity.insert( { _id: "dataType", embeddable: true, fields: [
-      { name: "dataClass", mandatory: true, type: { dataClass: "ENUM", enumeration: { $ref: "enumeration", $id: "dataClasses"} }},
-      { name: "type", type: { dataClass: "ENUM", enumeration: { $ref: "enumeration", $id: "scalarDataTypes"} }},
-      { name: "enumeration", type: { dataClass: "ENTITY", refEntity: { $ref: "entity", $id: "enumeration"} } },
-      { name: "refEntity", type: { dataClass: "ENTITY", refEntity: { $ref: "entity", $id: "entity"} } },
+      { name: "dataClass", mandatory: true, type: { dataClass: "ENUM", enumerationId: "dataClasses" }},
+      { name: "type", type: { dataClass: "ENUM", enumerationId: "scalarDataTypes" }},
+      { name: "enumerationId", type: { dataClass: "SCALAR", type: "STRING" } },
+      { name: "refEntityId", type: { dataClass: "SCALAR", type: "STRING" } },
       { name: "lazy", type: { dataClass: "SCALAR", type: "BOOL" } },
       { name: "cascade", type: { dataClass: "SCALAR", type: "BOOL" } }
 ], _class: "de.zeos.zen2.app.model.Entity" } );
@@ -47,8 +47,8 @@ db.entity.insert( { _id: "scriptHandler", embeddable: false, fields: [
       { name: "_id", pk: true, mandatory: true, type: { dataClass: "SCALAR", type: "STRING" } }, 
       { name: "source", mandatory: true, type: { dataClass: "SCALAR", type: "STRING" } }, 
       { name: "valid", mandatory: true, type: { dataClass: "SCALAR", type: "BOOL" }, readOnly: true },
-      { name: "errors", type: { dataClass: "LIST", refEntity: { $ref: "entity", $id: "scriptHandlerError"} } },
-      { name: "consoleEntries", type: { dataClass: "LIST", refEntity: { $ref: "entity", $id: "scriptHandlerConsoleEntry"} } }
+      { name: "errors", type: { dataClass: "LIST", refEntityId: "scriptHandlerError" } },
+      { name: "consoleEntries", type: { dataClass: "LIST", refEntityId: "scriptHandlerConsoleEntry" } }
  ], _class: "de.zeos.zen2.app.model.Entity" } );
 
 db.entity.insert( { _id: "scriptHandlerError", embeddable: true, fields: [
@@ -65,11 +65,11 @@ db.entity.insert( { _id: "scriptHandlerConsoleEntry", embeddable: true, fields: 
 
 db.entity.insert( { _id: "dataView", embeddable: false, fields: [
        { name: "_id", pk: true, mandatory: true, type: { dataClass: "SCALAR", type: "STRING" } }, 
-       { name: "entity", mandatory: true, type: { dataClass: "ENTITY", refEntity: { $ref: "entity", $id: "entity"} } },
-       { name: "fields", type: { dataClass: "LIST", refEntity: { $ref: "entity", $id: "fieldView"} } },
+       { name: "entity", mandatory: true, type: { dataClass: "ENTITY", refEntityId: "entity" } },
+       { name: "fields", type: { dataClass: "LIST", refEntityId: "fieldView" } },
        { name: "scope", type: { dataClass: "SCALAR", type: "STRING" } },
        { name: "pushScopes", type: { dataClass: "LIST", type: "STRING" } },
-       { name: "allowedModes", type: { dataClass: "LIST", enumeration: { $ref: "enumeration", $id: "commandModes"} } },
+       { name: "allowedModes", type: { dataClass: "LIST", enumerationId: "commandModes" } },
        { name: "pushable", mandatory: true, type: { dataClass: "SCALAR", type: "BOOL" } }
 ], _class: "de.zeos.zen2.app.model.Entity" } );
 
@@ -85,3 +85,5 @@ db.dataView.insert( { _id: "appView", entity: { $ref: "entity", $id: "applicatio
 db.dataView.insert( { _id: "appManageView", entity: { $ref: "entity", $id: "application"}, allowedModes: ["CREATE", "READ", "UPDATE", "DELETE"], _class: "de.zeos.zen2.app.model.DataView" } );
 
 db.dataView.insert( { _id: "entityManageView", entity: { $ref: "entity", $id: "entity"}, allowedModes: ["CREATE", "READ", "UPDATE", "DELETE"], _class: "de.zeos.zen2.app.model.DataView" } );
+db.dataView.insert( { _id: "enumerationManageView", entity: { $ref: "entity", $id: "enumeration"}, allowedModes: ["CREATE", "READ", "UPDATE", "DELETE"], _class: "de.zeos.zen2.app.model.DataView" } );
+db.dataView.insert( { _id: "dataViewManageView", entity: { $ref: "entity", $id: "dataView"}, allowedModes: ["CREATE", "READ", "UPDATE", "DELETE"], _class: "de.zeos.zen2.app.model.DataView" } );

@@ -12,6 +12,7 @@ import org.springframework.stereotype.Component;
 
 import de.zeos.script.ScriptEngineFacade;
 import de.zeos.zen2.app.model.Application;
+import de.zeos.zen2.app.model.Application.SecurityMode;
 import de.zeos.zen2.app.model.DataView.CommandMode;
 import de.zeos.zen2.app.model.ScriptHandler;
 import de.zeos.zen2.data.EntityInfo;
@@ -67,7 +68,12 @@ public class ApplicationRegistry {
         accessor.addDBListener(new DBListener() {
             @Override
             public void notify(DBEvent event) {
-                if (event.getType() == Type.AFTER && event.getMode() != CommandMode.READ) {
+                if (event.getType() == Type.BEFORE && event.getMode() == CommandMode.UPDATE) {
+                    Map<String, Object> query = event.getQuery();
+                    SecurityMode mode = SecurityMode.valueOf((String) query.get("securityMode"));
+                    if (mode == SecurityMode.PUBLIC)
+                        query.put("securityHandler", null);
+                } else if (event.getType() == Type.AFTER && event.getMode() != CommandMode.READ) {
                     EntityInfo entityInfo = (EntityInfo) event.getSource();
                     Application app;
                     Map<String, Object> query = event.getQuery();

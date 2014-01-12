@@ -69,7 +69,8 @@ public class DataViewService {
 
             @SuppressWarnings("unchecked")
             Map<String, Object> criteria = (Map<String, Object>) data.get("criteria");
-            DataViewInfo dataViewInfo = new DataViewInfo(view);
+            ModelInfo modelInfo = new ModelInfo();
+            DataViewInfo dataViewInfo = new DataViewInfo(modelInfo, internalAccessor, view);
             EntityInfo entityInfo = dataViewInfo.getEntity();
             Object result = null;
             switch (mode) {

@@ -48,6 +48,11 @@ public class AuthSecurityPolicy implements SecurityPolicy {
             ext.put(AUTH_KEY, auth);
             ext.put(APP_KEY, app);
         } catch (AuthenticationException e) {
+            String msg = e.getMessage();
+            if (msg != null) {
+                ServerMessage.Mutable handshakeReply = message.getAssociated();
+                handshakeReply.put("exception", msg);
+            }
             return false;
         }
         return true;

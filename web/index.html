@@ -33,7 +33,9 @@
                     initialized : function(success, clientId, err, msg) {
                         console.log("init", success, clientId, err, msg);
                         if (!success) {
-                            if (err && err.indexOf("403:") == 0)
+                            if (msg.exception && msgs[msg.exception])
+                                err = msgs[msg.exception];
+                            else if (err && err.indexOf("403:") == 0)
                                 err = msgs.errLogin;
                             loginForm.getField("feedback").setValue("<span style='color:red'>" + err + "</span>");                                
                         }

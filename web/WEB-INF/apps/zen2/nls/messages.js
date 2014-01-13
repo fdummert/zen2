@@ -27,6 +27,7 @@ define({
         errDataViewGeneral: "Allgemeiner Zugriffsfehler auf die Datenbank",
         errDataViewModeNotAllowed: "Zugriff auf die Datenbank nicht erlaubt",
         errLogin: "Falsches Login/Passwort",
-        errMandatory: "Feld wird benötigt"
+        errMandatory: "Feld wird benötigt",
+        errSystem: "Systemfehler"
     }
 });

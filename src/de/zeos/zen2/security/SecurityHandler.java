@@ -39,17 +39,18 @@ public class SecurityHandler {
     private Logger logger = LoggerFactory.getLogger(getClass());
 
     public Authorization authenticate(final String app, Map<String, Object> credentials) throws AuthenticationException {
-        Application application = appRegistry.getApplication(app);
-        if (application.getSecurityMode() == SecurityMode.PUBLIC) {
-            final List<DataView> dataViews = appRegistry.getInternalDBAccessor(app).getDataViews();
-            return createAuthorization(app, null, Collections.singleton("**"), Collections.singleton("**"), dataViews);
-        }
-        ScriptHandler handler = application.getSecurityHandler();
-        if (!handler.isValid())
-            throw new AuthenticationException();
-
-        Digester digester = new Digester("SHA-256", 1024);
+        ScriptHandler handler = null;
         try {
+            Application application = appRegistry.getApplication(app);
+            if (application.getSecurityMode() == SecurityMode.PUBLIC) {
+                final List<DataView> dataViews = appRegistry.getInternalDBAccessor(app).getDataViews();
+                return createAuthorization(app, null, Collections.singleton("**"), Collections.singleton("**"), dataViews);
+            }
+            handler = application.getSecurityHandler();
+            if (!handler.isValid())
+                throw new AuthenticationException();
+
+            Digester digester = new Digester("SHA-256", 1024);
             ScriptEngineFacade engine = engineCreator.createEngine();
             engine.put("$console", new ScriptHandlerConsole(handler, appRegistry.getInternalDBAccessor(app)));
             engine.eval(handler.getSource());
@@ -98,7 +99,7 @@ public class SecurityHandler {
             throw new AuthenticationException();
         } catch (Exception ex) {
             logger.warn("General error", ex);
-            throw new AuthenticationException();
+            throw new AuthenticationException("errSystem");
         }
     }
 

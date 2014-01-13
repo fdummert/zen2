@@ -134,11 +134,13 @@ public class SecurityHandler {
             String scope = getScope(v.getScope(), data);
             channels.add(prefix + "req/" + v.getId() + scope);
             channels.add(prefix + "res/" + v.getId() + scope);
-            if (v.getPushScopes() != null && v.getPushScopes().size() > 0) {
-                for (String s : v.getPushScopes())
-                    channels.add(AuthSecurityPolicy.APP_CHANNEL + app + "/dv/push/" + v.getId() + getScope(s, data));
-            } else
-                channels.add(AuthSecurityPolicy.APP_CHANNEL + app + "/dv/push/" + v.getId());
+            if (v.isPushable()) {
+                if (v.getPushScopes() != null && v.getPushScopes().size() > 0) {
+                    for (String s : v.getPushScopes())
+                        channels.add(AuthSecurityPolicy.APP_CHANNEL + app + "/dv/push/" + v.getId() + getScope(s, data));
+                } else
+                    channels.add(AuthSecurityPolicy.APP_CHANNEL + app + "/dv/push/" + v.getId());
+            }
         }
         return new Authorization() {
             @Override

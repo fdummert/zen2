@@ -9,6 +9,11 @@ define(["dojo/i18n!../../nls/messages", "require"], function(msgs, require) {
                     warnOnRemoval: true,
                     warnOnRemovalMessage: msgs.warnRemove,
                     showResizeBar: true,
+                    fields: [
+                         { name: "_id" },
+                         { name: "embeddable" },
+                         { name: "system" }
+                    ],
                     recordClick: function(viewer, rec) {
                         entityManageForm.editRecord(rec);
                     }
@@ -16,13 +21,14 @@ define(["dojo/i18n!../../nls/messages", "require"], function(msgs, require) {
                 isc.DynamicForm.create({
                     ID: "entityManageForm",
                     dataSource: entityManageViewDS,
-                    useAllDataSourceFields: true
+                    useAllDataSourceFields: true,
+                    showComplexFieldsRecursively: true
                 }),
                 isc.HStack.create({
                     members: [
                         isc.Button.create({
                             title: msgs.add,
-                            click: function() { entityManageForm.editNewRecord(); }
+                            click: function() { entityManageForm.editNewRecord({_class: "de.zeos.zen2.app.model.Entity"}); }
                         }),
                         isc.Button.create({
                             title: msgs.save,
@@ -31,7 +37,7 @@ define(["dojo/i18n!../../nls/messages", "require"], function(msgs, require) {
                     ]
                 })
             ];
-            entityManageForm.editNewRecord();
+            entityManageForm.editNewRecord({_class: "de.zeos.zen2.app.model.Entity"});
             return list;
         }
     };

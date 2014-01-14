@@ -42,7 +42,7 @@ define(["./cometdDataSource"], function() {
                     title: msgs[entity.id + "_" + f.name] || msgs[f.name]
                 };
                 if (f.pk === true) field.primaryKey = true;
-                if (f.mandatory === true) field.required = true;
+                if (f.mandatory === true && f.type.type !== "BOOL") field.required = true;
                 if (f.readOnly === true) field.canEdit = false;
                 var type = null;
                 switch (f.type.dataClass) {

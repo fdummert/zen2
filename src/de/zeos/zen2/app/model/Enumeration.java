@@ -5,6 +5,7 @@ import java.util.List;
 public class Enumeration {
     private String id;
     private List<String> constants;
+    private boolean system;
 
     public String getId() {
         return id;
@@ -20,5 +21,13 @@ public class Enumeration {
 
     public void setConstants(List<String> constants) {
         this.constants = constants;
+    }
+
+    public boolean isSystem() {
+        return this.system;
+    }
+
+    public void setSystem(boolean system) {
+        this.system = system;
     }
 }

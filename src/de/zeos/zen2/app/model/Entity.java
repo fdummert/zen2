@@ -7,6 +7,7 @@ public class Entity {
     private List<Field> fields;
     private List<Index> indexes;
     private boolean embeddable;
+    private boolean system;
 
     public String getId() {
         return id;
@@ -38,5 +39,13 @@ public class Entity {
 
     public void setEmbeddable(boolean embeddable) {
         this.embeddable = embeddable;
+    }
+
+    public boolean isSystem() {
+        return this.system;
+    }
+
+    public void setSystem(boolean system) {
+        this.system = system;
     }
 }

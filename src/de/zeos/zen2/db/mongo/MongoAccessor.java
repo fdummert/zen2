@@ -142,11 +142,11 @@ public class MongoAccessor implements DBAccessor {
     }
 
     @Override
-    public boolean delete(Map<String, Object> query, EntityInfo entityInfo) {
+    public Map<String, Object> delete(Map<String, Object> query, EntityInfo entityInfo) {
         notifyListeners(CommandMode.DELETE, Type.BEFORE, entityInfo, query, null);
         boolean success = deleteInternal(queryConverter.convert(query), entityInfo, false);
         notifyListeners(CommandMode.DELETE, Type.AFTER, entityInfo, query, success);
-        return success;
+        return success ? query : null;
     }
 
     private boolean deleteInternal(DBObject dbObj, EntityInfo entityInfo, boolean notify) {
@@ -193,11 +193,11 @@ public class MongoAccessor implements DBAccessor {
     }
 
     @Override
-    public boolean update(Map<String, Object> query, EntityInfo entityInfo) {
+    public Map<String, Object> update(Map<String, Object> query, EntityInfo entityInfo) {
         notifyListeners(CommandMode.UPDATE, Type.BEFORE, entityInfo, query, null);
         boolean success = updateInternal(queryConverter.convert(query), entityInfo, false);
         notifyListeners(CommandMode.UPDATE, Type.AFTER, entityInfo, query, success);
-        return success;
+        return success ? query : null;
     }
 
     private boolean updateInternal(DBObject queryObj, EntityInfo entityInfo, boolean notify) {

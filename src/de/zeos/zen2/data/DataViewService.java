@@ -5,6 +5,7 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import javax.inject.Inject;
 
@@ -37,7 +38,15 @@ public class DataViewService {
     @Inject
     private ApplicationRegistry appRegistry;
 
+    private Map<String, Set<String>> internalFields = new HashMap<>();
+
     private Logger logger = LoggerFactory.getLogger(getClass());
+
+    public DataViewService() {
+        this.internalFields.put("entity", Collections.singleton("_class"));
+        this.internalFields.put("enumeration", Collections.singleton("_class"));
+        this.internalFields.put("dataView", Collections.singleton("_class"));
+    }
 
     @Listener("/service/**")
     protected void receiveOnDsChannel(ServerSession remote, Mutable message) {
@@ -74,33 +83,33 @@ public class DataViewService {
             EntityInfo entityInfo = dataViewInfo.getEntity();
             Object result = null;
             switch (mode) {
-            case CREATE:
-                filterCriteria(criteria, dataViewInfo, true, true);
-                result = accessor.insert(criteria, entityInfo);
-                break;
-            case READ:
-                filterCriteria(criteria, dataViewInfo, false, false);
-                Integer pageFrom = (Integer) data.get("pageFrom");
-                Integer pageTo = (Integer) data.get("pageTo");
-                String[] sorts = (String[]) data.get("sorts");
-                Integer count = null;
-                List<Map<String, Object>> rows = accessor.select(criteria, pageFrom, pageTo, sorts, entityInfo);
-                if (pageFrom != null || pageTo != null) {
-                    count = new Long(accessor.count(criteria, entityInfo)).intValue();
-                    res.put("pageFrom", pageFrom);
-                    res.put("pageTo", pageFrom + (rows == null ? 0 : rows.size() - 1));
-                    res.put("count", count);
-                }
-                result = rows;
-                break;
-            case UPDATE:
-                filterCriteria(criteria, dataViewInfo, true, true);
-                result = accessor.update(criteria, entityInfo);
-                break;
-            case DELETE:
-                filterCriteria(criteria, dataViewInfo, false, false);
-                result = accessor.delete(criteria, entityInfo);
-                break;
+                case CREATE:
+                    filterCriteria(criteria, dataViewInfo, true, true);
+                    result = accessor.insert(criteria, entityInfo);
+                    break;
+                case READ:
+                    filterCriteria(criteria, dataViewInfo, false, false);
+                    Integer pageFrom = (Integer) data.get("pageFrom");
+                    Integer pageTo = (Integer) data.get("pageTo");
+                    String[] sorts = (String[]) data.get("sorts");
+                    Integer count = null;
+                    List<Map<String, Object>> rows = accessor.select(criteria, pageFrom, pageTo, sorts, entityInfo);
+                    if (pageFrom != null || pageTo != null) {
+                        count = new Long(accessor.count(criteria, entityInfo)).intValue();
+                        res.put("pageFrom", pageFrom);
+                        res.put("pageTo", pageFrom + (rows == null ? 0 : rows.size() - 1));
+                        res.put("count", count);
+                    }
+                    result = rows;
+                    break;
+                case UPDATE:
+                    filterCriteria(criteria, dataViewInfo, true, true);
+                    result = accessor.update(criteria, entityInfo);
+                    break;
+                case DELETE:
+                    filterCriteria(criteria, dataViewInfo, false, false);
+                    result = accessor.delete(criteria, entityInfo);
+                    break;
             }
             res.put("result", result);
         } catch (IllegalStateException e) {
@@ -118,14 +127,20 @@ public class DataViewService {
         remote.deliver(this.serverSession, responseChannel, res, null);
     }
 
+    private boolean isInternalField(String entity, String field) {
+        return (this.internalFields.containsKey(entity) && this.internalFields.get(entity).contains(field));
+    }
+
     private void filterCriteria(Map<String, Object> criteria, DataViewInfo dataViewInfo, boolean removeRO, boolean checkMandatory) throws ValidationException {
         for (Iterator<String> iter = criteria.keySet().iterator(); iter.hasNext();) {
             String crit = iter.next();
-            FieldInfo f = dataViewInfo.getEntity().getField(crit);
-            if (f == null || (removeRO && !f.isPk() && f.isReadOnly())) {
-                iter.remove();
-            } else if (checkMandatory && f.isMandatory() && criteria.get(crit) == null)
-                throw new ValidationException(crit, "errMandatory");
+            if (!isInternalField(dataViewInfo.getEntity().getId(), crit)) {
+                FieldInfo f = dataViewInfo.getEntity().getField(crit);
+                if (f == null || (removeRO && !f.isPk() && f.isReadOnly())) {
+                    iter.remove();
+                } else if (checkMandatory && f.isMandatory() && criteria.get(crit) == null)
+                    throw new ValidationException(crit, "errMandatory");
+            }
         }
     }
 }

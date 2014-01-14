@@ -18,6 +18,7 @@ public class DataView {
 
     private Set<CommandMode> allowedModes;
     private boolean pushable;
+    private boolean system;
 
     public String getId() {
         return id;
@@ -73,5 +74,13 @@ public class DataView {
 
     public void setPushable(boolean pushable) {
         this.pushable = pushable;
+    }
+
+    public boolean isSystem() {
+        return this.system;
+    }
+
+    public void setSystem(boolean system) {
+        this.system = system;
     }
 }

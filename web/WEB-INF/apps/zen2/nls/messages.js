@@ -7,10 +7,14 @@ define({
         configure: "Konfigurieren",
         console: "Konsole",
         dataViews: "Datensichten",
+        embeddable: "Eingebettet",
         entities: "Klassen",
+        entity__id: "Klasse",
         enumerations: "Aufzählungen",
         errors: "Fehler",
+        fields: "Attribute",
         _id: "ID",
+        indexes: "Indexe",
         login: "Login",
         logout: "Logout",
         name: "Name",
@@ -28,6 +32,8 @@ define({
         errDataViewModeNotAllowed: "Zugriff auf die Datenbank nicht erlaubt",
         errLogin: "Falsches Login/Passwort",
         errMandatory: "Feld wird benötigt",
-        errSystem: "Systemfehler"
+        errSystem: "Systemfehler",
+        
+        warnRemove: "Soll dieser Eintrag wirklich gelöscht werden?"
     }
 });

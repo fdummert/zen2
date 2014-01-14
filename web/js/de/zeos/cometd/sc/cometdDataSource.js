@@ -24,6 +24,7 @@ define(["../cometdReqRes"], function(CometDRequestResponse) {
                     if (dsResponse.error) {
                         var err = dsResponse.error;
                         if (that.messageResolver) err = that.messageResolver(err);
+                        dsResponse.status = -1;
                         dsResponse.data = err;
                         
                     } else if (dsResponse.validationErrors) {
@@ -33,8 +34,10 @@ define(["../cometdReqRes"], function(CometDRequestResponse) {
                             if (that.messageResolver) err = that.messageResolver(err);
                             errors[field] = err;
                         }
+                        dsResponse.status = -4;
                         dsResponse.errors = errors;
                     } else if (dsResponse.result) {
+                        dsResponse.status = 0;
                         dsResponse.data = ds.recordsFromObjects(dsResponse.result);
                     }
                     this.finished();

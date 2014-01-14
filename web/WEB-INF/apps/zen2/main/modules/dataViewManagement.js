@@ -22,7 +22,7 @@ define(["dojo/i18n!../../nls/messages", "require"], function(msgs, require) {
                     members: [
                         isc.Button.create({
                             title: msgs.add,
-                            click: function() { dataViewManageForm.editNewRecord(); }
+                            click: function() { dataViewManageForm.editNewRecord({_class: "de.zeos.zen2.app.model.DataView"}); }
                         }),
                         isc.Button.create({
                             title: msgs.save,
@@ -31,7 +31,7 @@ define(["dojo/i18n!../../nls/messages", "require"], function(msgs, require) {
                     ]
                 })
             ];
-            dataViewManageForm.editNewRecord();
+            dataViewManageForm.editNewRecord({_class: "de.zeos.zen2.app.model.DataView"});
             return list;
         }
     };

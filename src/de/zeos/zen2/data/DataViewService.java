@@ -16,6 +16,7 @@ import org.cometd.bayeux.server.ServerMessage.Mutable;
 import org.cometd.bayeux.server.ServerSession;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.dao.DuplicateKeyException;
 import org.springframework.stereotype.Component;
 
 import de.zeos.script.ScriptEngineCreator;
@@ -116,6 +117,8 @@ public class DataViewService {
             res.put("error", e.getMessage());
         } catch (ValidationException e) {
             res.put("validationErrors", Collections.singletonMap(e.getProperty(), e.getMessage()));
+        } catch (DuplicateKeyException e) {
+            res.put("error", "errDataViewAlreadyExists");
         } catch (Exception e) {
             res.put("error", "errDataViewGeneral");
             logger.error("Exception while accessing database", e);

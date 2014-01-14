@@ -28,6 +28,7 @@ define({
         welcome: "Willkommen",
         
         errConnection: "Der Server ist nicht erreichbar. Bitte warten...",
+        errDataViewAlreadyExists: "Eintrag ist bereits vorhanden",
         errDataViewGeneral: "Allgemeiner Zugriffsfehler auf die Datenbank",
         errDataViewModeNotAllowed: "Zugriff auf die Datenbank nicht erlaubt",
         errLogin: "Falsches Login/Passwort",

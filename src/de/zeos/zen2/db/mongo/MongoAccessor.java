@@ -6,10 +6,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import org.springframework.data.authentication.UserCredentials;
 import org.springframework.data.mongodb.MongoDbFactory;
 import org.springframework.data.mongodb.core.MongoExceptionTranslator;
-import org.springframework.data.mongodb.core.SimpleMongoDbFactory;
 
 import com.mongodb.BasicDBObject;
 import com.mongodb.DB;
@@ -17,7 +15,6 @@ import com.mongodb.DBCollection;
 import com.mongodb.DBCursor;
 import com.mongodb.DBObject;
 import com.mongodb.DBRef;
-import com.mongodb.Mongo;
 import com.mongodb.WriteResult;
 
 import de.zeos.db.mongo.MapToDBObjectConverter;
@@ -38,10 +35,6 @@ public class MongoAccessor implements DBAccessor {
     private final MongoExceptionTranslator exceptionTranslator = new MongoExceptionTranslator();
 
     private HashMap<String, ArrayList<DBListener>> listeners = new HashMap<>();
-
-    public MongoAccessor(Mongo mongo, String app, String username, String password) {
-        this(new SimpleMongoDbFactory(mongo, app, new UserCredentials(username, password)));
-    }
 
     public MongoAccessor(MongoDbFactory factory) {
         this.factory = factory;

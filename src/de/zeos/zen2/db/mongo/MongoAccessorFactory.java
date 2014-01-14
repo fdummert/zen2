@@ -6,6 +6,7 @@ import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.core.SimpleMongoDbFactory;
 
 import com.mongodb.Mongo;
+import com.mongodb.WriteConcern;
 
 import de.zeos.script.ScriptEngineFacade;
 import de.zeos.zen2.app.ScriptMongoAccessor;
@@ -17,6 +18,12 @@ public class MongoAccessorFactory implements DBAccessorFactory {
     @Inject
     private Mongo mongo;
 
+    private WriteConcern writeConcern;
+
+    public void setWriteConcern(WriteConcern writeConcern) {
+        this.writeConcern = writeConcern;
+    }
+
     @Override
     public DBAccessor createScriptableDBAccessor(String app, ScriptEngineFacade facade) {
         return new ScriptMongoAccessor(new SimpleMongoDbFactory(mongo, app), facade);
@@ -24,11 +31,15 @@ public class MongoAccessorFactory implements DBAccessorFactory {
 
     @Override
     public DBAccessor createDBAccessor(String app) {
-        return new MongoAccessor(new SimpleMongoDbFactory(mongo, app));
+        SimpleMongoDbFactory factory = new SimpleMongoDbFactory(mongo, app);
+        factory.setWriteConcern(this.writeConcern);
+        return new MongoAccessor(factory);
     }
 
     @Override
     public InternalDBAccessor createInternalDBAccessor(String app) {
-        return new MongoInternalDBAccessor(new MongoTemplate(mongo, app));
+        MongoTemplate template = new MongoTemplate(mongo, app);
+        template.setWriteConcern(writeConcern);
+        return new MongoInternalDBAccessor(template);
     }
 }

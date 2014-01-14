@@ -1,4 +1,5 @@
 db.application.insert( { _id: "zen2", system: true, securityMode: "PUBLIC", securityHandler: null, _class: "de.zeos.zen2.app.model.Application" } );
+
 db.enumeration.insert( { _id: "securityModes", system: true, constants: [ "PUBLIC", "PROTECTED" ], _class: "de.zeos.zen2.app.model.Enumeration" } );
 db.enumeration.insert( { _id: "dataClasses", system: true, constants: [ "SCALAR", "ENUM", "LIST", "ENTITY" ], _class: "de.zeos.zen2.app.model.Enumeration" } );
 db.enumeration.insert( { _id: "scalarDataTypes", system: true, constants: [ "BOOL", "INT", "FLOAT", "DATE", "DATETIME", "TIME", "PASSWORD", "STRING" ], _class: "de.zeos.zen2.app.model.Enumeration" } );

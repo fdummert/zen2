@@ -57,6 +57,13 @@ define(["./cometdDataSource"], function() {
                     var refEntity = model.entities[dataViewName + ":" + f.type.refEntityId];
                     if (refEntity.embeddable === true || f.type.lazy === false) {
                         type = createNestedDS(model, dataViewName, refEntity);
+                        // SC 9.1 fails if value is null instead of undefined
+                        field.getFieldValue = function(record, fieldValue, field, fieldName) {
+                            var undef;
+                            if (fieldValue === null)
+                                return undef;
+                            return fieldValue;
+                        };
                     } else {
                         //FIXME: should be linked to a datasource
                         field.foreignKey = refEntity[refEntity.pkFieldName];

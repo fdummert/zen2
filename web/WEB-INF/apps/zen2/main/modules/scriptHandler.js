@@ -22,12 +22,17 @@ define(["dojo/i18n!../../nls/messages"], function(msgs) {
                                 members: [
                                     isc.Canvas.create({ID: "aceContainer", width: "100%", height: "*", redrawOnResize: false,
                                         getInnerHTML: function() {
-                                            return "<div id='aceeditor'></div>";
+                                            return "<div id='aceeditor' style='width:100%;height:100%';overflow:auto></div>";
                                         },
-                                        resized: function() {
-                                            this.containerResized();
-                                            if (editor != null)
-                                                editor.resize();
+                                        resizeTo: function(width, height) {
+                                            var editorElem = document.getElementById("aceeditor");
+                                            if (editorElem) {
+                                                editorElem.style.height = height + "px";
+                                                editorElem.style.width = width + "px";
+                                                if (editor != null)
+                                                    editor.resize();
+                                            }
+                                            return this.Super("resizeTo", arguments);
                                         },
                                         containerResized: function() {
                                             var editorElem = document.getElementById("aceeditor");

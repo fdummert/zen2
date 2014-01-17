@@ -87,7 +87,7 @@ public class SecurityHandler {
                 }
             }
             o = auth.get("data");
-            if (!(o instanceof Map))
+            if (o != null && !(o instanceof Map))
                 throw new ScriptException("Authentication data must be given as JavaScript object");
             @SuppressWarnings("unchecked")
             final Map<String, Object> data = (Map<String, Object>) o;

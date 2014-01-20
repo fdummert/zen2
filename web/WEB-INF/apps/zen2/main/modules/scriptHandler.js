@@ -45,7 +45,8 @@ define(["dojo/i18n!../../nls/messages"], function(msgs) {
                                     isc.Button.create({height: 15, title: msgs.apply,
                                         click: function() {
                                             if (scriptHandler == null)
-                                                scriptHandler = { source: editor.getValue() };
+                                                scriptHandler = { };
+                                            scriptHandler.source = editor.getValue();
                                             scriptHandlerWin.closeClick();
                                             cb(scriptHandler);
                                         }

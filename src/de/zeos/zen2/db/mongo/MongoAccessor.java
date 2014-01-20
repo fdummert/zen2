@@ -61,7 +61,7 @@ public class MongoAccessor implements DBAccessor {
 
     @Override
     public boolean exists(Map<String, Object> query, EntityInfo entityInfo) {
-        return existsInternal(queryConverter.convert(query), entityInfo);
+        return existsInternal(queryConverter.convert(query, entityInfo), entityInfo);
     }
 
     private boolean existsInternal(DBObject dbObj, EntityInfo entityInfo) {
@@ -78,7 +78,7 @@ public class MongoAccessor implements DBAccessor {
         try {
             DBCollection coll = getCollection(entityInfo.getId());
             notifyListeners(CommandMode.READ, Type.BEFORE, entityInfo, query, null);
-            DBObject resultObj = coll.findOne(queryConverter.convert(query), getFields(entityInfo));
+            DBObject resultObj = coll.findOne(queryConverter.convert(query, entityInfo), getFields(entityInfo));
             Map<String, Object> result = null;
             if (resultObj != null)
                 result = convert(resultObj, entityInfo);
@@ -94,7 +94,7 @@ public class MongoAccessor implements DBAccessor {
         try {
             DBCollection coll = getCollection(entityInfo.getId());
             notifyListeners(CommandMode.READ, Type.BEFORE, entityInfo, query, null);
-            DBCursor cursor = coll.find(queryConverter.convert(query), getFields(entityInfo));
+            DBCursor cursor = coll.find(queryConverter.convert(query, entityInfo), getFields(entityInfo));
             if (pageFrom != null)
                 cursor = cursor.skip(pageFrom);
             if (pageTo != null)
@@ -127,7 +127,7 @@ public class MongoAccessor implements DBAccessor {
     public long count(Map<String, Object> query, EntityInfo entityInfo) {
         try {
             DBCollection coll = getCollection(entityInfo.getId());
-            long cnt = coll.count(queryConverter.convert(query));
+            long cnt = coll.count(queryConverter.convert(query, entityInfo));
             return cnt;
         } catch (RuntimeException e) {
             throw potentiallyConvertRuntimeException(e);
@@ -137,7 +137,7 @@ public class MongoAccessor implements DBAccessor {
     @Override
     public Map<String, Object> delete(Map<String, Object> query, EntityInfo entityInfo) {
         notifyListeners(CommandMode.DELETE, Type.BEFORE, entityInfo, query, null);
-        boolean success = deleteInternal(queryConverter.convert(query), entityInfo, false);
+        boolean success = deleteInternal(queryConverter.convert(query, entityInfo), entityInfo, false);
         notifyListeners(CommandMode.DELETE, Type.AFTER, entityInfo, query, success);
         return success ? query : null;
     }
@@ -161,7 +161,7 @@ public class MongoAccessor implements DBAccessor {
     @Override
     public Map<String, Object> insert(Map<String, Object> query, EntityInfo entityInfo) {
         notifyListeners(CommandMode.CREATE, Type.BEFORE, entityInfo, query, null);
-        Object id = insertInternal(queryConverter.convert(query), entityInfo, false);
+        Object id = insertInternal(queryConverter.convert(query, entityInfo), entityInfo, false);
         query.put(entityInfo.getPkFieldName(), id);
         notifyListeners(CommandMode.CREATE, Type.AFTER, entityInfo, query, id);
         return query;
@@ -188,7 +188,7 @@ public class MongoAccessor implements DBAccessor {
     @Override
     public Map<String, Object> update(Map<String, Object> query, EntityInfo entityInfo) {
         notifyListeners(CommandMode.UPDATE, Type.BEFORE, entityInfo, query, null);
-        boolean success = updateInternal(queryConverter.convert(query), entityInfo, false);
+        boolean success = updateInternal(queryConverter.convert(query, entityInfo), entityInfo, false);
         notifyListeners(CommandMode.UPDATE, Type.AFTER, entityInfo, query, success);
         return success ? query : null;
     }
@@ -252,6 +252,7 @@ public class MongoAccessor implements DBAccessor {
                 if (ref != null) {
                     if (!fi.getType().isLazy()) {
                         DBObject refObj = (DBObject) ref;
+                        // FIXME: check for id only, not complete query!
                         if (existsInternal(refObj, refEntity)) {
                             if (fi.getType().isCascade())
                                 updateInternal(refObj, refEntity, true);

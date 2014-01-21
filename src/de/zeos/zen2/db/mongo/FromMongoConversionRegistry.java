@@ -12,31 +12,31 @@ import com.mongodb.DBRef;
 
 import de.zeos.conversion.Converter;
 import de.zeos.conversion.DefaultConversionRegistry;
+import de.zeos.db.mongo.ConverterContext;
 import de.zeos.zen2.app.model.DataClass;
 import de.zeos.zen2.data.EntityInfo;
 import de.zeos.zen2.data.FieldInfo;
 
-public class MongoConversionRegistry extends DefaultConversionRegistry {
+public class FromMongoConversionRegistry extends DefaultConversionRegistry {
 
-    public MongoConversionRegistry() {
-        putConverter(ObjectId.class, new Converter<ObjectId, String>() {
+    public FromMongoConversionRegistry() {
+        putConverter(ObjectId.class, new Converter<ObjectId, String, ConverterContext<?, ?>>() {
             @Override
-            public String convert(ObjectId source, Object... context) {
+            public String convert(ObjectId source, ConverterContext<?, ?> context) {
                 return source.toString();
             }
         });
-        putConverter(BasicDBList.class, new Converter<BasicDBList, List<?>>() {
+        putConverter(BasicDBList.class, new Converter<BasicDBList, List<?>, ConverterContext<?, ?>>() {
             @Override
-            public List<?> convert(BasicDBList source, Object... context) {
+            public List<?> convert(BasicDBList source, ConverterContext<?, ?> context) {
                 return new ArrayList<Object>(source);
             }
         });
-        putConverter(DBRef.class, new Converter<DBRef, Object>() {
+        putConverter(DBRef.class, new Converter<DBRef, Object, ConverterContext<DBObject, EntityInfo>>() {
             @Override
-            public Object convert(DBRef source, Object... context) {
-                // DBObject obj = (DBObject) context[0];
-                String property = (String) context[1];
-                EntityInfo entityInfo = (EntityInfo) context[2];
+            public Object convert(DBRef source, ConverterContext<DBObject, EntityInfo> context) {
+                String property = context.getProperty();
+                EntityInfo entityInfo = context.getContext();
 
                 FieldInfo fieldInfo = entityInfo.getField(property);
                 if (fieldInfo.getType().getDataClass() == DataClass.ENTITY && !fieldInfo.getType().isLazy()) {

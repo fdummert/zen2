@@ -30,14 +30,13 @@ public class V8ScriptEngineFacadeImpl implements ScriptEngineFacade {
     @Override
     public Map<String, Object> createObject(Map<String, Object> source) {
         MapToScriptObjectConvertor convertor = new MapToScriptObjectConvertor(this, registry);
-        return convertor.convert(source);
+        return convertor.convert(source, null);
     }
 
     @Override
     public Map<String, Object> toPlainMap(Map<String, Object> source) {
-        //FIXME: no special converters registered. Do we need any?
         ScriptObjectToMapConvertor convertor = new ScriptObjectToMapConvertor(new DefaultConversionRegistry());
-        return convertor.convert(source);
+        return convertor.convert(source, null);
     }
 
     @Override

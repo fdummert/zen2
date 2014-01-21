@@ -1,4 +1,4 @@
-package de.zeos.zen2.db.mongo;
+package de.zeos.db.mongo;
 
 import java.util.Map;
 
@@ -7,7 +7,7 @@ import com.mongodb.DBObject;
 import de.zeos.conversion.ConversionRegistry;
 import de.zeos.conversion.Converter;
 
-public class DBObjectToMapConverter implements Converter<DBObject, Map<String, Object>> {
+public abstract class DBObjectToMapConverter<C> implements Converter<DBObject, Map<String, Object>, C> {
 
     private ConversionRegistry registry;
 
@@ -19,22 +19,24 @@ public class DBObjectToMapConverter implements Converter<DBObject, Map<String, O
     }
 
     @SuppressWarnings("unchecked")
-    public Map<String, Object> convert(DBObject result, Object... contexts) {
+    public Map<String, Object> convert(DBObject result, C context) {
         Map<String, Object> map = result.toMap();
         for (String key : map.keySet()) {
             Object value = map.get(key);
             if (value != null) {
                 Object convertedValue = value;
+
                 @SuppressWarnings("rawtypes")
                 Converter converter = null;
                 if (registry != null) {
                     converter = registry.getConverter(value.getClass());
                     if (converter != null) {
-                        convertedValue = converter.convert(convertedValue, result, key, contexts[0]);
+                        ConverterContext<DBObject, C> ctxt = new ConverterContext<DBObject, C>(result, key, context);
+                        convertedValue = converter.convert(convertedValue, ctxt);
                     }
                 }
                 if (convertedValue instanceof DBObject) {
-                    convertedValue = convert((DBObject) convertedValue, contexts);
+                    convertedValue = convert((DBObject) convertedValue, getContext(context, key));
                 }
                 if (convertedValue != value)
                     map.put(key, convertedValue);
@@ -42,4 +44,6 @@ public class DBObjectToMapConverter implements Converter<DBObject, Map<String, O
         }
         return map;
     }
+
+    protected abstract C getContext(C context, String property);
 }

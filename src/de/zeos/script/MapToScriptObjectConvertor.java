@@ -6,7 +6,7 @@ import java.util.Map;
 import de.zeos.conversion.ConversionRegistry;
 import de.zeos.conversion.Converter;
 
-public class MapToScriptObjectConvertor implements Converter<Map<String, Object>, Map<String, Object>> {
+public class MapToScriptObjectConvertor implements Converter<Map<String, Object>, Map<String, Object>, Void> {
     private ScriptEngineFacade engine;
     private ConversionRegistry registry;
 
@@ -16,7 +16,7 @@ public class MapToScriptObjectConvertor implements Converter<Map<String, Object>
     }
 
     @SuppressWarnings("unchecked")
-    public Map<String, Object> convert(Map<String, Object> sourceObject, Object... context) {
+    public Map<String, Object> convert(Map<String, Object> sourceObject, Void context) {
         Map<String, Object> destObject = engine.createObject();
         for (String key : sourceObject.keySet()) {
             Object value = sourceObject.get(key);
@@ -24,10 +24,10 @@ public class MapToScriptObjectConvertor implements Converter<Map<String, Object>
                 @SuppressWarnings("rawtypes")
                 Converter converter = (Converter) registry.getConverter(value.getClass());
                 if (converter != null) {
-                    value = converter.convert(value, (Object) context);
+                    value = converter.convert(value, null);
                 }
                 if (value instanceof Map) {
-                    value = convert((Map<String, Object>) value);
+                    value = convert((Map<String, Object>) value, null);
                 } else if (value instanceof Object[]) {
                     value = convert((Object[]) value);
                 } else if (value instanceof long[]) {

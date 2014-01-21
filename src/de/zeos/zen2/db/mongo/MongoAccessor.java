@@ -17,6 +17,7 @@ import com.mongodb.DBObject;
 import com.mongodb.DBRef;
 import com.mongodb.WriteResult;
 
+import de.zeos.db.mongo.DBObjectToMapConverter;
 import de.zeos.db.mongo.MapToDBObjectConverter;
 import de.zeos.zen2.app.model.DataClass;
 import de.zeos.zen2.app.model.DataView.CommandMode;
@@ -30,8 +31,18 @@ import de.zeos.zen2.db.DBListener;
 public class MongoAccessor implements DBAccessor {
 
     private MongoDbFactory factory;
-    private MapToDBObjectConverter queryConverter = new MapToDBObjectConverter();
-    private DBObjectToMapConverter resultConverter = new DBObjectToMapConverter(new MongoConversionRegistry());
+    private MapToDBObjectConverter<EntityInfo> queryConverter = new MapToDBObjectConverter<EntityInfo>(new ToMongoConversionRegistry()) {
+        @Override
+        protected EntityInfo getContext(EntityInfo context, String property) {
+            return resolveEntity(context, property);
+        }
+    };
+    private DBObjectToMapConverter<EntityInfo> resultConverter = new DBObjectToMapConverter<EntityInfo>(new FromMongoConversionRegistry()) {
+        @Override
+        protected EntityInfo getContext(EntityInfo context, String property) {
+            return resolveEntity(context, property);
+        };
+    };
     private final MongoExceptionTranslator exceptionTranslator = new MongoExceptionTranslator();
 
     private HashMap<String, ArrayList<DBListener>> listeners = new HashMap<>();
@@ -252,11 +263,11 @@ public class MongoAccessor implements DBAccessor {
                 if (ref != null) {
                     if (!fi.getType().isLazy()) {
                         DBObject refObj = (DBObject) ref;
-                        // FIXME: check for id only, not complete query!
-                        if (existsInternal(refObj, refEntity)) {
+                        id = refObj.get(refEntity.getPkFieldName());
+                        DBObject refObjId = new BasicDBObject(refEntity.getPkFieldName(), id);
+                        if (existsInternal(refObjId, refEntity)) {
                             if (fi.getType().isCascade())
                                 updateInternal(refObj, refEntity, true);
-                            id = refObj.get(entityInfo.getPkFieldName());
                         } else {
                             if (!fi.getType().isCascade())
                                 throw new IllegalStateException("Noncascading reference does not exist yet: " + entityInfo.getId() + "." + fi.getName() + " -> " + refEntity.getId());
@@ -297,6 +308,15 @@ public class MongoAccessor implements DBAccessor {
 
     protected Map<String, Object> convert(DBObject dbObject, EntityInfo entityInfo) {
         return resultConverter.convert(dbObject, entityInfo);
+    }
+
+    private EntityInfo resolveEntity(EntityInfo entity, String property) {
+        FieldInfo fieldInfo = entity.getField(property);
+        if (fieldInfo.getType().getDataClass() == DataClass.ENTITY) {
+            EntityInfo refEntity = fieldInfo.getType().resolveRefEntity();
+            return refEntity;
+        }
+        return entity;
     }
 
     private DBCollection getCollection(String collection) {

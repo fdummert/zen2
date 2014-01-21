@@ -8,14 +8,14 @@ import java.util.Map;
 import de.zeos.conversion.ConversionRegistry;
 import de.zeos.conversion.Converter;
 
-public class ScriptObjectToMapConvertor implements Converter<Map<String, Object>, Map<String, Object>> {
+public class ScriptObjectToMapConvertor implements Converter<Map<String, Object>, Map<String, Object>, Void> {
     private ConversionRegistry registry;
 
     public ScriptObjectToMapConvertor(ConversionRegistry registry) {
         this.registry = registry;
     }
 
-    public Map<String, Object> convert(Map<String, Object> sourceObject, Object... contexts) {
+    public Map<String, Object> convert(Map<String, Object> sourceObject, Void context) {
         if (sourceObject == null)
             return null;
         Map<String, Object> destObject = new HashMap<String, Object>();
@@ -34,10 +34,10 @@ public class ScriptObjectToMapConvertor implements Converter<Map<String, Object>
         @SuppressWarnings("rawtypes")
         Converter converter = registry.getConverter(value.getClass());
         if (converter != null) {
-            value = converter.convert(value);
+            value = converter.convert(value, null);
         }
         if (value instanceof Map) {
-            value = convert((Map<String, Object>) value);
+            value = convert((Map<String, Object>) value, null);
         } else if (value instanceof List) {
             List<Object> orig = (List<Object>) value;
             ArrayList<Object> list = new ArrayList<Object>();

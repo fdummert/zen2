@@ -4,7 +4,7 @@ define(["dojo/i18n!../../nls/messages", "require"], function(msgs, require) {
             var list = [
                 isc.DynamicForm.create({
                     ID: "appConfigForm",
-                    dataSource: appManageViewDS,
+                    dataSource: appManageDS,
                     fields: [
                         { name: "_id", canEdit: app == null },
                         { name: "securityMode", redrawOnChange: true },
@@ -32,7 +32,7 @@ define(["dojo/i18n!../../nls/messages", "require"], function(msgs, require) {
             if (app == null)
                 appConfigForm.editNewRecord();
             else {
-                appManageViewDS.fetchData({_id: app._id}, function(res, data) {
+                appManageDS.fetchData({_id: app._id}, function(res, data) {
                     appConfigForm.editRecord(data[0]);
                 });
             }

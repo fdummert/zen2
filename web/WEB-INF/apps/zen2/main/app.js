@@ -48,7 +48,7 @@ define(["dojo/i18n!../nls/messages", "de/zeos/cometd/sc/cometdDataSource", "requ
                             isc.Label.create({contents: msgs.welcome}),
                             isc.ListGrid.create({
                                 ID: "applications",
-                                dataSource: appViewDS,
+                                dataSource: appDS,
                                 autoFetchData: true,
                                 contextMenu: appMenu,
                                 recordClick: function(viewer, record) {

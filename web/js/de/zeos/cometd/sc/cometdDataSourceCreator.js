@@ -65,8 +65,7 @@ define(["./cometdDataSource"], function() {
                             return fieldValue;
                         };
                     } else {
-                        //FIXME: should be linked to a datasource
-                        field.foreignKey = refEntity[refEntity.pkFieldName];
+                        field.foreignKey = model.dataViews[f.type.dataViewId] + "DS." + refEntity.pkFieldName;
                         field.type = scalarTypeMapping[refEntity.fields[refEntity.pkFieldName].type.type];
                     }
                     break;

@@ -24,7 +24,7 @@ define(["../cometdReqRes"], function(CometDRequestResponse) {
                     if (dsResponse.error) {
                         var err = dsResponse.error;
                         if (that.messageResolver) err = that.messageResolver(err);
-                        dsResponse.status = -1;
+                        dsResponse.status = isc.DSResponse.STATUS_FAILURE;
                         dsResponse.data = err;
                         
                     } else if (dsResponse.validationErrors) {
@@ -34,12 +34,22 @@ define(["../cometdReqRes"], function(CometDRequestResponse) {
                             if (that.messageResolver) err = that.messageResolver(err);
                             errors[field] = err;
                         }
-                        dsResponse.status = -4;
+                        dsResponse.status = isc.DSResponse.STATUS_VALIDATION_ERROR;
                         dsResponse.errors = errors;
                     } else if (dsResponse.result) {
                         dsResponse.status = 0;
                         dsResponse.data = ds.recordsFromObjects(dsResponse.result);
                     }
+                    this.finished();
+                    ds.processResponse(requestId, dsResponse);
+                };
+                this.error = function(err) {
+                    if (err.startsWith("403:"))
+                        err = that.messageResolver("errSecurity");
+                    var dsResponse = {
+                        status: isc.DSResponse.STATUS_FAILURE,
+                        data: err
+                    };
                     this.finished();
                     ds.processResponse(requestId, dsResponse);
                 };
@@ -57,14 +67,6 @@ define(["../cometdReqRes"], function(CometDRequestResponse) {
         
             var params = isc.addProperties({}, dsRequest.params);
             var data = isc.addProperties({}, params.data, dsRequest.data);
-            if (data._constructor) {
-                console.log("NEED TO IMPLEMENT ADVANCED CRIT", dsRequest.data.criteria);
-            } else {
-                params.criteria = {};
-                for (var p in data) {
-                    params.criteria[p] = data[p];
-                }
-            }
             
             if (dsRequest.operationType) {
                 var val = dsRequest.operationType;
@@ -83,6 +85,37 @@ define(["../cometdReqRes"], function(CometDRequestResponse) {
                         break;
                 }
                 params.mode = val;
+            }
+            
+            if (data._constructor) {
+                console.log("NEED TO IMPLEMENT ADVANCED CRIT", dsRequest.data.criteria);
+            } else {
+                function filter(fields, dataObj) {
+                    var critObj = {};
+                    for (var p in dataObj) {
+                        if (fields[p] && fields[p].canEdit !== false) {
+                            var value = dataObj[p];
+                            if (params.mode == "UPDATE" || params.mode == "CREATE") {
+                                var type = fields[p].type;
+                                var typeDS = type != null ? isc.DataSource.get(type) : null;
+                                if (typeDS) {
+                                    var nestedObj = dataObj[p];
+                                    if (isc.isAn.Array(nestedObj)) {
+                                        var arr = [];
+                                        for (var i = 0; i < nestedObj.length; i++) {
+                                            arr[i] = filter(typeDS.fields, nestedObj[i]);
+                                        }
+                                    } else {
+                                        value = filter(typeDS.fields, nestedObj);
+                                    }
+                                }
+                            }
+                            critObj[p] = value;
+                        }
+                    }
+                    return critObj;
+                }
+                params.criteria = filter(this.fields, data);
             }
             if (dsRequest.startRow != null) {
                 params.pageFrom = dsRequest.startRow;

@@ -3,7 +3,7 @@ define(["dojo/i18n!../../nls/messages", "require"], function(msgs, require) {
         create: function(cm, app) {
             var list = [
                 isc.ListGrid.create({
-                    dataSource: entityManageViewDS,
+                    dataSource: entityManageDS,
                     autoFetchData: true,
                     canRemoveRecords: true,
                     warnOnRemoval: true,
@@ -20,7 +20,7 @@ define(["dojo/i18n!../../nls/messages", "require"], function(msgs, require) {
                 }),
                 isc.DynamicForm.create({
                     ID: "entityManageForm",
-                    dataSource: entityManageViewDS,
+                    dataSource: entityManageDS,
                     useAllDataSourceFields: true,
                     showComplexFieldsRecursively: true
                 }),

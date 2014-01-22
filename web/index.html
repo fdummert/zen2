@@ -29,14 +29,26 @@
             require([ "de/zeos/cometd/cometdManager", "require", "dojo/i18n!fs/zen2/nls/messages" ], function(CometDManager, require, msgs) {
                 var mainApp = null;
                 var warnImg = isc.Img.create({ size: 32, src: "[SKIN]Dialog/warn.png", autoDraw: true, left: -1000 });
+                
+                function hideBroken() {
+                    var brokenWin = isc.Canvas.getById("brokenWin");
+                    if (brokenWin) {
+                        warnImg.deparent();
+                        brokenWin.destroy();
+                    }
+                }
+                
                 var cm = new CometDManager(null, {
                     initialized : function(success, clientId, err, msg) {
                         console.log("init", success, clientId, err, msg);
+                        hideBroken();
                         if (!success) {
                             if (msg.exception && msgs[msg.exception])
                                 err = msgs[msg.exception];
                             else if (err && err.indexOf("403:") == 0)
                                 err = msgs.errLogin;
+                            if (!loginWin.isVisible())
+                                loginWin.show();
                             loginForm.getField("feedback").setValue("<span style='color:red'>" + err + "</span>");                                
                         }
                         else {
@@ -59,11 +71,7 @@
                         }
                     },
                     connected: function() {
-                        var brokenWin = isc.Canvas.getById("brokenWin");
-                        if (brokenWin) {
-                            warnImg.deparent();
-                            brokenWin.destroy();
-                        }
+                        hideBroken();
                     },
                     broken : function(sessionLost, wasConnected, err, msg) {
                         if (wasConnected) {

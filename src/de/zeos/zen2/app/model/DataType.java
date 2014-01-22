@@ -5,6 +5,7 @@ public class DataType {
     private ScalarDataType type;
     private String enumerationId;
     private String refEntityId;
+    private String dataViewId;
     private boolean lazy = true;
     private boolean cascade;
 
@@ -38,6 +39,14 @@ public class DataType {
 
     public void setRefEntityId(String refEntityId) {
         this.refEntityId = refEntityId;
+    }
+
+    public String getDataViewId() {
+        return dataViewId;
+    }
+
+    public void setDataViewId(String dataViewId) {
+        this.dataViewId = dataViewId;
     }
 
     public boolean isLazy() {

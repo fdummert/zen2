@@ -1,8 +1,9 @@
 define(["dojo/i18n!../../nls/messages"], function(msgs) {
     return {
-        show: function(cm, type, scriptHandler, cb) {
-            var origColor = null;
-            var editor = null;
+        origColor: null,
+        editor: null,
+        show: function(cm, type, scriptHandler, applyCallback) {
+            var that = this;
             isc.Window.create({
                 ID: "scriptHandlerWin",
                 title: type,
@@ -29,8 +30,8 @@ define(["dojo/i18n!../../nls/messages"], function(msgs) {
                                             if (editorElem) {
                                                 editorElem.style.height = height + "px";
                                                 editorElem.style.width = width + "px";
-                                                if (editor != null)
-                                                    editor.resize();
+                                                if (that.editor != null)
+                                                    that.editor.resize();
                                             }
                                             return this.Super("resizeTo", arguments);
                                         },
@@ -42,14 +43,20 @@ define(["dojo/i18n!../../nls/messages"], function(msgs) {
                                             }
                                         }
                                     }),
-                                    isc.Button.create({height: 15, title: msgs.apply,
-                                        click: function() {
-                                            if (scriptHandler == null)
-                                                scriptHandler = { };
-                                            scriptHandler.source = editor.getValue();
-                                            scriptHandlerWin.closeClick();
-                                            cb(scriptHandler);
-                                        }
+                                    isc.HStack.create({
+                                        ID: "scriptHandlerSourceButtons",
+                                        height: 15,
+                                        members: [
+                                            isc.Button.create({height: 15, title: msgs.apply,
+                                                click: function() {
+                                                    if (scriptHandler == null)
+                                                        scriptHandler = { };
+                                                    scriptHandler.source = that.editor.getValue();
+                                                    scriptHandlerWin.closeClick();
+                                                    applyCallback(scriptHandler);
+                                                }
+                                            })
+                                        ]
                                     })
                                 ]
                             }),
@@ -70,7 +77,14 @@ define(["dojo/i18n!../../nls/messages"], function(msgs) {
                                                     { name: "line", type: "text" }
                                                 ] 
                                             }),
-                                            isc.Button.create({height: 15, title: msgs.clear})
+                                            isc.Button.create({height: 15, title: msgs.clear,
+                                                click: function() {
+                                                    scriptHandler.consoleEntries = [];
+                                                    scriptHandlerConsoleUpdateDS.updateData(scriptHandler, function(res, data) {
+                                                        scriptConsole.setData(data[0].consoleEntries);
+                                                    });
+                                                }
+                                            })
                                         ] 
                                     }),
                                     isc.VLayout.create({
@@ -88,7 +102,14 @@ define(["dojo/i18n!../../nls/messages"], function(msgs) {
                                                     { name: "error" }
                                                 ]
                                             }),
-                                            isc.Button.create({height: 15, title: msgs.clear})
+                                            isc.Button.create({height: 15, title: msgs.clear,
+                                                click: function() {
+                                                    scriptHandler.errors = [];
+                                                    scriptHandlerErrorUpdateDS.updateData(scriptHandler, function(res, data) {
+                                                        scriptErrors.setData(data[0].errors);
+                                                    });
+                                                }
+                                            })
                                         ] 
                                      })
                                 ]
@@ -101,19 +122,34 @@ define(["dojo/i18n!../../nls/messages"], function(msgs) {
                     return false;
                 }
             }).show();
-            editor = ace.edit("aceeditor");
-            editor.setTheme("ace/theme/eclipse");
-            editor.getSession().setMode("ace/mode/javascript");
-            origColor = editor.renderer.content.style.backgroundColor;
+            this.editor = ace.edit("aceeditor");
+            this.editor.setTheme("ace/theme/eclipse");
+            this.editor.getSession().setMode("ace/mode/javascript");
+            this.editor.setFontSize(10);
+            this.origColor = this.editor.renderer.content.style.backgroundColor;
             aceContainer.containerResized();
             
             if (scriptHandler != null) {
-                editor.setValue(scriptHandler.source);
+                this.editor.setValue(scriptHandler.source);
                 scriptConsole.setData(scriptHandler.consoleEntries);
                 scriptErrors.setData(scriptHandler.errors);
-                if (scriptHandler.valid === false)
-                    editor.renderer.content.style.backgroundColor = "orange";
+                this.update(scriptHandler);
+                scriptHandlerSourceButtons.addMember(
+                    isc.Button.create({height: 15, title: msgs.save,
+                        click: function() {
+                            scriptHandler.source = that.editor.getValue();
+                            applyCallback(scriptHandler);
+                            scriptHandlerSourceUpdateDS.updateData(scriptHandler, function(res, data) {
+                                scriptHandler = data[0];
+                                that.update(scriptHandler);
+                            });
+                        }
+                    })
+                );
             }
+        },
+        update: function(scriptHandler) {
+            this.editor.renderer.content.style.backgroundColor = (scriptHandler.valid === false ? "orange" : this.origColor);
         }
     };
 });

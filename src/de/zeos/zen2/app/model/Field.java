@@ -3,6 +3,7 @@ package de.zeos.zen2.app.model;
 public class Field {
     private String name;
     private boolean pk;
+    private PkType pkType;
     private boolean mandatory;
     private boolean readOnly;
     private DataType type;
@@ -37,6 +38,14 @@ public class Field {
 
     public void setPk(boolean pk) {
         this.pk = pk;
+    }
+
+    public PkType getPkType() {
+        return pkType;
+    }
+
+    public void setPkType(PkType pkType) {
+        this.pkType = pkType;
     }
 
     public DataType getType() {

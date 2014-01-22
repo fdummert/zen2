@@ -13,7 +13,6 @@ import com.mongodb.DBRef;
 import de.zeos.conversion.Converter;
 import de.zeos.conversion.DefaultConversionRegistry;
 import de.zeos.db.mongo.ConverterContext;
-import de.zeos.zen2.app.model.DataClass;
 import de.zeos.zen2.data.EntityInfo;
 import de.zeos.zen2.data.FieldInfo;
 
@@ -39,7 +38,7 @@ public class FromMongoConversionRegistry extends DefaultConversionRegistry {
                 EntityInfo entityInfo = context.getContext();
 
                 FieldInfo fieldInfo = entityInfo.getField(property);
-                if (fieldInfo.getType().getDataClass() == DataClass.ENTITY && !fieldInfo.getType().isLazy()) {
+                if (!fieldInfo.getType().isLazy() && fieldInfo.isComplex()) {
                     EntityInfo refEntity = fieldInfo.getType().resolveRefEntity();
                     return source.getDB().getCollection(source.getRef()).findOne(new BasicDBObject(refEntity.getPkFieldName(), source.getId()), getFields(refEntity));
                 }

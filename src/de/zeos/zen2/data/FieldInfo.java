@@ -2,8 +2,10 @@ package de.zeos.zen2.data;
 
 import java.util.List;
 
+import de.zeos.zen2.app.model.DataClass;
 import de.zeos.zen2.app.model.Field;
 import de.zeos.zen2.app.model.FieldView;
+import de.zeos.zen2.app.model.PkType;
 import de.zeos.zen2.db.InternalDBAccessor;
 
 public class FieldInfo {
@@ -37,7 +39,15 @@ public class FieldInfo {
         return field.isPk();
     }
 
+    public PkType getPkType() {
+        return field.getPkType();
+    }
+
     public DataTypeInfo getType() {
         return this.dataTypeInfo;
+    }
+
+    public boolean isComplex() {
+        return this.dataTypeInfo.getDataClass() == DataClass.ENTITY || (this.dataTypeInfo.getDataClass() == DataClass.LIST && this.dataTypeInfo.getRefEntityId() != null);
     }
 }

@@ -3,6 +3,7 @@ package de.zeos.zen2.db.mongo;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 
@@ -76,28 +77,30 @@ public class MongoAccessor implements DBAccessor {
     }
 
     private boolean existsInternal(DBObject dbObj, EntityInfo entityInfo) {
+        return selectSingleInternal(dbObj, null, entityInfo) != null;
+    }
+
+    public Map<String, Object> selectSingle(Map<String, Object> query, EntityInfo entityInfo) {
+        notifyListeners(CommandMode.READ, Type.BEFORE, entityInfo, query, null);
+        DBObject resultObj = selectSingleInternal(queryConverter.convert(query, entityInfo), getFields(entityInfo), entityInfo);
+        Map<String, Object> result = null;
+        if (resultObj != null)
+            result = convert(resultObj, entityInfo);
+        notifyListeners(CommandMode.READ, Type.AFTER, entityInfo, query, result);
+        return result;
+    }
+
+    private DBObject selectSingleInternal(DBObject dbObj, DBObject fields, EntityInfo entityInfo) {
         try {
             DBCollection coll = getCollection(entityInfo.getId());
-            DBObject result = coll.findOne(dbObj);
-            return result != null;
+            return coll.findOne(dbObj, fields);
         } catch (RuntimeException e) {
             throw potentiallyConvertRuntimeException(e);
         }
     }
 
-    public Map<String, Object> selectSingle(Map<String, Object> query, EntityInfo entityInfo) {
-        try {
-            DBCollection coll = getCollection(entityInfo.getId());
-            notifyListeners(CommandMode.READ, Type.BEFORE, entityInfo, query, null);
-            DBObject resultObj = coll.findOne(queryConverter.convert(query, entityInfo), getFields(entityInfo));
-            Map<String, Object> result = null;
-            if (resultObj != null)
-                result = convert(resultObj, entityInfo);
-            notifyListeners(CommandMode.READ, Type.AFTER, entityInfo, query, result);
-            return result;
-        } catch (RuntimeException e) {
-            throw potentiallyConvertRuntimeException(e);
-        }
+    private DBObject selectSingleById(Object id, EntityInfo entityInfo) {
+        return selectSingleInternal(new BasicDBObject(entityInfo.getPkFieldName(), id), null, entityInfo);
     }
 
     @Override
@@ -156,16 +159,52 @@ public class MongoAccessor implements DBAccessor {
     private boolean deleteInternal(DBObject dbObj, EntityInfo entityInfo, boolean notify) {
         try {
             DBCollection coll = getCollection(entityInfo.getId());
-            followRefs(dbObj, entityInfo);
             if (notify)
                 notifyListeners(CommandMode.DELETE, Type.BEFORE, entityInfo, new DBObjectMapFacade(dbObj), null);
-            WriteResult result = coll.remove(dbObj);
-            boolean success = result.getError() == null;
+            DBObject dbObjToDel = selectSingleById(dbObj.get(entityInfo.getPkFieldName()), entityInfo);
+            boolean success = false;
+            if (dbObjToDel != null) {
+                deleteCascadeRefs(dbObjToDel, entityInfo);
+                WriteResult result = coll.remove(dbObj);
+                success = result.getError() == null;
+            }
             if (notify)
                 notifyListeners(CommandMode.DELETE, Type.AFTER, entityInfo, new DBObjectMapFacade(dbObj), success);
             return success;
         } catch (RuntimeException e) {
             throw potentiallyConvertRuntimeException(e);
+        }
+    }
+
+    private void deleteCascadeRefs(DBObject obj, EntityInfo entityInfo) {
+        for (FieldInfo fi : entityInfo.getFields().values()) {
+            EntityInfo refEntity = fi.getType().resolveRefEntity();
+            DataClass dc = fi.getType().getDataClass();
+            if (fi.isComplex() && !refEntity.isEmbeddable() && fi.getType().isCascade()) {
+                Object ref = obj.get(fi.getName());
+                if (ref != null) {
+                    if (dc == DataClass.ENTITY)
+                        deleteCascadeSingle(refEntity, fi.getType().isLazy(), ref);
+                    else if (dc == DataClass.LIST) {
+                        List<?> list = (List<?>) ref;
+                        for (Object o : list) {
+                            deleteCascadeSingle(refEntity, fi.getType().isLazy(), o);
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    private void deleteCascadeSingle(EntityInfo refEntity, boolean lazy, Object ref) {
+        DBObject refObj = null;
+        if (!lazy) {
+            refObj = ((DBRef) ref).fetch();
+        } else {
+            refObj = new BasicDBObject(refEntity.getPkFieldName(), ref);
+        }
+        if (refObj != null) {
+            deleteInternal(refObj, refEntity, true);
         }
     }
 
@@ -181,9 +220,9 @@ public class MongoAccessor implements DBAccessor {
     private Object insertInternal(DBObject dbObj, EntityInfo entityInfo, boolean notify) {
         try {
             DBCollection coll = getCollection(entityInfo.getId());
-            persistRefs(dbObj, entityInfo);
             if (notify)
                 notifyListeners(CommandMode.CREATE, Type.BEFORE, entityInfo, new DBObjectMapFacade(dbObj), null);
+            persistRefs(dbObj, entityInfo, true);
             WriteResult writeResult = coll.insert(dbObj);
             Object result = null;
             if (writeResult.getError() == null)
@@ -207,9 +246,9 @@ public class MongoAccessor implements DBAccessor {
     private boolean updateInternal(DBObject queryObj, EntityInfo entityInfo, boolean notify) {
         try {
             DBCollection coll = getCollection(entityInfo.getId());
-            persistRefs(queryObj, entityInfo);
             if (notify)
                 notifyListeners(CommandMode.UPDATE, Type.BEFORE, entityInfo, new DBObjectMapFacade(queryObj), null);
+            persistRefs(queryObj, entityInfo, false);
             DBObject update = new BasicDBObject();
             Object id = queryObj.removeField(entityInfo.getPkFieldName());
             update.put("$set", queryObj);
@@ -231,63 +270,107 @@ public class MongoAccessor implements DBAccessor {
         return dbObj;
     }
 
-    private void followRefs(DBObject obj, EntityInfo entityInfo) {
+    @SuppressWarnings("unchecked")
+    private void persistRefs(DBObject obj, EntityInfo entityInfo, boolean insert) {
         for (FieldInfo fi : entityInfo.getFields().values()) {
             EntityInfo refEntity = fi.getType().resolveRefEntity();
-            if (fi.getType().getDataClass() == DataClass.ENTITY && !refEntity.isEmbeddable() && fi.getType().isCascade()) {
+            DataClass dc = fi.getType().getDataClass();
+            if (fi.isComplex() && !refEntity.isEmbeddable()) {
                 Object ref = obj.get(fi.getName());
-                if (ref != null) {
-                    DBObject refObj = null;
-                    if (!fi.getType().isLazy()) {
-                        refObj = (DBObject) ref;
-                        if (!existsInternal(refObj, refEntity)) {
-                            refObj = null;
+                if (dc == DataClass.ENTITY) {
+                    if (ref != null) {
+                        DBRef dbRef = persistSingleRef(entityInfo, obj, refEntity, fi, ref, insert);
+                        obj.put(fi.getName(), dbRef);
+                    } else if (fi.getType().isCascade() && !insert) {
+                        // ref is null: obtain orig ref from db
+                        DBObject objInDB = selectSingleById(obj.get(entityInfo.getPkFieldName()), entityInfo);
+                        Object refInDB = objInDB.get(fi.getName());
+                        if (refInDB != null) {
+                            deleteCascadeSingle(refEntity, fi.getType().isLazy(), refInDB);
                         }
-                    } else {
-                        refObj = new BasicDBObject(refEntity.getPkFieldName(), ref);
                     }
-                    if (refObj != null) {
-                        deleteInternal(refObj, refEntity, true);
+                } else if (dc == DataClass.LIST) {
+                    @SuppressWarnings("rawtypes")
+                    List list = (List) ref;
+                    if (ref != null && insert) {
+                        // insert mode: list given -> persist db list
+                        persistList(list, entityInfo, obj, refEntity, fi, insert);
+                    } else if (!insert) {
+                        // 1) no list given but db list exists -> remove db list
+                        if (ref == null && fi.getType().isCascade()) {
+                            DBObject objInDB = selectSingleById(obj.get(entityInfo.getPkFieldName()), entityInfo);
+                            Object refInDB = objInDB.get(fi.getName());
+                            if (refInDB != null) {
+                                @SuppressWarnings("rawtypes")
+                                List listInDB = (List) refInDB;
+                                for (int i = 0; i < listInDB.size(); i++) {
+                                    deleteCascadeSingle(refEntity, fi.getType().isLazy(), list.get(i));
+                                }
+                            }
+                        } else if (ref != null) {
+                            DBObject objInDB = selectSingleById(obj.get(entityInfo.getPkFieldName()), entityInfo);
+                            Object refInDB = objInDB.get(fi.getName());
+                            if (refInDB == null) {
+                                // 2) list given but db list null -> insert db
+                                // list
+                                persistList(list, entityInfo, obj, refEntity, fi, insert);
+                            } else {
+                                // 3) compare list with db list -> insert/update
+                                List<DBObject> listInDB = (List<DBObject>) refInDB;
+                                HashSet<Object> ids = new HashSet<Object>();
+                                for (int i = 0; i < list.size(); i++) {
+                                    Object listObj = list.get(i);
+                                    DBRef dbRef = persistSingleRef(entityInfo, obj, refEntity, fi, listObj, insert);
+                                    ids.add(dbRef.getId());
+                                    list.set(i, dbRef);
+                                }
+                                // -> remove
+                                for (DBObject o : listInDB) {
+                                    if (!ids.contains(o.get(refEntity.getPkFieldName())))
+                                        deleteInternal(o, refEntity, true);
+                                }
+                            }
+                        }
                     }
                 }
             }
         }
     }
 
-    private void persistRefs(DBObject obj, EntityInfo entityInfo) {
-        for (FieldInfo fi : entityInfo.getFields().values()) {
-            EntityInfo refEntity = fi.getType().resolveRefEntity();
-            if (fi.getType().getDataClass() == DataClass.ENTITY && !refEntity.isEmbeddable()) {
-                Object id = null;
-                Object ref = obj.get(fi.getName());
-                if (ref != null) {
-                    if (!fi.getType().isLazy()) {
-                        DBObject refObj = (DBObject) ref;
-                        id = refObj.get(refEntity.getPkFieldName());
-                        DBObject refObjId = new BasicDBObject(refEntity.getPkFieldName(), id);
-                        if (existsInternal(refObjId, refEntity)) {
-                            if (fi.getType().isCascade())
-                                updateInternal(refObj, refEntity, true);
-                        } else {
-                            if (!fi.getType().isCascade())
-                                throw new IllegalStateException("Noncascading reference does not exist yet: " + entityInfo.getId() + "." + fi.getName() + " -> " + refEntity.getId());
-                            id = insertInternal(refObj, refEntity, true);
-                        }
-                    } else {
-                        id = ref;
-                    }
-                    obj.put(fi.getName(), new DBRef(factory.getDb(), refEntity.getId(), id));
-                } else if (fi.getType().isCascade()) {
-                    DBObject refObj = null;
-                    if (!fi.getType().isLazy())
-                        refObj = (DBObject) ref;
-                    else {
-                        refObj = new BasicDBObject(refEntity.getPkFieldName(), ref);
-                    }
-                    deleteInternal(refObj, refEntity, true);
-                }
+    @SuppressWarnings({ "unchecked", "rawtypes" })
+    private void persistList(List list, EntityInfo entityInfo, DBObject obj, EntityInfo refEntity, FieldInfo fi, boolean insert) {
+        for (int i = 0; i < list.size(); i++) {
+            DBRef dbRef = persistSingleRef(entityInfo, obj, refEntity, fi, list.get(i), insert);
+            if (dbRef != null) {
+                list.set(i, dbRef);
             }
         }
+    }
+
+    private DBRef persistSingleRef(EntityInfo entityInfo, DBObject obj, EntityInfo refEntity, FieldInfo fi, Object ref, boolean insert) {
+        Object id = null;
+        if (!fi.getType().isLazy()) {
+            DBObject refObj = (DBObject) ref;
+            id = refObj.get(refEntity.getPkFieldName());
+            DBObject refObjId = new BasicDBObject(refEntity.getPkFieldName(), id);
+            if (existsInternal(refObjId, refEntity)) {
+                if (insert)
+                    throw new IllegalStateException("Nonlazy reference does already exist: " + entityInfo.getId() + "." + fi.getName() + " -> " + refEntity.getId() + " with ID " + id);
+                if (fi.getType().isCascade())
+                    updateInternal(refObj, refEntity, true);
+            } else {
+                if (!fi.getType().isCascade())
+                    throw new IllegalStateException("Noncascading reference does not exist yet: " + entityInfo.getId() + "." + fi.getName() + " -> " + refEntity.getId() + " with ID " + id);
+                id = insertInternal(refObj, refEntity, true);
+            }
+        } else {
+            id = ref;
+            DBObject refObjId = new BasicDBObject(refEntity.getPkFieldName(), id);
+            if (!existsInternal(refObjId, refEntity)) {
+                throw new IllegalStateException("Reference does not exist: " + entityInfo.getId() + "." + fi.getName() + " -> " + refEntity.getId() + " with ID " + id);
+            }
+        }
+        return new DBRef(factory.getDb(), refEntity.getId(), id);
     }
 
     private void notifyListeners(CommandMode mode, DBEvent.Type type, EntityInfo entity, Map<String, Object> query, Object result) {
@@ -312,7 +395,7 @@ public class MongoAccessor implements DBAccessor {
 
     private EntityInfo resolveEntity(EntityInfo entity, String property) {
         FieldInfo fieldInfo = entity.getField(property);
-        if (fieldInfo.getType().getDataClass() == DataClass.ENTITY) {
+        if (fieldInfo.isComplex()) {
             EntityInfo refEntity = fieldInfo.getType().resolveRefEntity();
             return refEntity;
         }

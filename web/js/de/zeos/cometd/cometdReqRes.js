@@ -26,6 +26,11 @@ define(function() {
                         console.log("unknown response message received without " + ID_FIELD, msg);
                 }
             };
+            this.error = function(err) {
+                if (listener && listener.error) {
+                    listener.error(err);
+                }
+            };
         }
         
         this.sendRequest = function(msg, listener) {

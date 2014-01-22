@@ -3,7 +3,7 @@ define(["dojo/i18n!../../nls/messages", "require"], function(msgs, require) {
         create: function(cm, app) {
             var list = [
                 isc.ListGrid.create({
-                    dataSource: dataViewManageViewDS,
+                    dataSource: dataViewManageDS,
                     autoFetchData: true,
                     canRemoveRecords: true,
                     warnOnRemoval: true,
@@ -15,7 +15,7 @@ define(["dojo/i18n!../../nls/messages", "require"], function(msgs, require) {
                 }),
                 isc.DynamicForm.create({
                     ID: "dataViewManageForm",
-                    dataSource: dataViewManageViewDS,
+                    dataSource: dataViewManageDS,
                     useAllDataSourceFields: true
                 }),
                 isc.HStack.create({

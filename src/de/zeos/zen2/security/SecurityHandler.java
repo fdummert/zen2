@@ -97,6 +97,8 @@ public class SecurityHandler {
             handler.getErrors().add(new ScriptHandlerError(new Date(), ex.getMessage(), ex.getLineNumber(), ex.getColumnNumber()));
             appRegistry.getInternalDBAccessor(app).updateScriptHandler(handler);
             throw new AuthenticationException();
+        } catch (AuthenticationException ex) {
+            throw ex;
         } catch (Exception ex) {
             logger.warn("General error", ex);
             throw new AuthenticationException("errSystem");

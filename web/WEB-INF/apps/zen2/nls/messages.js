@@ -33,6 +33,7 @@ define({
         errDataViewModeNotAllowed: "Zugriff auf die Datenbank nicht erlaubt",
         errLogin: "Falsches Login/Passwort",
         errMandatory: "Feld wird benötigt",
+        errSecurity: "Kein Zugriff auf diese Funktion erteilt",
         errSystem: "Systemfehler",
         
         warnRemove: "Soll dieser Eintrag wirklich gelöscht werden?"

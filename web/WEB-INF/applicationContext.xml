@@ -9,10 +9,27 @@
     ">
     
     <bean class="de.zeos.script.v8.V8ScriptEngineCreator">
+        <property name="features">
+            <list>
+                <ref bean="consoleFeature"/>
+                <ref bean="authFeature"/>
+            </list>
+        </property>
+    </bean>
+    
+    <bean name="consoleFeature" class="de.zeos.zen2.script.ConsoleFeature">
         <property name="scripts">
             <list>
                 <value>classpath:/js/toString.js</value>
                 <value>classpath:/js/console.js</value>
+            </list>
+        </property>
+    </bean>
+    
+    <bean name="authFeature" class="de.zeos.script.ScriptEngineFeature">
+        <property name="scripts">
+            <list>
+                <value>classpath:/js/authenticationException.js</value>
             </list>
         </property>
     </bean>

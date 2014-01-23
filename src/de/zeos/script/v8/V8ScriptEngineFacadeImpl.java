@@ -2,6 +2,8 @@ package de.zeos.script.v8;
 
 import java.io.Reader;
 import java.util.Date;
+import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
 
 import javax.script.Bindings;
@@ -11,20 +13,31 @@ import javax.script.ScriptEngineFactory;
 import javax.script.ScriptEngineManager;
 import javax.script.ScriptException;
 
+import lu.flier.script.JavascriptError;
 import lu.flier.script.V8ScriptEngine;
+
+import org.springframework.beans.BeanUtils;
+import org.springframework.util.ClassUtils;
+
 import de.zeos.conversion.DefaultConversionRegistry;
 import de.zeos.script.MapToScriptObjectConvertor;
 import de.zeos.script.ScriptEngineFacade;
+import de.zeos.script.ScriptEngineFeature;
 import de.zeos.script.ScriptObjectToMapConvertor;
 
 public class V8ScriptEngineFacadeImpl implements ScriptEngineFacade {
 
     private V8ScriptEngine v8Engine;
     private V8ConversionRegistry registry;
+    private Map<String, ScriptEngineFeature<?>> features = new LinkedHashMap<>();
 
-    public V8ScriptEngineFacadeImpl(ScriptEngineManager manager) {
+    public V8ScriptEngineFacadeImpl(ScriptEngineManager manager, List<ScriptEngineFeature<?>> features) {
         this.v8Engine = (V8ScriptEngine) manager.getEngineByName("jav8");
         this.registry = new V8ConversionRegistry(v8Engine);
+        if (features != null) {
+            for (ScriptEngineFeature<?> f : features)
+                this.features.put(f.getName(), f);
+        }
     }
 
     @Override
@@ -189,4 +202,57 @@ public class V8ScriptEngineFacadeImpl implements ScriptEngineFacade {
         return v8Engine.getInterface(thiz, clasz);
     }
 
+    @Override
+    public Exception convertException(Exception e) {
+        if (e instanceof JavascriptError) {
+            String msg = e.getMessage();
+            int idx = msg.indexOf('@');
+            int close = msg.indexOf(')', idx);
+            int lineNo = -1;
+            int colNo = -1;
+            if (idx >= 0 && close >= idx) {
+                String test = msg.substring(idx + 1, close);
+                String[] pos = test.split(":");
+                if (pos.length == 2) {
+                    try {
+                        lineNo = new Integer(pos[0].trim());
+                        colNo = new Integer(pos[1].trim());
+                    } catch (NumberFormatException nfe) {
+                    }
+                }
+            }
+            return new ScriptException(msg, null, lineNo, colNo);
+        } else if (e instanceof RuntimeException) {
+            int idx = e.getMessage().indexOf('#');
+            int endIdx = e.getMessage().indexOf('#', idx + 1);
+            if (idx == 0 && endIdx > idx) {
+                String[] parts = e.getMessage().substring(idx + 1, endIdx).split(":");
+                if (parts.length == 2) {
+                    String className = parts[0];
+                    Class<?> clazz = ClassUtils.resolveClassName(className, ClassUtils.getDefaultClassLoader());
+                    String arg = parts[1];
+                    Exception ex = null;
+                    if (arg.length() == 0)
+                        ex = (Exception) BeanUtils.instantiate(clazz);
+                    else
+                        ex = (Exception) BeanUtils.instantiateClass(ClassUtils.getConstructorIfAvailable(clazz, String.class), arg);
+                    if (ex != null)
+                        return ex;
+                }
+            }
+        }
+        return e;
+    }
+
+    @Override
+    public void activateFeature(String name) {
+        activateFeature(name, null);
+    }
+
+    @SuppressWarnings({ "rawtypes", "unchecked" })
+    @Override
+    public void activateFeature(String name, Object arg) {
+        ScriptEngineFeature f = this.features.get(name);
+        f.activate(this, arg);
+    }
 }

@@ -77,7 +77,8 @@ db.entity.insert( { _id: "dataView", embeddable: false, system: true, fields: [
        { name: "scope", type: { dataClass: "SCALAR", type: "STRING" } },
        { name: "pushScopes", type: { dataClass: "LIST", type: "STRING" } },
        { name: "allowedModes", type: { dataClass: "LIST", enumerationId: "commandModes" } },
-       { name: "pushable", mandatory: true, type: { dataClass: "SCALAR", type: "BOOL" } }
+       { name: "pushable", mandatory: true, type: { dataClass: "SCALAR", type: "BOOL" } },
+       { name: "beforeHandler", type: { dataClass: "ENTITY", refEntityId: "scriptHandler", lazy: true} }
 ], _class: "de.zeos.zen2.app.model.Entity" } );
 
 db.entity.insert( { _id: "fieldView", embeddable: true, system: true, fields: [
@@ -90,7 +91,7 @@ db.entity.insert( { _id: "fieldView", embeddable: true, system: true, fields: [
 
 db.dataView.insert( { _id: "app", system: true, entity: { $ref: "entity", $id: "application"}, fields: [{name: "_id"}], allowedModes: ["READ"], _class: "de.zeos.zen2.app.model.DataView" } );
 db.dataView.insert( { _id: "appManage", system: true, entity: { $ref: "entity", $id: "application"}, allowedModes: ["CREATE", "READ", "UPDATE", "DELETE"], _class: "de.zeos.zen2.app.model.DataView" } );
-db.dataView.insert( { _id: "scriptHandlerSourceUpdate", system: true, entity: { $ref: "entity", $id: "scriptHandler"}, fields: [{name: "_id"}, {name: "source"}], allowedModes: ["UPDATE"], _class: "de.zeos.zen2.app.model.DataView" } );
+db.dataView.insert( { _id: "scriptHandlerManage", system: true, entity: { $ref: "entity", $id: "scriptHandler"}, fields: [{name: "_id"}, {name: "source"}], allowedModes: ["CREATE", "READ", "UPDATE", "DELETE"], _class: "de.zeos.zen2.app.model.DataView" } );
 db.dataView.insert( { _id: "scriptHandlerConsoleUpdate", system: true, entity: { $ref: "entity", $id: "scriptHandler"}, fields: [{name: "_id"}, {name: "consoleEntries", readOnly: false}], allowedModes: ["UPDATE"], _class: "de.zeos.zen2.app.model.DataView" } );
 db.dataView.insert( { _id: "scriptHandlerErrorUpdate", system: true, entity: { $ref: "entity", $id: "scriptHandler"}, fields: [{name: "_id"}, {name: "errors", readOnly: false}], allowedModes: ["UPDATE"], _class: "de.zeos.zen2.app.model.DataView" } );
 

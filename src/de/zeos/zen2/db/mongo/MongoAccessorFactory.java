@@ -9,10 +9,10 @@ import com.mongodb.Mongo;
 import com.mongodb.WriteConcern;
 
 import de.zeos.script.ScriptEngineFacade;
-import de.zeos.zen2.app.ScriptMongoAccessor;
 import de.zeos.zen2.db.DBAccessor;
 import de.zeos.zen2.db.DBAccessorFactory;
 import de.zeos.zen2.db.InternalDBAccessor;
+import de.zeos.zen2.script.ScriptMongoAccessor;
 
 public class MongoAccessorFactory implements DBAccessorFactory {
     @Inject

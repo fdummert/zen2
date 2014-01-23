@@ -13,7 +13,14 @@ define(["dojo/i18n!../../nls/messages", "require"], function(msgs, require) {
                                 click: function() {
                                     require(["./scriptHandler"], function(handler) {
                                         handler.show(cm, msgs.securityHandler, appConfigForm.getValue("securityHandler"), function(updatedHandler) {
-                                            appConfigForm.setValue("securityHandler", updatedHandler);
+                                            updatedHandler.valid = true;
+                                            var handler = appConfigForm.getValue("securityHandler");
+                                            if (handler == null)
+                                                appConfigForm.setValue("securityHandler", updatedHandler);
+                                            appConfigForm.getField("securityHandlerButton").canvas.setBorder("1px solid orange");
+                                        }, function(savedHandler) {
+                                            appConfigForm.getField("securityHandlerButton").canvas.setBorder("1px solid green");
+                                            savedHandler.valid = true;
                                         });
                                     });
                                 } 
@@ -24,7 +31,12 @@ define(["dojo/i18n!../../nls/messages", "require"], function(msgs, require) {
                     members: [
                         isc.Button.create({
                             title: msgs.save,
-                            click: function() { appConfigForm.saveData(); }
+                            click: function() { 
+                                appConfigForm.saveData(function(res, data) {
+                                    if (res.status == isc.DSResponse.STATUS_SUCCESS && data.securityHandler != null)
+                                        appConfigForm.getField("securityHandlerButton").canvas.setBorder("1px solid green");
+                                }); 
+                            }
                         })
                     ]
                 })
@@ -34,6 +46,9 @@ define(["dojo/i18n!../../nls/messages", "require"], function(msgs, require) {
             else {
                 appManageDS.fetchData({_id: app._id}, function(res, data) {
                     appConfigForm.editRecord(data[0]);
+                    if (data[0].securityHandler != null) {
+                        appConfigForm.getField("securityHandlerButton").canvas.setBorder("1px solid green");
+                    }
                 });
             }
             return list;

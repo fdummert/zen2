@@ -20,13 +20,13 @@ import org.springframework.stereotype.Component;
 import de.zeos.script.ScriptEngineCreator;
 import de.zeos.script.ScriptEngineFacade;
 import de.zeos.zen2.app.ApplicationRegistry;
-import de.zeos.zen2.app.ScriptHandlerConsole;
 import de.zeos.zen2.app.model.Application;
 import de.zeos.zen2.app.model.Application.SecurityMode;
 import de.zeos.zen2.app.model.DataView;
 import de.zeos.zen2.app.model.ScriptHandler;
 import de.zeos.zen2.app.model.ScriptHandlerError;
 import de.zeos.zen2.db.InternalDBAccessor;
+import de.zeos.zen2.script.ScriptHandlerConsole;
 
 @Component
 public class SecurityHandler {
@@ -52,7 +52,8 @@ public class SecurityHandler {
 
             Digester digester = new Digester("SHA-256", 1024);
             ScriptEngineFacade engine = engineCreator.createEngine();
-            engine.put("$console", new ScriptHandlerConsole(handler, appRegistry.getInternalDBAccessor(app)));
+            engine.activateFeature("consoleFeature", new ScriptHandlerConsole(handler, appRegistry.getInternalDBAccessor(app)));
+            engine.activateFeature("authFeature");
             engine.eval(handler.getSource());
             Invocable invocable = (Invocable) engine;
             Authenticator authenticator = invocable.getInterface(Authenticator.class);
@@ -62,9 +63,7 @@ public class SecurityHandler {
             } catch (UndeclaredThrowableException ex) {
                 throw new ScriptException("Security handler does not implement the authenicate function properly.");
             } catch (Exception ex) {
-                if (ex.getMessage().contains("auth.error"))
-                    throw new AuthenticationException();
-                throw ex;
+                throw engine.convertException(ex);
             }
             if (auth == null)
                 throw new ScriptException("Security handler did not return an authentication.");

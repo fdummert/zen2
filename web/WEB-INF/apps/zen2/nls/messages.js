@@ -3,6 +3,7 @@ define({
         add: "Hinzufügen",
         application__id: "Applikation",
         apply: "Anwenden",
+        beforeHandler: "Vorbereitende Behandlung",
         clear: "Löschen",
         configure: "Konfigurieren",
         console: "Konsole",

@@ -1,4 +1,4 @@
-package de.zeos.zen2.app;
+package de.zeos.zen2.script;
 
 import java.util.Map;
 

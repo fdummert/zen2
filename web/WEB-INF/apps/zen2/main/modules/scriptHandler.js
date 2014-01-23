@@ -2,7 +2,7 @@ define(["dojo/i18n!../../nls/messages"], function(msgs) {
     return {
         origColor: null,
         editor: null,
-        show: function(cm, type, scriptHandler, applyCallback) {
+        show: function(cm, type, scriptHandler, applyCallback, saveCallback) {
             var that = this;
             isc.Window.create({
                 ID: "scriptHandlerWin",
@@ -47,15 +47,7 @@ define(["dojo/i18n!../../nls/messages"], function(msgs) {
                                         ID: "scriptHandlerSourceButtons",
                                         height: 15,
                                         members: [
-                                            isc.Button.create({height: 15, title: msgs.apply,
-                                                click: function() {
-                                                    if (scriptHandler == null)
-                                                        scriptHandler = { };
-                                                    scriptHandler.source = that.editor.getValue();
-                                                    scriptHandlerWin.closeClick();
-                                                    applyCallback(scriptHandler);
-                                                }
-                                            })
+                                            
                                         ]
                                     })
                                 ]
@@ -77,7 +69,7 @@ define(["dojo/i18n!../../nls/messages"], function(msgs) {
                                                     { name: "line", type: "text" }
                                                 ] 
                                             }),
-                                            isc.Button.create({height: 15, title: msgs.clear,
+                                            isc.Button.create({ID: "scriptConsoleClear", height: 15, title: msgs.clear, disabled: true,
                                                 click: function() {
                                                     scriptHandler.consoleEntries = [];
                                                     scriptHandlerConsoleUpdateDS.updateData(scriptHandler, function(res, data) {
@@ -97,12 +89,24 @@ define(["dojo/i18n!../../nls/messages"], function(msgs) {
                                                 height: "*",
                                                 fields: [
                                                     { name: "date", type: "datetime", width: 110 },
-                                                    { name: "lineNo", width: 60 },
-                                                    { name: "colNo", width: 60 },
+                                                    { name: "lineNo", width: 40 },
+                                                    { name: "colNo", width: 40 },
                                                     { name: "error" }
-                                                ]
+                                                ],
+                                                recordClick: function(viewer, record) {
+                                                    if (record.lineNo >= 0 && record.colNo >= 0) {
+                                                        var arr = that.editor.getSession().getAnnotations();
+                                                        arr.push({
+                                                            row: record.lineNo - 1,
+                                                            column: record.colNo,
+                                                            text: record.error,
+                                                            type: "error"
+                                                        });
+                                                        that.editor.getSession().setAnnotations(arr);
+                                                    }
+                                                }
                                             }),
-                                            isc.Button.create({height: 15, title: msgs.clear,
+                                            isc.Button.create({ID: "scriptErrorClear", height: 15, title: msgs.clear, disabled: true,
                                                 click: function() {
                                                     scriptHandler.errors = [];
                                                     scriptHandlerErrorUpdateDS.updateData(scriptHandler, function(res, data) {
@@ -129,23 +133,52 @@ define(["dojo/i18n!../../nls/messages"], function(msgs) {
             this.origColor = this.editor.renderer.content.style.backgroundColor;
             aceContainer.containerResized();
             
-            if (scriptHandler != null) {
-                this.editor.setValue(scriptHandler.source);
-                scriptConsole.setData(scriptHandler.consoleEntries);
-                scriptErrors.setData(scriptHandler.errors);
-                this.update(scriptHandler);
+            if (applyCallback) {
                 scriptHandlerSourceButtons.addMember(
-                    isc.Button.create({height: 15, title: msgs.save,
+                    isc.Button.create({height: 15, title: msgs.apply,
                         click: function() {
+                            if (scriptHandler == null)
+                                scriptHandler = { };
                             scriptHandler.source = that.editor.getValue();
+                            scriptHandlerWin.closeClick();
                             applyCallback(scriptHandler);
-                            scriptHandlerSourceUpdateDS.updateData(scriptHandler, function(res, data) {
-                                scriptHandler = data[0];
-                                that.update(scriptHandler);
-                            });
                         }
                     })
                 );
+            }
+            if (saveCallback && (scriptHandler != null || applyCallback == null)) {
+                scriptHandlerSourceButtons.addMember(
+                    isc.Button.create({height: 15, title: msgs.save,
+                        click: function() {
+                            if (scriptHandler == null) {
+                                scriptHandler = {};
+                                scriptHandler.source = that.editor.getValue();
+                                scriptHandlerManageDS.addData(scriptHandler, function(res, data) {
+                                    scriptHandler = data[0];
+                                    that.update(scriptHandler);
+                                    saveCallback(scriptHandler);
+                                });
+                            } else {
+                                scriptHandler.source = that.editor.getValue();
+                                scriptHandlerManageDS.updateData(scriptHandler, function(res, data) {
+                                    scriptHandler = data[0];
+                                    that.update(scriptHandler);
+                                    saveCallback(scriptHandler);
+                                });
+                            }
+                        }
+                    })
+                );
+            }
+            if (scriptHandler != null) {
+                this.editor.setValue(scriptHandler.source);
+                scriptConsoleClear.setDisabled(false);
+                scriptConsoleError.setDisabled(false);
+                scriptConsole.setData(scriptHandler.consoleEntries);
+                scriptErrors.setData(scriptHandler.errors);
+                this.update(scriptHandler);
+            } else {
+                this.editor.setValue("");
             }
         },
         update: function(scriptHandler) {

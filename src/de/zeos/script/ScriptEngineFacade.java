@@ -31,4 +31,10 @@ public interface ScriptEngineFacade extends ScriptEngine, Compilable, Invocable 
     public Object createArray(String[] data);
 
     public Object createArray(Date[] data);
+
+    public void activateFeature(String name);
+
+    public void activateFeature(String name, Object arg);
+
+    public Exception convertException(Exception e);
 }

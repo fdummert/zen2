@@ -54,6 +54,7 @@ public class ApplicationRegistry {
             }
         } catch (Exception e) {
             logger.error("Mongo not available", e);
+            throw e;
         }
     }
 

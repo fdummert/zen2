@@ -73,7 +73,7 @@ define(["dojo/i18n!../../nls/messages"], function(msgs) {
                                                 showHeader: false,
                                                 height: "*",
                                                 fields: [
-                                                    { name: "date", type: "datetime" },
+                                                    { name: "date", type: "datetime", width: 110 },
                                                     { name: "line", type: "text" }
                                                 ] 
                                             }),

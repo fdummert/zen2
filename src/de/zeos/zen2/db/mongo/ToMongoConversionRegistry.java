@@ -35,8 +35,13 @@ public class ToMongoConversionRegistry extends DefaultConversionRegistry {
                         return DatatypeConverter.parseTime(source).getTime();
                     default:
                     }
-                } else if (fieldInfo.isComplex() && fieldInfo.getType().isLazy() && !fieldInfo.getType().resolveRefEntity().isEmbeddable()) {
-                    return new ObjectId(source);
+                } else if (fieldInfo.isComplex() && fieldInfo.getType().isLazy()) {
+                    EntityInfo refEntity = fieldInfo.getType().resolveRefEntity();
+                    if (!refEntity.isEmbeddable()) {
+                        FieldInfo refPkField = refEntity.getField(refEntity.getPkFieldName());
+                        if (refPkField.getPkType() == PkType.AUTO)
+                            return new ObjectId(source);
+                    }
                 }
                 return source;
             }

@@ -1,6 +1,7 @@
 package de.zeos.script.v8;
 
 import java.io.Reader;
+import java.util.Arrays;
 import java.util.Date;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -204,7 +205,12 @@ public class V8ScriptEngineFacadeImpl implements ScriptEngineFacade {
 
     @Override
     public Exception convertException(Exception e) {
-        if (e instanceof JavascriptError) {
+        if (e instanceof ScriptException) {
+            ScriptException se = (ScriptException) e;
+            if (se.getColumnNumber() == -1 && e.getCause() != null && e.getCause() != e) {
+                return convertException((Exception) e.getCause());
+            }
+        } else if (e instanceof JavascriptError) {
             String msg = e.getMessage();
             int idx = msg.indexOf('@');
             int close = msg.indexOf(')', idx);
@@ -230,12 +236,16 @@ public class V8ScriptEngineFacadeImpl implements ScriptEngineFacade {
                 if (parts.length == 2) {
                     String className = parts[0];
                     Class<?> clazz = ClassUtils.resolveClassName(className, ClassUtils.getDefaultClassLoader());
-                    String arg = parts[1];
+
                     Exception ex = null;
-                    if (arg.length() == 0)
+                    if (parts[1].length() == 0)
                         ex = (Exception) BeanUtils.instantiate(clazz);
-                    else
-                        ex = (Exception) BeanUtils.instantiateClass(ClassUtils.getConstructorIfAvailable(clazz, String.class), arg);
+                    else {
+                        String[] args = parts[1].split(",");
+                        Class<?>[] types = new Class<?>[args.length];
+                        Arrays.fill(types, String.class);
+                        ex = (Exception) BeanUtils.instantiateClass(ClassUtils.getConstructorIfAvailable(clazz, types), (Object[]) args);
+                    }
                     if (ex != null)
                         return ex;
                 }

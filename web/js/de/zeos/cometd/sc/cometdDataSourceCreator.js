@@ -119,5 +119,6 @@ define(["./cometdDataSource"], function() {
             props.fields = createDataSourceFields(model, dataViewName, dataView.entity);
             isc.CometDDataSource.create(props);
         }
+        isc.CometDDataSource.model = model;
     }; 
 });

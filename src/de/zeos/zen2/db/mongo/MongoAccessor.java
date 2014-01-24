@@ -198,7 +198,7 @@ public class MongoAccessor implements DBAccessor {
 
     private void deleteCascadeSingle(EntityInfo refEntity, boolean lazy, Object ref) {
         DBObject refObj = null;
-        if (!lazy) {
+        if (!lazy || ref instanceof DBRef) {
             refObj = ((DBRef) ref).fetch();
         } else {
             refObj = new BasicDBObject(refEntity.getPkFieldName(), ref);
@@ -349,7 +349,8 @@ public class MongoAccessor implements DBAccessor {
 
     private DBRef persistSingleRef(EntityInfo entityInfo, DBObject obj, EntityInfo refEntity, FieldInfo fi, Object ref, boolean insert) {
         Object id = null;
-        if (!fi.getType().isLazy()) {
+        if (!fi.getType().isLazy() || ref instanceof DBObject) {
+            // lazy or resolved
             DBObject refObj = (DBObject) ref;
             id = refObj.get(refEntity.getPkFieldName());
             DBObject refObjId = new BasicDBObject(refEntity.getPkFieldName(), id);

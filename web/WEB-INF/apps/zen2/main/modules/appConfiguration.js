@@ -14,8 +14,8 @@ define(["dojo/i18n!../../nls/messages", "require"], function(msgs, require) {
                                     require(["./scriptHandler"], function(handler) {
                                         handler.show(cm, msgs.securityHandler, appConfigForm.getValue("securityHandler"), function(updatedHandler) {
                                             updatedHandler.valid = true;
-                                            var handler = appConfigForm.getValue("securityHandler");
-                                            if (handler == null)
+                                            var secHandler = appConfigForm.getValue("securityHandler");
+                                            if (secHandler == null)
                                                 appConfigForm.setValue("securityHandler", updatedHandler);
                                             appConfigForm.getField("securityHandlerButton").canvas.setBorder("1px solid orange");
                                         }, function(savedHandler) {

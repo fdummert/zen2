@@ -55,7 +55,7 @@
                             console.log("logged in", cm.getAppProperties());
                             loginWin.hide();
                             if (!mainApp) {
-                                require(["fs/zen2/main/app", "de/zeos/cometd/sc/cometdDataSourceCreator", "dojo/text!dv/zen2/" + clientId], function(app, dsCreator, dataViewDescriptors) {
+                                require(["fs/zen2/main/app", "fs/zen2/main/util/sc", "de/zeos/cometd/sc/cometdDataSourceCreator", "dojo/text!dv/zen2/" + clientId], function(app, unused, dsCreator, dataViewDescriptors) {
                                     dsCreator(cm, msgs, JSON.parse(dataViewDescriptors));
                                     mainApp = app.start(cm);
                                 });

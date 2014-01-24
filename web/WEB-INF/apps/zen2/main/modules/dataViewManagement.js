@@ -11,6 +11,7 @@ define(["dojo/i18n!../../nls/messages", "require"], function(msgs, require) {
                     showResizeBar: true,
                     recordClick: function(viewer, rec) {
                         dataViewManageForm.editRecord(rec);
+                        dataViewManageForm.unchanged();
                     }
                 }),
                 isc.DynamicForm.create({
@@ -18,46 +19,16 @@ define(["dojo/i18n!../../nls/messages", "require"], function(msgs, require) {
                     dataSource: dataViewManageDS,
                     useAllDataSourceFields: true,
                     fields: [
-                        { name: "beforeHandler", type: "canvas", title: msgs.beforeHandler, canvasConstructor: "Button",
-                            canvasProperties: { title: "...",
-                                click: function() {
-                                    var that = this.canvasItem;
-                                    require(["./scriptHandler"], function(handler) {
-                                        scriptHandlerManageDS.fetchData({_id: that.getValue()}, function(res, data) {
-                                            handler.show(cm, msgs.beforeHandler, data[0], null, function(savedHandler) {
-                                                if (savedHandler != null)
-                                                    that.setValue(savedHandler._id);
-                                            });
-                                        });
-                                    });
-                                }
-                            }, icons: [{
-                                src: "[SKIN]actions/remove.png",
-                                click: function() {
-                                    var that = this;
-                                    isc.confirm(msgs.warnRemove, function(value) {
-                                        if (value === true) {
-                                            scriptHandlerManageDS.removeData(that.getValue(), function(res, data) {
-                                                that.setValue(null);
-                                            });
-                                        }
-                                    })
-                                }
-                            }], iconIsDisabled : function (icon) {
-                                icon = this.getIcon(icon);
-                                if (icon.disabled)
-                                    return true;
-                                return this.Super("iconIsDisabled", arguments);
-                            }, showIf: function(item, value, form, values) {
-                                if (value != null) {
-                                    this.canvas.setBorder("1px solid green");
-                                }
-                                this.getIcon(0).disabled = value == null;
-                                this.setIconEnabled(0);
-                                return values._id != null;
+                        { name: "beforeHandler", type: "HandlerEditorItem", title: msgs.beforeHandler, cm: cm, msgs: msgs}
+                    ],
+                    unchanged: function() {
+                        for (var i = 0; i < this.getFields().length; i++) {
+                            var f = this.getField(i);
+                            if (f.unchangedValue != null) {
+                                f.unchangedValue();
                             }
                         }
-                    ]
+                    }
                 }),
                 isc.HStack.create({
                     members: [
@@ -67,7 +38,12 @@ define(["dojo/i18n!../../nls/messages", "require"], function(msgs, require) {
                         }),
                         isc.Button.create({
                             title: msgs.save,
-                            click: function() { dataViewManageForm.saveData(); }
+                            click: function() { 
+                                dataViewManageForm.saveData(function(res, data) {
+                                    if (res.status == isc.DSResponse.STATUS_SUCCESS)
+                                        dataViewManageForm.unchanged();
+                                }); 
+                            }
                         })
                     ]
                 })

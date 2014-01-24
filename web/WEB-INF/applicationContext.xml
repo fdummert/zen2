@@ -34,6 +34,14 @@
         </property>
     </bean>
     
+    <bean name="dataFeature" class="de.zeos.script.ScriptEngineFeature">
+        <property name="scripts">
+            <list>
+                <value>classpath:/js/dataExceptions.js</value>
+            </list>
+        </property>
+    </bean>
+    
     <context:component-scan base-package="de.zeos.zen2"/>
 
     <import resource="dbContext.xml"/>

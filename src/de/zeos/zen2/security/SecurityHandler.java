@@ -40,6 +40,7 @@ public class SecurityHandler {
 
     public Authorization authenticate(final String app, Map<String, Object> credentials) throws AuthenticationException {
         ScriptHandler handler = null;
+        ScriptEngineFacade engine = null;
         try {
             Application application = appRegistry.getApplication(app);
             if (application.getSecurityMode() == SecurityMode.PUBLIC) {
@@ -51,7 +52,7 @@ public class SecurityHandler {
                 throw new AuthenticationException();
 
             Digester digester = new Digester("SHA-256", 1024);
-            ScriptEngineFacade engine = engineCreator.createEngine();
+            engine = engineCreator.createEngine();
             engine.activateFeature("consoleFeature", new ScriptHandlerConsole(handler, appRegistry.getInternalDBAccessor(app)));
             engine.activateFeature("authFeature");
             engine.eval(handler.getSource());
@@ -92,6 +93,7 @@ public class SecurityHandler {
             final Map<String, Object> data = (Map<String, Object>) o;
             return createAuthorization(app, data, collectChannels("publicChannels", auth), collectChannels("appChannels", auth), dataViews);
         } catch (ScriptException ex) {
+            ex = (ScriptException) engine.convertException(ex);
             handler.setValid(false);
             handler.getErrors().add(new ScriptHandlerError(new Date(), ex.getMessage(), ex.getLineNumber(), ex.getColumnNumber()));
             appRegistry.getInternalDBAccessor(app).updateScriptHandler(handler);

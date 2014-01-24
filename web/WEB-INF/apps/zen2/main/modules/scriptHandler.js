@@ -146,39 +146,27 @@ define(["dojo/i18n!../../nls/messages"], function(msgs) {
                     })
                 );
             }
-            if (saveCallback && (scriptHandler != null || applyCallback == null)) {
-                scriptHandlerSourceButtons.addMember(
-                    isc.Button.create({height: 15, title: msgs.save,
-                        click: function() {
-                            if (scriptHandler == null) {
-                                scriptHandler = {};
+            if (scriptHandler != null) {
+                if (saveCallback && scriptHandler._id != null) {
+                    scriptHandlerSourceButtons.addMember(
+                        isc.Button.create({height: 15, title: msgs.save,
+                            click: function() {
                                 scriptHandler.source = that.editor.getValue();
-                                scriptHandlerManageDS.addData(scriptHandler, function(res, data) {
-                                    scriptHandler = data[0];
-                                    that.update(scriptHandler);
-                                    saveCallback(scriptHandler);
-                                });
-                            } else {
-                                scriptHandler.source = that.editor.getValue();
-                                scriptHandlerManageDS.updateData(scriptHandler, function(res, data) {
+                                scriptHandlerSourceUpdateDS.updateData(scriptHandler, function(res, data) {
                                     scriptHandler = data[0];
                                     that.update(scriptHandler);
                                     saveCallback(scriptHandler);
                                 });
                             }
-                        }
-                    })
-                );
-            }
-            if (scriptHandler != null) {
+                        })
+                    );
+                }
                 this.editor.setValue(scriptHandler.source);
                 scriptConsoleClear.setDisabled(false);
-                scriptConsoleError.setDisabled(false);
+                scriptErrorClear.setDisabled(false);
                 scriptConsole.setData(scriptHandler.consoleEntries);
                 scriptErrors.setData(scriptHandler.errors);
                 this.update(scriptHandler);
-            } else {
-                this.editor.setValue("");
             }
         },
         update: function(scriptHandler) {

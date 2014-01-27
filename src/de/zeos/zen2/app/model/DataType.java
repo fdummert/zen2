@@ -7,6 +7,8 @@ public class DataType {
     private String refEntityId;
     private String dataViewId;
     private boolean lazy = true;
+    private boolean inverse;
+    private String backRef;
     private boolean cascade;
 
     public DataClass getDataClass() {
@@ -55,6 +57,22 @@ public class DataType {
 
     public void setLazy(boolean lazy) {
         this.lazy = lazy;
+    }
+
+    public boolean isInverse() {
+        return this.inverse;
+    }
+
+    public void setInverse(boolean inverse) {
+        this.inverse = inverse;
+    }
+
+    public String getBackRef() {
+        return this.backRef;
+    }
+
+    public void setBackRef(String backRef) {
+        this.backRef = backRef;
     }
 
     public boolean isCascade() {

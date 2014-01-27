@@ -49,6 +49,12 @@ public class DataTypeInfo {
         return refEntityId;
     }
 
+    public String getDataViewId() {
+        if (this.fieldView != null && this.fieldView.getDataViewId() != null)
+            return this.fieldView.getDataViewId();
+        return this.dataType.getDataViewId();
+    }
+
     public EntityInfo resolveRefEntity() {
         return this.modelInfo.getEntity(this.dataViewInfo.getId(), refEntityId);
     }
@@ -63,5 +69,13 @@ public class DataTypeInfo {
         if (this.fieldView != null && this.fieldView.getCascade() != null)
             return this.fieldView.getCascade();
         return this.dataType.isCascade();
+    }
+
+    public String getBackRef() {
+        return this.dataType.getBackRef();
+    }
+
+    public boolean isInverse() {
+        return this.dataType.isInverse();
     }
 }

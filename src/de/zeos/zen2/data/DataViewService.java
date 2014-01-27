@@ -85,7 +85,7 @@ public class DataViewService {
             if (!view.getAllowedModes().contains(mode))
                 throw new IllegalStateException("errDataViewModeNotAllowed");
 
-            ScriptHandler handler = view.getBeforeHandler();
+            ScriptHandler handler = null;//view.getBeforeHandler();
             ScriptEngineFacade engine = null;
             engine = processHandler(app, "before", handler, engine, data);
 
@@ -96,33 +96,33 @@ public class DataViewService {
             EntityInfo entityInfo = dataViewInfo.getEntity();
             Object result = null;
             switch (mode) {
-            case CREATE:
-                filterCriteria(criteria, dataViewInfo, true, true);
-                result = accessor.insert(criteria, entityInfo);
-                break;
-            case READ:
-                filterCriteria(criteria, dataViewInfo, false, false);
-                Integer pageFrom = (Integer) data.get("pageFrom");
-                Integer pageTo = (Integer) data.get("pageTo");
-                String[] sorts = (String[]) data.get("sorts");
-                Integer count = null;
-                List<Map<String, Object>> rows = accessor.select(criteria, pageFrom, pageTo, sorts, entityInfo);
-                if (pageFrom != null || pageTo != null) {
-                    count = new Long(accessor.count(criteria, entityInfo)).intValue();
-                    res.put("pageFrom", pageFrom);
-                    res.put("pageTo", pageFrom + (rows == null ? 0 : rows.size() - 1));
-                    res.put("count", count);
-                }
-                result = rows;
-                break;
-            case UPDATE:
-                filterCriteria(criteria, dataViewInfo, true, true);
-                result = accessor.update(criteria, entityInfo);
-                break;
-            case DELETE:
-                filterCriteria(criteria, dataViewInfo, false, false);
-                result = accessor.delete(criteria, entityInfo);
-                break;
+                case CREATE:
+                    filterCriteria(criteria, dataViewInfo, true, true);
+                    result = accessor.insert(criteria, entityInfo);
+                    break;
+                case READ:
+                    filterCriteria(criteria, dataViewInfo, false, false);
+                    Integer pageFrom = (Integer) data.get("pageFrom");
+                    Integer pageTo = (Integer) data.get("pageTo");
+                    String[] sorts = (String[]) data.get("sorts");
+                    Integer count = null;
+                    List<Map<String, Object>> rows = accessor.select(criteria, pageFrom, pageTo, sorts, entityInfo);
+                    if (pageFrom != null || pageTo != null) {
+                        count = new Long(accessor.count(criteria, entityInfo)).intValue();
+                        res.put("pageFrom", pageFrom);
+                        res.put("pageTo", pageFrom + (rows == null ? 0 : rows.size() - 1));
+                        res.put("count", count);
+                    }
+                    result = rows;
+                    break;
+                case UPDATE:
+                    filterCriteria(criteria, dataViewInfo, true, true);
+                    result = accessor.update(criteria, entityInfo);
+                    break;
+                case DELETE:
+                    filterCriteria(criteria, dataViewInfo, false, false);
+                    result = accessor.delete(criteria, entityInfo);
+                    break;
             }
             res.put("result", result);
         } catch (IllegalStateException e) {

@@ -4,6 +4,7 @@ import java.util.List;
 
 public class Entity {
     private String id;
+    private String parentEntityId;
     private List<Field> fields;
     private List<Index> indexes;
     private boolean embeddable;
@@ -15,6 +16,14 @@ public class Entity {
 
     public void setId(String id) {
         this.id = id;
+    }
+
+    public String getParentEntityId() {
+        return this.parentEntityId;
+    }
+
+    public void setParentEntityId(String parentEntityId) {
+        this.parentEntityId = parentEntityId;
     }
 
     public List<Field> getFields() {

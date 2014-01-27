@@ -2,6 +2,7 @@ package de.zeos.zen2.app.model;
 
 public class FieldView {
     private String name;
+    private String dataViewId;
     private Boolean mandatory;
     private Boolean readOnly;
     private Boolean lazy;
@@ -13,6 +14,14 @@ public class FieldView {
 
     public void setName(String name) {
         this.name = name;
+    }
+
+    public String getDataViewId() {
+        return this.dataViewId;
+    }
+
+    public void setDataViewId(String dataViewId) {
+        this.dataViewId = dataViewId;
     }
 
     public Boolean getMandatory() {

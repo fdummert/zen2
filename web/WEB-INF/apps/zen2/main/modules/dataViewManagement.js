@@ -19,15 +19,11 @@ define(["dojo/i18n!../../nls/messages", "require"], function(msgs, require) {
                     dataSource: dataViewManageDS,
                     useAllDataSourceFields: true,
                     fields: [
-                        { name: "beforeHandler", type: "HandlerEditorItem", title: msgs.beforeHandler, cm: cm, msgs: msgs}
+                        { name: "scriptHandlers", title: msgs.dataViewHandler, editorType: "GridEditorItem", cm: cm, msgs: msgs, gridDataSource: "dataViewScriptHandlerReadDS", 
+                            gridFields: [{name:"triggerPoint"}, {name:"triggerMode"}, {name:"valid"}]}
                     ],
                     unchanged: function() {
-                        for (var i = 0; i < this.getFields().length; i++) {
-                            var f = this.getField(i);
-                            if (f.unchangedValue != null) {
-                                f.unchangedValue();
-                            }
-                        }
+                        // FIXME: reset state of list grid item
                     }
                 }),
                 isc.HStack.create({

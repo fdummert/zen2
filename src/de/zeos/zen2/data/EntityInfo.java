@@ -13,15 +13,33 @@ import de.zeos.zen2.app.model.FieldView;
 import de.zeos.zen2.db.InternalDBAccessor;
 
 public class EntityInfo {
+    private ModelInfo modelInfo;
+    private DataViewInfo dataViewInfo;
     private Entity entity;
+    private String parentEntityId;
     private String prefix;
     private LinkedHashMap<String, FieldInfo> fields = new LinkedHashMap<>();
     private String pkFieldName;
 
     public EntityInfo(ModelInfo modelInfo, DataViewInfo dataViewInfo, InternalDBAccessor accessor, Entity entity, String prefix, List<FieldView> fieldViews) {
+        this.modelInfo = modelInfo;
+        this.dataViewInfo = dataViewInfo;
         this.entity = entity;
         modelInfo.addEntity(dataViewInfo, this);
         this.prefix = prefix;
+
+        this.parentEntityId = entity.getParentEntityId();
+        if (parentEntityId != null) {
+            EntityInfo parentEntityInfo = modelInfo.getEntity(dataViewInfo.getId(), parentEntityId);
+            if (parentEntityInfo == null) {
+                parentEntityInfo = new EntityInfo(modelInfo, dataViewInfo, accessor, accessor.getEntity(parentEntityId), prefix, fieldViews);
+                modelInfo.addEntity(dataViewInfo, parentEntityInfo);
+            }
+            this.fields.putAll(parentEntityInfo.getFields());
+            if (parentEntityInfo.getPkFieldName() != null)
+                this.pkFieldName = parentEntityInfo.getPkFieldName();
+        }
+
         boolean processFieldViews = !fieldViews.isEmpty();
         for (Field f : entity.getFields()) {
             if (f.isPk())
@@ -97,6 +115,14 @@ public class EntityInfo {
             return info.getField(path);
         }
         return fields.get(path);
+    }
+
+    public String getParentEntityId() {
+        return this.parentEntityId;
+    }
+
+    public EntityInfo resolveParentEntity() {
+        return this.modelInfo.getEntity(this.dataViewInfo.getId(), this.parentEntityId);
     }
 
 }

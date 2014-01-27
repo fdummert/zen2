@@ -92,7 +92,7 @@ public class MongoAccessor implements DBAccessor {
 
     private DBObject selectSingleInternal(DBObject dbObj, DBObject fields, EntityInfo entityInfo) {
         try {
-            DBCollection coll = getCollection(entityInfo.getId());
+            DBCollection coll = getCollection(entityInfo);
             return coll.findOne(dbObj, fields);
         } catch (RuntimeException e) {
             throw potentiallyConvertRuntimeException(e);
@@ -106,7 +106,7 @@ public class MongoAccessor implements DBAccessor {
     @Override
     public List<Map<String, Object>> select(Map<String, Object> query, Integer pageFrom, Integer pageTo, String[] sortCols, EntityInfo entityInfo) {
         try {
-            DBCollection coll = getCollection(entityInfo.getId());
+            DBCollection coll = getCollection(entityInfo);
             notifyListeners(CommandMode.READ, Type.BEFORE, entityInfo, query, null);
             DBCursor cursor = coll.find(queryConverter.convert(query, entityInfo), getFields(entityInfo));
             if (pageFrom != null)
@@ -140,7 +140,7 @@ public class MongoAccessor implements DBAccessor {
     @Override
     public long count(Map<String, Object> query, EntityInfo entityInfo) {
         try {
-            DBCollection coll = getCollection(entityInfo.getId());
+            DBCollection coll = getCollection(entityInfo);
             long cnt = coll.count(queryConverter.convert(query, entityInfo));
             return cnt;
         } catch (RuntimeException e) {
@@ -158,7 +158,7 @@ public class MongoAccessor implements DBAccessor {
 
     private boolean deleteInternal(DBObject dbObj, EntityInfo entityInfo, boolean notify) {
         try {
-            DBCollection coll = getCollection(entityInfo.getId());
+            DBCollection coll = getCollection(entityInfo);
             if (notify)
                 notifyListeners(CommandMode.DELETE, Type.BEFORE, entityInfo, new DBObjectMapFacade(dbObj), null);
             DBObject dbObjToDel = selectSingleById(dbObj.get(entityInfo.getPkFieldName()), entityInfo);
@@ -186,7 +186,12 @@ public class MongoAccessor implements DBAccessor {
                     if (dc == DataClass.ENTITY)
                         deleteCascadeSingle(refEntity, fi.getType().isLazy(), ref);
                     else if (dc == DataClass.LIST) {
-                        List<?> list = (List<?>) ref;
+                        List<?> list = null;
+                        if (fi.getType().isInverse() && fi.getType().getBackRef() != null) {
+                            list = select(Collections.singletonMap(fi.getType().getBackRef(), obj.get(entityInfo.getPkFieldName())), null, null, null, refEntity);
+                        } else {
+                            list = (List<?>) ref;
+                        }
                         for (Object o : list) {
                             deleteCascadeSingle(refEntity, fi.getType().isLazy(), o);
                         }
@@ -219,7 +224,7 @@ public class MongoAccessor implements DBAccessor {
 
     private Object insertInternal(DBObject dbObj, EntityInfo entityInfo, boolean notify) {
         try {
-            DBCollection coll = getCollection(entityInfo.getId());
+            DBCollection coll = getCollection(entityInfo);
             if (notify)
                 notifyListeners(CommandMode.CREATE, Type.BEFORE, entityInfo, new DBObjectMapFacade(dbObj), null);
             persistRefs(dbObj, entityInfo, true);
@@ -245,7 +250,7 @@ public class MongoAccessor implements DBAccessor {
 
     private boolean updateInternal(DBObject queryObj, EntityInfo entityInfo, boolean notify) {
         try {
-            DBCollection coll = getCollection(entityInfo.getId());
+            DBCollection coll = getCollection(entityInfo);
             if (notify)
                 notifyListeners(CommandMode.UPDATE, Type.BEFORE, entityInfo, new DBObjectMapFacade(queryObj), null);
             persistRefs(queryObj, entityInfo, false);
@@ -289,7 +294,7 @@ public class MongoAccessor implements DBAccessor {
                             deleteCascadeSingle(refEntity, fi.getType().isLazy(), refInDB);
                         }
                     }
-                } else if (dc == DataClass.LIST) {
+                } else if (dc == DataClass.LIST && !fi.getType().isInverse()) {
                     @SuppressWarnings("rawtypes")
                     List list = (List) ref;
                     if (ref != null && insert) {
@@ -403,9 +408,12 @@ public class MongoAccessor implements DBAccessor {
         return entity;
     }
 
-    private DBCollection getCollection(String collection) {
+    private DBCollection getCollection(EntityInfo entityInfo) {
         DB db = factory.getDb();
-        return db.getCollection(collection);
+        while (entityInfo.getParentEntityId() != null) {
+            entityInfo = entityInfo.resolveParentEntity();
+        }
+        return db.getCollection(entityInfo.getId());
     }
 
     private RuntimeException potentiallyConvertRuntimeException(RuntimeException ex) {

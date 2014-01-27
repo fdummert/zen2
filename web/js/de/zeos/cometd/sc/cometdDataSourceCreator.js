@@ -42,6 +42,7 @@ define(["./cometdDataSource"], function() {
                     title: msgs[entity.id + "_" + f.name] || msgs[f.name]
                 };
                 if (f.pk === true) field.primaryKey = true;
+                if (f.pk === true && f.pkType == "AUTO") field.hidden = true;
                 if (f.mandatory === true && f.type.type !== "BOOL") field.required = true;
                 if (f.readOnly === true) field.canEdit = false;
                 var type = null;
@@ -55,8 +56,10 @@ define(["./cometdDataSource"], function() {
                     break;
                 case "ENTITY":
                     var refEntity = model.entities[dataViewName + ":" + f.type.refEntityId];
-                    if (refEntity.embeddable === true || f.type.lazy === false) {
+                    if (refEntity.embeddable === true || (f.type.lazy === false && f.type.dataViewId == null)) {
                         type = createNestedDS(model, dataViewName, refEntity);
+                        if (refEntity.embeddable === false)
+                            field.foreignKey = type + "." + refEntity.pkFieldName;
                         // SC 9.1 fails if value is null instead of undefined
                         field.getFieldValue = function(record, fieldValue, field, fieldName) {
                             var undef;
@@ -65,27 +68,33 @@ define(["./cometdDataSource"], function() {
                             return fieldValue;
                         };
                     } else {
-                        field.foreignKey = model.dataViews[f.type.dataViewId] + "DS." + refEntity.pkFieldName;
-                        field.type = scalarTypeMapping[refEntity.fields[refEntity.pkFieldName].type.type];
+                        type = scalarTypeMapping[refEntity.fields[refEntity.pkFieldName].type.type];
+                        if (f.type.dataViewId != null)
+                            field.foreignKey = model.dataViews[f.type.dataViewId].id + "DS." + refEntity.pkFieldName;
                     }
                     break;
                 case "LIST":
                     var refEntity = null;
                     if (f.type.refEntityId != null)
                         refEntity = model.entities[dataViewName + ":" + f.type.refEntityId];
-                    if (f.type.type != null || f.type.enumerationId != null || (refEntity != null && refEntity.embeddable)) {
-                        field.multiple = true;
-                        if (f.type.type != null) {
-                            type = scalarTypeMapping[f.type.type];
-                        } else if (f.type.enumerationId != null) {
-                            type = "enum";
-                            field.valueMap = createEnum(model, f);
-                        } else if (refEntity != null) {
+                    field.multiple = true;
+                    if (f.type.type != null) {
+                        type = scalarTypeMapping[f.type.type];
+                    } else if (f.type.enumerationId != null) {
+                        type = "enum";
+                        field.valueMap = createEnum(model, f);
+                    } else if (refEntity != null) {
+                        if (refEntity.embeddable === true || (f.type.lazy === false && f.type.dataViewId == null)) {
                             type = createNestedDS(model, dataViewName, refEntity);
+                            if (refEntity.embeddable === false)
+                                field.foreignKey = type + "." + refEntity.pkFieldName;
+                        } else if (f.type.dataViewId != null) {
+                            type = model.dataViews[f.type.dataViewId].id + "DS";
+                            field.foreignKey = type + "." + refEntity.pkFieldName; 
+                        } else {
+                            skip = true;
                         }
                     }
-                    else
-                        skip = true;
                     break;
                 default:
                     throw "not implemented";

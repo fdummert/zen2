@@ -255,7 +255,7 @@ define(["./cometd"], function(CometD) {
         
         this.getApplication = function() {
             return application;
-        }
+        };
         
         this.getAppProperties = function() {
             return appProperties;

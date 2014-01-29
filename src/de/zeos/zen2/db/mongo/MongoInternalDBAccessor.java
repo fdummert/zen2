@@ -2,10 +2,12 @@ package de.zeos.zen2.db.mongo;
 
 import java.util.List;
 
-import org.springframework.data.mongodb.core.MongoOperations;
+import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.data.mongodb.core.query.Update;
+
+import com.mongodb.DB;
 
 import de.zeos.zen2.app.model.Application;
 import de.zeos.zen2.app.model.DataView;
@@ -19,10 +21,17 @@ import de.zeos.zen2.db.InternalDBAccessor;
 
 public class MongoInternalDBAccessor implements InternalDBAccessor {
 
-    private MongoOperations operations;
+    private MongoTemplate operations;
+    private String bootstrapScript;
 
-    public MongoInternalDBAccessor(MongoOperations operations) {
+    public MongoInternalDBAccessor(MongoTemplate operations, String bootstrapScript) {
         this.operations = operations;
+        this.bootstrapScript = bootstrapScript;
+    }
+
+    @Override
+    public boolean existsDB(String id) {
+        return operations.getDb().getMongo().getDatabaseNames().contains(id);
     }
 
     @Override
@@ -33,6 +42,19 @@ public class MongoInternalDBAccessor implements InternalDBAccessor {
     @Override
     public Application getApplication(String name) {
         return this.operations.findById(name, Application.class);
+    }
+
+    @Override
+    public void createApplication(Application app) {
+        DB targetDB = operations.getDb().getMongo().getDB(app.getId());
+        targetDB.eval("function() { " + bootstrapScript + "}");
+        targetDB.addUser(app.getId(), app.getId().toCharArray());
+    }
+
+    @Override
+    public void deleteApplication(String name) {
+        DB targetDB = operations.getDb().getMongo().getDB(name);
+        targetDB.dropDatabase();
     }
 
     @Override

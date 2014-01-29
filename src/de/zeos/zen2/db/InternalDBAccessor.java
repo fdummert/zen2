@@ -12,9 +12,15 @@ import de.zeos.zen2.app.model.ScriptHandlerConsoleEntry;
 import de.zeos.zen2.app.model.ScriptHandlerError;
 
 public interface InternalDBAccessor {
+    public boolean existsDB(String id);
+
     public List<Application> getApplications();
 
     public Application getApplication(String name);
+
+    public void createApplication(Application app);
+
+    public void deleteApplication(String name);
 
     public List<DataView> getDataViews();
 
@@ -31,4 +37,5 @@ public interface InternalDBAccessor {
     public Enumeration getEnumeration(String name);
 
     public Entity getEntity(String refEntityId);
+
 }

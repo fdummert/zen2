@@ -21,7 +21,10 @@ define(["dojo/i18n!../nls/messages", "de/zeos/cometd/sc/cometdDataSource", "requ
             isc.Menu.create({
                 ID: "appMenu",
                 data: [
-                    { title: msgs.configure, 
+                    { title: msgs.configure,
+                        enableIf: function() {
+                            return applications.getSelectedRecord() != null;
+                        },
                         click: function() { 
                             openModule("appConfiguration", applications.getSelectedRecord());
                         } 
@@ -30,6 +33,21 @@ define(["dojo/i18n!../nls/messages", "de/zeos/cometd/sc/cometdDataSource", "requ
                         click: function() {
                             openModule("appConfiguration");
                         }
+                    },
+                    { title: msgs.remove, 
+                        enableIf: function() {
+                            return applications.getSelectedRecord() != null;
+                        },
+                        click: function() { 
+                            isc.confirm(msgs.warnRemoveApp, function(value) {
+                                if (value === true) {
+                                    var rec = applications.getSelectedRecord();
+                                    appManageDS.removeData(rec, function() {
+                                        applications.invalidateCache();
+                                    });
+                                }
+                            });
+                        } 
                     }
                 ]
             });

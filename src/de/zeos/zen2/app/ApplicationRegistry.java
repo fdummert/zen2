@@ -26,6 +26,7 @@ import de.zeos.zen2.db.InternalDBAccessor;
 @Component
 public class ApplicationRegistry {
     private static String ZEN2 = "zen2";
+    private static String ADMIN = "admin";
 
     public class Console {
         private Logger logger = LoggerFactory.getLogger(getClass());
@@ -74,6 +75,14 @@ public class ApplicationRegistry {
                     SecurityMode mode = SecurityMode.valueOf((String) query.get("securityMode"));
                     if (mode == SecurityMode.PUBLIC)
                         query.put("securityHandler", null);
+                } else if (event.getType() == Type.BEFORE && event.getMode() == CommandMode.CREATE) {
+                    EntityInfo entityInfo = (EntityInfo) event.getSource();
+                    Map<String, Object> query = event.getQuery();
+                    String id = (String) query.get(entityInfo.getPkFieldName());
+                    if (getInternalDBAccessor(ZEN2).getApplication(id) == null) {
+                        if (getInternalDBAccessor(ADMIN).existsDB(id))
+                            throw new IllegalStateException("errAppAlreadyExistsInDB");
+                    }
                 } else if (event.getType() == Type.AFTER && event.getMode() != CommandMode.READ) {
                     EntityInfo entityInfo = (EntityInfo) event.getSource();
                     Application app;
@@ -84,10 +93,12 @@ public class ApplicationRegistry {
                             id = (String) event.getResult();
                             app = getInternalDBAccessor(ZEN2).getApplication(id);
                             applications.put(id, app);
+                            getInternalDBAccessor(ADMIN).createApplication(app);
                             break;
                         }
                         case DELETE:
                             applications.remove(id);
+                            getInternalDBAccessor(ADMIN).deleteApplication(id);
                             break;
                         case UPDATE:
                             app = getInternalDBAccessor(ZEN2).getApplication(id);

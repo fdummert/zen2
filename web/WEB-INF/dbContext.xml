@@ -11,14 +11,11 @@
 
     <context:property-placeholder location="classpath:db.properties"/>
     <mongo:mongo host="${mongo.host}" port="${mongo.port}"/>
-    <mongo:db-factory dbname="${mongo.db}" username="${mongo.user}" password="${mongo.password}"/>
-    
-    <bean id="mongoTemplate" class="org.springframework.data.mongodb.core.MongoTemplate">
-        <constructor-arg name="mongoDbFactory" ref="mongoDbFactory"/>
-        <property name="writeResultChecking" value="EXCEPTION"/>
-    </bean>
     
     <bean id="dbAccessorFactory" class="de.zeos.zen2.db.mongo.MongoAccessorFactory">
         <property name="writeConcern" value="ACKNOWLEDGED"/>
+        <property name="user" value="${mongo.user}"/>
+        <property name="password" value="${mongo.password}"/>
+        <property name="bootstrapScript" value="classpath:/db/bootstrap.js"/>
     </bean>
 </beans>

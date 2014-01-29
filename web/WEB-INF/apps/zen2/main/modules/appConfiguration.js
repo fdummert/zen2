@@ -7,7 +7,7 @@ define(["dojo/i18n!../../nls/messages", "require"], function(msgs, require) {
                     dataSource: appManageDS,
                     fields: [
                         { name: "_id", canEdit: app == null },
-                        { name: "securityMode", redrawOnChange: true },
+                        { name: "securityMode", redrawOnChange: true, defaultToFirstOption: true },
                         { name: "securityHandlerButton", showIf: "form.getValue('securityMode') == 'PROTECTED'", type: "canvas", title: msgs.securityHandler, canvasConstructor: "Button",
                             canvasProperties: { title: "...", 
                                 click: function() {
@@ -33,9 +33,12 @@ define(["dojo/i18n!../../nls/messages", "require"], function(msgs, require) {
                         isc.Button.create({
                             title: msgs.save,
                             click: function() { 
-                                appConfigForm.saveData(function(res, data) {
+                                appConfigForm.saveData(function(res, data, req) {
                                     if (res.status == isc.DSResponse.STATUS_SUCCESS && data.securityHandler != null)
                                         appConfigForm.getField("securityHandlerButton").canvas.setBorder("1px solid green");
+                                    if (req.operationType == "add") {
+                                        applications.invalidateCache();
+                                    }
                                 }); 
                             }
                         })

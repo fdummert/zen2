@@ -7,6 +7,8 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.data.mongodb.MongoDbFactory;
 import org.springframework.data.mongodb.core.MongoExceptionTranslator;
 
@@ -58,6 +60,8 @@ public class MongoAccessor implements DBAccessor {
     private final MongoExceptionTranslator exceptionTranslator = new MongoExceptionTranslator();
 
     private HashMap<String, ArrayList<DBListener>> listeners = new HashMap<>();
+
+    private Logger logger = LoggerFactory.getLogger(getClass());
 
     public MongoAccessor(MongoDbFactory factory) {
         this.factory = factory;

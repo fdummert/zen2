@@ -1,0 +1,1 @@
+db.application.insert( { _id: "zen2", system: true, securityMode: "PUBLIC", securityHandler: null, _class: "de.zeos.zen2.app.model.Application" } );

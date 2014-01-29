@@ -21,6 +21,7 @@ define({
         logout: "Logout",
         name: "Name",
         password: "Passwort",
+        remove: "Löschen",
         save: "Speichern",
         securityHandler: "Sicherheitsbehandlung",
         securityMode: "Sicherheit",
@@ -38,6 +39,7 @@ define({
         errSecurity: "Kein Zugriff auf diese Funktion erteilt",
         errSystem: "Systemfehler",
         
-        warnRemove: "Soll dieser Eintrag wirklich gelöscht werden?"
+        warnRemove: "Soll dieser Eintrag wirklich gelöscht werden?",
+        warnRemoveApp: "Soll wirklich die gesamte Anwendung mit allen Daten gelöscht werden?"
     }
 });

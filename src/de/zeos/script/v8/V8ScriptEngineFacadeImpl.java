@@ -21,10 +21,10 @@ import org.springframework.beans.BeanUtils;
 import org.springframework.util.ClassUtils;
 
 import de.zeos.conversion.DefaultConversionRegistry;
-import de.zeos.script.MapToScriptObjectConvertor;
+import de.zeos.script.ObjectToScriptObjectConvertor;
 import de.zeos.script.ScriptEngineFacade;
 import de.zeos.script.ScriptEngineFeature;
-import de.zeos.script.ScriptObjectToMapConvertor;
+import de.zeos.script.ScriptObjectToObjectConvertor;
 
 public class V8ScriptEngineFacadeImpl implements ScriptEngineFacade {
 
@@ -42,19 +42,43 @@ public class V8ScriptEngineFacadeImpl implements ScriptEngineFacade {
     }
 
     @Override
-    public Map<String, Object> createObject(Map<String, Object> source) {
-        MapToScriptObjectConvertor convertor = new MapToScriptObjectConvertor(this, registry);
-        return convertor.convert(source, null);
+    public Object convertFromScriptObject(Object o) {
+        ScriptObjectToObjectConvertor convertor = new ScriptObjectToObjectConvertor(new DefaultConversionRegistry());
+        return convertor.convert(o, null);
+    }
+
+    @SuppressWarnings("unchecked")
+    @Override
+    public Map<String, Object> convertFromScriptObject(Map<String, Object> o) {
+        return (Map<String, Object>) convertFromScriptObject((Object) o);
+    }
+
+    @SuppressWarnings("unchecked")
+    @Override
+    public List<Object> convertFromScriptObject(List<Object> o) {
+        return (List<Object>) convertFromScriptObject((Object) o);
     }
 
     @Override
-    public Map<String, Object> toPlainMap(Map<String, Object> source) {
-        ScriptObjectToMapConvertor convertor = new ScriptObjectToMapConvertor(new DefaultConversionRegistry());
-        return convertor.convert(source, null);
+    public Object convertToScriptObject(Object o) {
+        ObjectToScriptObjectConvertor convertor = new ObjectToScriptObjectConvertor(this, registry);
+        return convertor.convert(o, null);
+    }
+
+    @SuppressWarnings("unchecked")
+    @Override
+    public Map<String, Object> convertToScriptObject(Map<String, Object> o) {
+        return (Map<String, Object>) convertToScriptObject((Object) o);
+    }
+
+    @SuppressWarnings("unchecked")
+    @Override
+    public List<Object> convertToScriptObject(List<Object> o) {
+        return (List<Object>) convertToScriptObject((Object) o);
     }
 
     @Override
-    public Map<String, Object> createObject() {
+    public Map<String, Object> createScriptObject() {
         return v8Engine.createObject();
     }
 

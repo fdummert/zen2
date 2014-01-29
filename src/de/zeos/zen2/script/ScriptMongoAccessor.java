@@ -21,6 +21,6 @@ public class ScriptMongoAccessor extends MongoAccessor {
 
     @Override
     protected Map<String, Object> convert(DBObject dbObject, EntityInfo entityInfo) {
-        return facade.createObject(super.convert(dbObject, entityInfo));
+        return facade.convertToScriptObject(super.convert(dbObject, entityInfo));
     }
 }

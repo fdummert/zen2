@@ -26,9 +26,12 @@ import org.springframework.stereotype.Component;
 import de.zeos.script.ScriptEngineCreator;
 import de.zeos.script.ScriptEngineFacade;
 import de.zeos.zen2.app.ApplicationRegistry;
+import de.zeos.zen2.app.model.DataClass;
 import de.zeos.zen2.app.model.DataView;
 import de.zeos.zen2.app.model.DataView.CommandMode;
-import de.zeos.zen2.app.model.ScriptHandler;
+import de.zeos.zen2.app.model.DataViewScriptHandler;
+import de.zeos.zen2.app.model.DataViewScriptHandler.TriggerMode;
+import de.zeos.zen2.app.model.DataViewScriptHandler.TriggerPoint;
 import de.zeos.zen2.app.model.ScriptHandlerError;
 import de.zeos.zen2.db.DBAccessor;
 import de.zeos.zen2.db.InternalDBAccessor;
@@ -37,6 +40,19 @@ import de.zeos.zen2.script.ScriptHandlerConsole;
 @Service("dv")
 @Component
 public class DataViewService {
+
+    private class InterruptedException extends Exception {
+        private static final long serialVersionUID = -887441181042875126L;
+        private Object result;
+
+        public InterruptedException(Object result) {
+            this.result = result;
+        }
+
+        public Object getResult() {
+            return this.result;
+        }
+    }
 
     @Session
     private ServerSession serverSession;
@@ -82,12 +98,25 @@ public class DataViewService {
         Map<String, Object> res = new HashMap<>();
         res.put("requestId", data.get("requestId"));
         try {
+            HashMap<TriggerMode, HashMap<TriggerPoint, DataViewScriptHandler>> availableHandlers = new HashMap<>();
+            for (DataViewScriptHandler handler : internalAccessor.getScriptHandlers(view)) {
+                for (TriggerMode m : handler.getTriggerModes()) {
+                    HashMap<TriggerPoint, DataViewScriptHandler> triggerPoints = availableHandlers.get(m);
+                    if (triggerPoints == null) {
+                        triggerPoints = new HashMap<>();
+                        availableHandlers.put(m, triggerPoints);
+                    }
+                    triggerPoints.put(handler.getTriggerPoint(), handler);
+                }
+            }
+
+            ScriptEngineFacade engine = null;
+            engine = processHandler(app, TriggerPoint.BEFORE_PROCESSING, TriggerMode.ALL, availableHandlers, engine, data, null);
+
             if (!view.getAllowedModes().contains(mode))
                 throw new IllegalStateException("errDataViewModeNotAllowed");
 
-            ScriptHandler handler = null;//view.getBeforeHandler();
-            ScriptEngineFacade engine = null;
-            engine = processHandler(app, "before", handler, engine, data);
+            engine = processHandler(app, TriggerPoint.BEFORE, TriggerMode.ALL, availableHandlers, engine, data, null);
 
             @SuppressWarnings("unchecked")
             Map<String, Object> criteria = (Map<String, Object>) data.get("criteria");
@@ -97,15 +126,20 @@ public class DataViewService {
             Object result = null;
             switch (mode) {
                 case CREATE:
+                    engine = processHandler(app, TriggerPoint.BEFORE_PROCESSING, TriggerMode.CREATE, availableHandlers, engine, data, null);
                     filterCriteria(criteria, dataViewInfo, true, true);
+                    engine = processHandler(app, TriggerPoint.BEFORE, TriggerMode.CREATE, availableHandlers, engine, criteria, null);
                     result = accessor.insert(criteria, entityInfo);
+                    engine = processHandler(app, TriggerPoint.AFTER, TriggerMode.CREATE, availableHandlers, engine, criteria, result);
                     break;
                 case READ:
+                    engine = processHandler(app, TriggerPoint.BEFORE_PROCESSING, TriggerMode.READ, availableHandlers, engine, data, null);
                     filterCriteria(criteria, dataViewInfo, false, false);
                     Integer pageFrom = (Integer) data.get("pageFrom");
                     Integer pageTo = (Integer) data.get("pageTo");
                     String[] sorts = (String[]) data.get("sorts");
                     Integer count = null;
+                    engine = processHandler(app, TriggerPoint.BEFORE, TriggerMode.READ, availableHandlers, engine, criteria, null);
                     List<Map<String, Object>> rows = accessor.select(criteria, pageFrom, pageTo, sorts, entityInfo);
                     if (pageFrom != null || pageTo != null) {
                         count = new Long(accessor.count(criteria, entityInfo)).intValue();
@@ -114,17 +148,27 @@ public class DataViewService {
                         res.put("count", count);
                     }
                     result = rows;
+                    engine = processHandler(app, TriggerPoint.AFTER, TriggerMode.READ, availableHandlers, engine, criteria, result);
                     break;
                 case UPDATE:
+                    engine = processHandler(app, TriggerPoint.BEFORE_PROCESSING, TriggerMode.UPDATE, availableHandlers, engine, data, null);
                     filterCriteria(criteria, dataViewInfo, true, true);
+                    engine = processHandler(app, TriggerPoint.BEFORE, TriggerMode.UPDATE, availableHandlers, engine, criteria, null);
                     result = accessor.update(criteria, entityInfo);
+                    engine = processHandler(app, TriggerPoint.AFTER, TriggerMode.UPDATE, availableHandlers, engine, criteria, result);
                     break;
                 case DELETE:
+                    engine = processHandler(app, TriggerPoint.BEFORE_PROCESSING, TriggerMode.DELETE, availableHandlers, engine, data, null);
                     filterCriteria(criteria, dataViewInfo, false, false);
+                    engine = processHandler(app, TriggerPoint.BEFORE, TriggerMode.DELETE, availableHandlers, engine, criteria, null);
                     result = accessor.delete(criteria, entityInfo);
+                    engine = processHandler(app, TriggerPoint.AFTER, TriggerMode.DELETE, availableHandlers, engine, criteria, result);
                     break;
             }
+            engine = processHandler(app, TriggerPoint.AFTER, TriggerMode.ALL, availableHandlers, engine, criteria, result);
             res.put("result", result);
+        } catch (InterruptedException e) {
+            res.put("result", e.getResult());
         } catch (IllegalStateException e) {
             res.put("error", e.getMessage());
         } catch (ValidationException e) {
@@ -147,45 +191,75 @@ public class DataViewService {
     }
 
     private void filterCriteria(Map<String, Object> criteria, DataViewInfo dataViewInfo, boolean removeRO, boolean checkMandatory) throws ValidationException {
+        filterCriteria(criteria, dataViewInfo.getEntity(), removeRO, checkMandatory);
+    }
+
+    @SuppressWarnings("unchecked")
+    private void filterCriteria(Map<String, Object> criteria, EntityInfo entityInfo, boolean removeRO, boolean checkMandatory) throws ValidationException {
         for (Iterator<String> iter = criteria.keySet().iterator(); iter.hasNext();) {
             String crit = iter.next();
-            if (!isInternalField(dataViewInfo.getEntity().getId(), crit)) {
-                FieldInfo f = dataViewInfo.getEntity().getField(crit);
+            if (!isInternalField(entityInfo.getId(), crit)) {
+                FieldInfo f = entityInfo.getField(crit);
                 if (f == null || (removeRO && !f.isPk() && f.isReadOnly())) {
                     iter.remove();
-                } else if (checkMandatory && f.isMandatory() && criteria.get(crit) == null)
+                } else if (checkMandatory && f.isMandatory() && criteria.get(crit) == null) {
                     throw new ValidationException(crit, "errMandatory");
+                } else if (f.isComplex()) {
+                    Object ref = criteria.get(crit);
+                    EntityInfo refEntity = f.getType().resolveRefEntity();
+                    if (f.getType().getDataClass() == DataClass.ENTITY) {
+                        if (ref instanceof Map) {
+                            filterCriteria((Map<String, Object>) ref, refEntity, removeRO, checkMandatory);
+                        }
+                    } else if (f.getType().getDataClass() == DataClass.LIST) {
+                        List<Map<String, Object>> list = (List<Map<String, Object>>) ref;
+                        for (Map<String, Object> m : list) {
+                            filterCriteria(m, refEntity, removeRO, checkMandatory);
+                        }
+                    }
+                }
             }
         }
     }
 
-    private ScriptEngineFacade processHandler(String app, String type, ScriptHandler handler, ScriptEngineFacade engine, Map<String, Object> data) throws Exception {
+    private ScriptEngineFacade processHandler(String app, TriggerPoint point, TriggerMode mode, HashMap<TriggerMode, HashMap<TriggerPoint, DataViewScriptHandler>> availableHandlers, ScriptEngineFacade engine, Map<String, Object> data, Object result)
+            throws Exception {
+        DataViewScriptHandler handler = null;
+        HashMap<TriggerPoint, DataViewScriptHandler> points = availableHandlers.get(mode);
+        if (points != null)
+            handler = points.get(point);
         if (handler != null) {
             if (!handler.isValid())
-                throw new RuntimeException("Invalid dataView handler of type: " + type);
+                throw new RuntimeException("Invalid dataView handler " + point + " " + mode);
             if (engine == null) {
                 engine = this.engineCreator.createEngine();
-                engine.activateFeature("consoleFeature", new ScriptHandlerConsole(handler, appRegistry.getInternalDBAccessor(app)));
                 engine.activateFeature("dataFeature");
+            }
+            engine.activateFeature("consoleFeature", new ScriptHandlerConsole(handler, appRegistry.getInternalDBAccessor(app)));
+            try {
+                engine.eval(handler.getSource());
+                Invocable invocable = (Invocable) engine;
                 try {
-                    engine.eval(handler.getSource());
-                    Invocable invocable = (Invocable) engine;
-                    // FIXME depends on type category
-                    DataViewBeforeHandler beforeHandler = invocable.getInterface(DataViewBeforeHandler.class);
-                    try {
-                        Object result = beforeHandler.process(data, appRegistry.getDBAccessor(app, engine));
-                    } catch (UndeclaredThrowableException ex) {
-                        throw new ScriptException("DataView handler of type '" + type + "' does not implement the process function properly.");
-                    } catch (Exception ex) {
-                        throw engine.convertException(ex);
+                    Object returnedResult = null;
+                    if (point == TriggerPoint.BEFORE || point == TriggerPoint.BEFORE_PROCESSING) {
+                        DataViewBeforeHandler beforeHandler = invocable.getInterface(DataViewBeforeHandler.class);
+                        returnedResult = beforeHandler.process(engine.convertToScriptObject(data), appRegistry.getDBAccessor(app, engine));
+                    } else {
+                        DataViewAfterHandler afterHandler = invocable.getInterface(DataViewAfterHandler.class);
+                        returnedResult = afterHandler.process(engine.convertToScriptObject(data), engine.convertToScriptObject(result), appRegistry.getDBAccessor(app, engine));
                     }
-                } catch (ScriptException ex) {
-                    ex = (ScriptException) engine.convertException(ex);
-                    handler.setValid(false);
-                    handler.getErrors().add(new ScriptHandlerError(new Date(), ex.getMessage(), ex.getLineNumber(), ex.getColumnNumber()));
-                    appRegistry.getInternalDBAccessor(app).updateScriptHandler(handler);
-                    throw new RuntimeException("DataView handler failed of type: " + type);
+                    if (returnedResult != null)
+                        throw new InterruptedException(engine.convertFromScriptObject(returnedResult));
+                } catch (UndeclaredThrowableException ex) {
+                    throw new ScriptException("DataView handler " + point + " " + mode + " does not implement the process function properly.");
+                } catch (Exception ex) {
+                    throw engine.convertException(ex);
                 }
+            } catch (ScriptException ex) {
+                ex = (ScriptException) engine.convertException(ex);
+                handler.setValid(false);
+                appRegistry.getInternalDBAccessor(app).addScriptHandlerError(handler.getId(), new ScriptHandlerError(new Date(), ex.getMessage(), ex.getLineNumber(), ex.getColumnNumber()));
+                throw new RuntimeException("DataView handler " + point + " " + mode + " failed.");
             }
         }
         return engine;

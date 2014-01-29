@@ -31,11 +31,22 @@ import de.zeos.zen2.db.DBListener;
 
 public class MongoAccessor implements DBAccessor {
 
+    class EntityInDB {
+        DB db;
+        EntityInfo entityInfo;
+
+        EntityInDB(DB db, EntityInfo entityInfo) {
+            this.db = db;
+            this.entityInfo = entityInfo;
+        }
+    }
+
     private MongoDbFactory factory;
-    private MapToDBObjectConverter<EntityInfo> queryConverter = new MapToDBObjectConverter<EntityInfo>(new ToMongoConversionRegistry()) {
+    private MapToDBObjectConverter<EntityInDB> queryConverter = new MapToDBObjectConverter<EntityInDB>(new ToMongoConversionRegistry()) {
         @Override
-        protected EntityInfo getContext(EntityInfo context, String property) {
-            return resolveEntity(context, property);
+        protected EntityInDB getContext(EntityInDB context, String property) {
+            EntityInfo info = resolveEntity(context.entityInfo, property);
+            return new EntityInDB(context.db, info);
         }
     };
     private DBObjectToMapConverter<EntityInfo> resultConverter = new DBObjectToMapConverter<EntityInfo>(new FromMongoConversionRegistry()) {
@@ -73,7 +84,7 @@ public class MongoAccessor implements DBAccessor {
 
     @Override
     public boolean exists(Map<String, Object> query, EntityInfo entityInfo) {
-        return existsInternal(queryConverter.convert(query, entityInfo), entityInfo);
+        return existsInternal(queryConverter.convert(query, new EntityInDB(factory.getDb(), entityInfo)), entityInfo);
     }
 
     private boolean existsInternal(DBObject dbObj, EntityInfo entityInfo) {
@@ -82,7 +93,7 @@ public class MongoAccessor implements DBAccessor {
 
     public Map<String, Object> selectSingle(Map<String, Object> query, EntityInfo entityInfo) {
         notifyListeners(CommandMode.READ, Type.BEFORE, entityInfo, query, null);
-        DBObject resultObj = selectSingleInternal(queryConverter.convert(query, entityInfo), getFields(entityInfo), entityInfo);
+        DBObject resultObj = selectSingleInternal(queryConverter.convert(query, new EntityInDB(factory.getDb(), entityInfo)), getFields(entityInfo), entityInfo);
         Map<String, Object> result = null;
         if (resultObj != null)
             result = convert(resultObj, entityInfo);
@@ -108,7 +119,7 @@ public class MongoAccessor implements DBAccessor {
         try {
             DBCollection coll = getCollection(entityInfo);
             notifyListeners(CommandMode.READ, Type.BEFORE, entityInfo, query, null);
-            DBCursor cursor = coll.find(queryConverter.convert(query, entityInfo), getFields(entityInfo));
+            DBCursor cursor = coll.find(queryConverter.convert(query, new EntityInDB(factory.getDb(), entityInfo)), getFields(entityInfo));
             if (pageFrom != null)
                 cursor = cursor.skip(pageFrom);
             if (pageTo != null)
@@ -137,11 +148,17 @@ public class MongoAccessor implements DBAccessor {
         }
     }
 
+    private List<DBObject> selectInternal(DBObject query, EntityInfo entityInfo) {
+        DBCollection coll = getCollection(entityInfo);
+        DBCursor cursor = coll.find(query, getFields(entityInfo));
+        return cursor.toArray();
+    }
+
     @Override
     public long count(Map<String, Object> query, EntityInfo entityInfo) {
         try {
             DBCollection coll = getCollection(entityInfo);
-            long cnt = coll.count(queryConverter.convert(query, entityInfo));
+            long cnt = coll.count(queryConverter.convert(query, new EntityInDB(factory.getDb(), entityInfo)));
             return cnt;
         } catch (RuntimeException e) {
             throw potentiallyConvertRuntimeException(e);
@@ -151,17 +168,17 @@ public class MongoAccessor implements DBAccessor {
     @Override
     public Map<String, Object> delete(Map<String, Object> query, EntityInfo entityInfo) {
         notifyListeners(CommandMode.DELETE, Type.BEFORE, entityInfo, query, null);
-        boolean success = deleteInternal(queryConverter.convert(query, entityInfo), entityInfo, false);
+        boolean success = deleteInternal(queryConverter.convert(query, new EntityInDB(factory.getDb(), entityInfo)), entityInfo, false, true);
         notifyListeners(CommandMode.DELETE, Type.AFTER, entityInfo, query, success);
         return success ? query : null;
     }
 
-    private boolean deleteInternal(DBObject dbObj, EntityInfo entityInfo, boolean notify) {
+    private boolean deleteInternal(DBObject dbObj, EntityInfo entityInfo, boolean notify, boolean fetchFromDB) {
         try {
             DBCollection coll = getCollection(entityInfo);
             if (notify)
                 notifyListeners(CommandMode.DELETE, Type.BEFORE, entityInfo, new DBObjectMapFacade(dbObj), null);
-            DBObject dbObjToDel = selectSingleById(dbObj.get(entityInfo.getPkFieldName()), entityInfo);
+            DBObject dbObjToDel = fetchFromDB ? selectSingleById(dbObj.get(entityInfo.getPkFieldName()), entityInfo) : dbObj;
             boolean success = false;
             if (dbObjToDel != null) {
                 deleteCascadeRefs(dbObjToDel, entityInfo);
@@ -186,14 +203,17 @@ public class MongoAccessor implements DBAccessor {
                     if (dc == DataClass.ENTITY)
                         deleteCascadeSingle(refEntity, fi.getType().isLazy(), ref);
                     else if (dc == DataClass.LIST) {
-                        List<?> list = null;
                         if (fi.getType().isInverse() && fi.getType().getBackRef() != null) {
-                            list = select(Collections.singletonMap(fi.getType().getBackRef(), obj.get(entityInfo.getPkFieldName())), null, null, null, refEntity);
+                            Object id = obj.get(entityInfo.getPkFieldName());
+                            List<DBObject> list = selectInternal(new BasicDBObject(fi.getType().getBackRef(), new DBRef(factory.getDb(), entityInfo.getId(), id)), refEntity);
+                            for (DBObject o : list) {
+                                deleteInternal(o, refEntity, true, false);
+                            }
                         } else {
-                            list = (List<?>) ref;
-                        }
-                        for (Object o : list) {
-                            deleteCascadeSingle(refEntity, fi.getType().isLazy(), o);
+                            List<?> list = (List<?>) ref;
+                            for (Object o : list) {
+                                deleteCascadeSingle(refEntity, fi.getType().isLazy(), o);
+                            }
                         }
                     }
                 }
@@ -209,14 +229,14 @@ public class MongoAccessor implements DBAccessor {
             refObj = new BasicDBObject(refEntity.getPkFieldName(), ref);
         }
         if (refObj != null) {
-            deleteInternal(refObj, refEntity, true);
+            deleteInternal(refObj, refEntity, true, true);
         }
     }
 
     @Override
     public Map<String, Object> insert(Map<String, Object> query, EntityInfo entityInfo) {
         notifyListeners(CommandMode.CREATE, Type.BEFORE, entityInfo, query, null);
-        Object id = insertInternal(queryConverter.convert(query, entityInfo), entityInfo, false);
+        Object id = insertInternal(queryConverter.convert(query, new EntityInDB(factory.getDb(), entityInfo)), entityInfo, false);
         query.put(entityInfo.getPkFieldName(), id);
         notifyListeners(CommandMode.CREATE, Type.AFTER, entityInfo, query, id);
         return query;
@@ -243,7 +263,7 @@ public class MongoAccessor implements DBAccessor {
     @Override
     public Map<String, Object> update(Map<String, Object> query, EntityInfo entityInfo) {
         notifyListeners(CommandMode.UPDATE, Type.BEFORE, entityInfo, query, null);
-        boolean success = updateInternal(queryConverter.convert(query, entityInfo), entityInfo, false);
+        boolean success = updateInternal(queryConverter.convert(query, new EntityInDB(factory.getDb(), entityInfo)), entityInfo, false);
         notifyListeners(CommandMode.UPDATE, Type.AFTER, entityInfo, query, success);
         return success ? query : null;
     }
@@ -294,7 +314,7 @@ public class MongoAccessor implements DBAccessor {
                             deleteCascadeSingle(refEntity, fi.getType().isLazy(), refInDB);
                         }
                     }
-                } else if (dc == DataClass.LIST && !fi.getType().isInverse()) {
+                } else if (dc == DataClass.LIST) {
                     @SuppressWarnings("rawtypes")
                     List list = (List) ref;
                     if (ref != null && insert) {
@@ -302,7 +322,7 @@ public class MongoAccessor implements DBAccessor {
                         persistList(list, entityInfo, obj, refEntity, fi, insert);
                     } else if (!insert) {
                         // 1) no list given but db list exists -> remove db list
-                        if (ref == null && fi.getType().isCascade()) {
+                        if (ref == null && fi.getType().isCascade() && !fi.getType().isInverse()) {
                             DBObject objInDB = selectSingleById(obj.get(entityInfo.getPkFieldName()), entityInfo);
                             Object refInDB = objInDB.get(fi.getName());
                             if (refInDB != null) {
@@ -312,9 +332,15 @@ public class MongoAccessor implements DBAccessor {
                                     deleteCascadeSingle(refEntity, fi.getType().isLazy(), list.get(i));
                                 }
                             }
-                        } else if (ref != null) {
+                        } else if (ref != null && (!fi.getType().isInverse() || (fi.getType().isCascade() && fi.getType().getBackRef() != null))) {
                             DBObject objInDB = selectSingleById(obj.get(entityInfo.getPkFieldName()), entityInfo);
-                            Object refInDB = objInDB.get(fi.getName());
+                            Object refInDB = null;
+                            if (fi.getType().isInverse()) {
+                                Object id = objInDB.get(entityInfo.getPkFieldName());
+                                refInDB = selectInternal(new BasicDBObject(fi.getType().getBackRef(), new DBRef(factory.getDb(), entityInfo.getId(), id)), refEntity);
+                            } else {
+                                refInDB = objInDB.get(fi.getName());
+                            }
                             if (refInDB == null) {
                                 // 2) list given but db list null -> insert db
                                 // list
@@ -332,11 +358,13 @@ public class MongoAccessor implements DBAccessor {
                                 // -> remove
                                 for (DBObject o : listInDB) {
                                     if (!ids.contains(o.get(refEntity.getPkFieldName())))
-                                        deleteInternal(o, refEntity, true);
+                                        deleteInternal(o, refEntity, true, true);
                                 }
                             }
                         }
                     }
+                    if (fi.getType().isInverse())
+                        obj.removeField(fi.getName());
                 }
             }
         }
@@ -357,6 +385,12 @@ public class MongoAccessor implements DBAccessor {
         if (!fi.getType().isLazy() || ref instanceof DBObject) {
             // lazy or resolved
             DBObject refObj = (DBObject) ref;
+
+            if (fi.getType().isInverse() && fi.getType().getBackRef() != null) {
+                if (!refObj.containsField(fi.getType().getBackRef()))
+                    refObj.put(fi.getType().getBackRef(), obj.get(entityInfo.getPkFieldName()));
+            }
+
             id = refObj.get(refEntity.getPkFieldName());
             DBObject refObjId = new BasicDBObject(refEntity.getPkFieldName(), id);
             if (existsInternal(refObjId, refEntity)) {
@@ -371,6 +405,9 @@ public class MongoAccessor implements DBAccessor {
             }
         } else {
             id = ref;
+            if (id instanceof DBRef) {
+                id = ((DBRef) id).getId();
+            }
             DBObject refObjId = new BasicDBObject(refEntity.getPkFieldName(), id);
             if (!existsInternal(refObjId, refEntity)) {
                 throw new IllegalStateException("Reference does not exist: " + entityInfo.getId() + "." + fi.getName() + " -> " + refEntity.getId() + " with ID " + id);

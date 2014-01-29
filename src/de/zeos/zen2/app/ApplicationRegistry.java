@@ -80,20 +80,20 @@ public class ApplicationRegistry {
                     Map<String, Object> query = event.getQuery();
                     String id = (String) query.get(entityInfo.getPkFieldName());
                     switch (event.getMode()) {
-                    case CREATE: {
-                        id = (String) event.getResult();
-                        app = getInternalDBAccessor(ZEN2).getApplication(id);
-                        applications.put(id, app);
-                        break;
-                    }
-                    case DELETE:
-                        applications.remove(id);
-                        break;
-                    case UPDATE:
-                        app = getInternalDBAccessor(ZEN2).getApplication(id);
-                        applications.put(id, app);
-                        break;
-                    default:
+                        case CREATE: {
+                            id = (String) event.getResult();
+                            app = getInternalDBAccessor(ZEN2).getApplication(id);
+                            applications.put(id, app);
+                            break;
+                        }
+                        case DELETE:
+                            applications.remove(id);
+                            break;
+                        case UPDATE:
+                            app = getInternalDBAccessor(ZEN2).getApplication(id);
+                            applications.put(id, app);
+                            break;
+                        default:
                     }
                 }
             }
@@ -103,7 +103,8 @@ public class ApplicationRegistry {
                 return "application";
             }
         });
-        accessor.addDBListener(new DBListener() {
+
+        abstract class ScriptHandlerListener implements DBListener {
             @Override
             public void notify(DBEvent event) {
                 if (event.getType() == Type.BEFORE && (event.getMode() == CommandMode.CREATE || event.getMode() == CommandMode.UPDATE)) {
@@ -117,10 +118,19 @@ public class ApplicationRegistry {
                         query.put("valid", true);
                 }
             }
+        }
 
+        accessor.addDBListener(new ScriptHandlerListener() {
             @Override
             public String getEntityName() {
                 return "scriptHandler";
+            }
+        });
+
+        accessor.addDBListener(new ScriptHandlerListener() {
+            @Override
+            public String getEntityName() {
+                return "dataViewScriptHandler";
             }
         });
     }

@@ -10,7 +10,7 @@ db.enumeration.insert( { _id: "triggerPoints", system: true, constants: [ "BEFOR
 
 db.entity.insert( { _id: "application", embeddable: false, system: true, fields: [
       { name: "_id", pk: true, pkType: "ASSIGNED", mandatory: true, type: { dataClass: "SCALAR", type: "STRING" } }, 
-      { name: "securityMode", type: { dataClass: "ENUM", enumerationId: "securityModes" }}, 
+      { name: "securityMode", mandatory: true, type: { dataClass: "ENUM", enumerationId: "securityModes" }}, 
       { name: "securityHandler", type: { dataClass: "ENTITY", refEntityId: "scriptHandler", lazy: false, cascade: true } }
  ], _class: "de.zeos.zen2.app.model.Entity" } );
 
@@ -63,8 +63,9 @@ db.entity.insert( { _id: "scriptHandler", embeddable: false, system: true, field
  ], _class: "de.zeos.zen2.app.model.Entity" } );
 
 db.entity.insert( { _id: "dataViewScriptHandler", parentEntityId: "scriptHandler", embeddable: false, system: true, fields: [
-    { name: "triggerPoint", type: { dataClass: "ENUM", enumerationId: "triggerPoints" }},
-    { name: "triggerMode", type: { dataClass: "LIST", enumerationId: "triggerModes" }}
+    { name: "dataViewId", mandatory: true, type: { dataClass: "ENTITY", refEntityId: "dataView", lazy: true, dataViewId: "dataViewManage" } },                                                                                                                     
+    { name: "triggerPoint", mandatory: true, type: { dataClass: "ENUM", enumerationId: "triggerPoints" } },
+    { name: "triggerModes", mandatory: true, type: { dataClass: "LIST", enumerationId: "triggerModes" } }
 ], _class: "de.zeos.zen2.app.model.Entity" } );
 
 db.entity.insert( { _id: "scriptHandlerError", embeddable: true, system: true, fields: [
@@ -88,7 +89,7 @@ db.entity.insert( { _id: "dataView", embeddable: false, system: true, fields: [
        { name: "pushScopes", type: { dataClass: "LIST", type: "STRING" } },
        { name: "allowedModes", type: { dataClass: "LIST", enumerationId: "commandModes" } },
        { name: "pushable", mandatory: true, type: { dataClass: "SCALAR", type: "BOOL" } },
-       { name: "scriptHandlers", type: { dataClass: "LIST", refEntityId: "dataViewScriptHandler", lazy: true, cascade: true, inverse: true, backRef: "dataViewId" } }
+       { name: "scriptHandlers", type: { dataClass: "LIST", refEntityId: "dataViewScriptHandler", lazy: true, cascade: true, inverse: true, backRef: "dataViewId", dataViewId: "dataViewScriptHandlerRead" } }
 ], _class: "de.zeos.zen2.app.model.Entity" } );
 
 db.entity.insert( { _id: "fieldView", embeddable: true, system: true, fields: [

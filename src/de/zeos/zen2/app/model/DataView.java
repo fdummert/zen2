@@ -20,8 +20,6 @@ public class DataView {
     private boolean pushable;
     private boolean system;
 
-    private List<DataViewScriptHandler> scriptHandlers;
-
     public String getId() {
         return id;
     }
@@ -84,13 +82,5 @@ public class DataView {
 
     public void setSystem(boolean system) {
         this.system = system;
-    }
-
-    public List<DataViewScriptHandler> getScriptHandlers() {
-        return this.scriptHandlers;
-    }
-
-    public void setScriptHandlers(List<DataViewScriptHandler> scriptHandlers) {
-        this.scriptHandlers = scriptHandlers;
     }
 }

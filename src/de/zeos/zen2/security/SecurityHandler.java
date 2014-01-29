@@ -60,7 +60,7 @@ public class SecurityHandler {
             Authenticator authenticator = invocable.getInterface(Authenticator.class);
             final Map<String, Object> auth;
             try {
-                auth = engine.toPlainMap(authenticator.authenticate(engine.createObject(credentials), appRegistry.getDBAccessor(app, engine), digester));
+                auth = engine.convertFromScriptObject(authenticator.authenticate(engine.convertToScriptObject(credentials), appRegistry.getDBAccessor(app, engine), digester));
             } catch (UndeclaredThrowableException ex) {
                 throw new ScriptException("Security handler does not implement the authenicate function properly.");
             } catch (Exception ex) {
@@ -95,8 +95,7 @@ public class SecurityHandler {
         } catch (ScriptException ex) {
             ex = (ScriptException) engine.convertException(ex);
             handler.setValid(false);
-            handler.getErrors().add(new ScriptHandlerError(new Date(), ex.getMessage(), ex.getLineNumber(), ex.getColumnNumber()));
-            appRegistry.getInternalDBAccessor(app).updateScriptHandler(handler);
+            appRegistry.getInternalDBAccessor(app).addScriptHandlerError(handler.getId(), new ScriptHandlerError(new Date(), ex.getMessage(), ex.getLineNumber(), ex.getColumnNumber()));
             throw new AuthenticationException();
         } catch (AuthenticationException ex) {
             throw ex;

@@ -8,14 +8,7 @@
        http://www.springframework.org/schema/util http://www.springframework.org/schema/util/spring-util.xsd
     ">
     
-    <bean class="de.zeos.script.v8.V8ScriptEngineCreator">
-        <property name="features">
-            <list>
-                <ref bean="consoleFeature"/>
-                <ref bean="authFeature"/>
-            </list>
-        </property>
-    </bean>
+    <bean class="de.zeos.script.v8.V8ScriptEngineCreator"/>
     
     <bean name="consoleFeature" class="de.zeos.zen2.script.ConsoleFeature">
         <property name="scripts">

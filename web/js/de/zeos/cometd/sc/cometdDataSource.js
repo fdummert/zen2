@@ -23,7 +23,7 @@ define(["../cometdReqRes"], function(CometDRequestResponse) {
                 this.success = function(dsResponse) {
                     if (dsResponse.error) {
                         var err = dsResponse.error;
-                        if (that.messageResolver) err = that.messageResolver(err);
+                        if (that.messageResolver) err = that.messageResolver(err) || err;
                         dsResponse.status = isc.DSResponse.STATUS_FAILURE;
                         dsResponse.data = err;
                         
@@ -31,7 +31,7 @@ define(["../cometdReqRes"], function(CometDRequestResponse) {
                         var errors = {};
                         for (var field in dsResponse.validationErrors) {
                             var err = dsResponse.validationErrors[field]; 
-                            if (that.messageResolver) err = that.messageResolver(err);
+                            if (that.messageResolver) err = that.messageResolver(err) || err;
                             errors[field] = err;
                         }
                         dsResponse.status = isc.DSResponse.STATUS_VALIDATION_ERROR;
@@ -45,7 +45,7 @@ define(["../cometdReqRes"], function(CometDRequestResponse) {
                 };
                 this.error = function(err) {
                     if (err.startsWith("403:"))
-                        err = that.messageResolver("errSecurity");
+                        err = that.messageResolver("errSecurity") || "General security error";
                     var dsResponse = {
                         status: isc.DSResponse.STATUS_FAILURE,
                         data: err

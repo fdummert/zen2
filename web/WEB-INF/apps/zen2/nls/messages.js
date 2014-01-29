@@ -8,6 +8,7 @@ define({
         console: "Konsole",
         dataViews: "Datensichten",
         dataViewHandler: "Datenbehandlung",
+        edit: "Bearbeiten",
         embeddable: "Eingebettet",
         entities: "Klassen",
         entity__id: "Klasse",

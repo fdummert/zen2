@@ -12,7 +12,8 @@ define(["dojo/i18n!../../nls/messages", "require"], function(msgs, require) {
                             canvasProperties: { title: "...", 
                                 click: function() {
                                     require(["./scriptHandler"], function(handler) {
-                                        handler.show(cm, msgs.securityHandler, appConfigForm.getValue("securityHandler"), function(updatedHandler) {
+                                        var def = "function authenticate(credentials, db, digester) {\n    $\n}";
+                                        handler.show(cm, msgs.securityHandler, appConfigForm.getValue("securityHandler"), def, function(updatedHandler) {
                                             updatedHandler.valid = true;
                                             var secHandler = appConfigForm.getValue("securityHandler");
                                             if (secHandler == null)

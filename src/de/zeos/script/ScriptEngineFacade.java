@@ -1,6 +1,7 @@
 package de.zeos.script;
 
 import java.util.Date;
+import java.util.List;
 import java.util.Map;
 
 import javax.script.Compilable;
@@ -8,11 +9,20 @@ import javax.script.Invocable;
 import javax.script.ScriptEngine;
 
 public interface ScriptEngineFacade extends ScriptEngine, Compilable, Invocable {
-    public Map<String, Object> createObject(Map<String, Object> source);
 
-    public Map<String, Object> createObject();
+    public Object convertToScriptObject(Object o);
 
-    public Map<String, Object> toPlainMap(Map<String, Object> source);
+    public Map<String, Object> convertToScriptObject(Map<String, Object> o);
+
+    public List<Object> convertToScriptObject(List<Object> o);
+
+    public Object convertFromScriptObject(Object o);
+
+    public Map<String, Object> convertFromScriptObject(Map<String, Object> o);
+
+    public List<Object> convertFromScriptObject(List<Object> o);
+
+    public Map<String, Object> createScriptObject();
 
     public Object createArray(Object[] data);
 

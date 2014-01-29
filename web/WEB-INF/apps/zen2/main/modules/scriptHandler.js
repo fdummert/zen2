@@ -2,7 +2,7 @@ define(["dojo/i18n!../../nls/messages"], function(msgs) {
     return {
         origColor: null,
         editor: null,
-        show: function(cm, type, scriptHandler, applyCallback, saveCallback) {
+        show: function(cm, type, scriptHandler, def, applyCallback, saveCallback) {
             var that = this;
             isc.Window.create({
                 ID: "scriptHandlerWin",
@@ -167,6 +167,14 @@ define(["dojo/i18n!../../nls/messages"], function(msgs) {
                 scriptConsole.setData(scriptHandler.consoleEntries);
                 scriptErrors.setData(scriptHandler.errors);
                 this.update(scriptHandler);
+            }
+            if (scriptHandler == null || scriptHandler.source == null && def != null) {
+                this.editor.setValue(def);
+                var pos = this.editor.find("$");
+                if (pos != null) {
+                    this.editor.replace("");
+                    this.editor.moveCursorTo(pos.start);
+                }
             }
         },
         update: function(scriptHandler) {

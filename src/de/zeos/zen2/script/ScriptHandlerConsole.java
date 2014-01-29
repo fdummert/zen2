@@ -16,7 +16,6 @@ public class ScriptHandlerConsole {
     }
 
     public void log(String msg) {
-        this.handler.getConsoleEntries().add(new ScriptHandlerConsoleEntry(new Date(), msg));
-        this.internalDBAccessor.updateScriptHandler(this.handler);
+        this.internalDBAccessor.addScriptHandlerLogEntry(this.handler.getId(), new ScriptHandlerConsoleEntry(new Date(), msg));
     }
 }

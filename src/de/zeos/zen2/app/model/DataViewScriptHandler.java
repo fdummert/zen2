@@ -1,5 +1,7 @@
 package de.zeos.zen2.app.model;
 
+import java.util.List;
+
 public class DataViewScriptHandler extends ScriptHandler {
 
     public enum TriggerPoint {
@@ -11,7 +13,7 @@ public class DataViewScriptHandler extends ScriptHandler {
     }
 
     private TriggerPoint triggerPoint;
-    private TriggerMode triggerMode;
+    private List<TriggerMode> triggerModes;
 
     public TriggerPoint getTriggerPoint() {
         return this.triggerPoint;
@@ -21,11 +23,11 @@ public class DataViewScriptHandler extends ScriptHandler {
         this.triggerPoint = triggerPoint;
     }
 
-    public TriggerMode getTriggerMode() {
-        return this.triggerMode;
+    public List<TriggerMode> getTriggerModes() {
+        return this.triggerModes;
     }
 
-    public void setTriggerMode(TriggerMode triggerMode) {
-        this.triggerMode = triggerMode;
+    public void setTriggerModes(List<TriggerMode> triggerModes) {
+        this.triggerModes = triggerModes;
     }
 }

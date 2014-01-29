@@ -69,8 +69,12 @@ define(["./cometdDataSource"], function() {
                         };
                     } else {
                         type = scalarTypeMapping[refEntity.fields[refEntity.pkFieldName].type.type];
-                        if (f.type.dataViewId != null)
-                            field.foreignKey = model.dataViews[f.type.dataViewId].id + "DS." + refEntity.pkFieldName;
+                        if (f.type.dataViewId != null) {
+                            var dv = model.dataViews[f.type.dataViewId];
+                            if (dv == null)
+                                throw "specified davaview does not exist";
+                            field.foreignKey = dv.id + "DS." + refEntity.pkFieldName;
+                        }
                     }
                     break;
                 case "LIST":
@@ -86,11 +90,13 @@ define(["./cometdDataSource"], function() {
                     } else if (refEntity != null) {
                         if (refEntity.embeddable === true || (f.type.lazy === false && f.type.dataViewId == null)) {
                             type = createNestedDS(model, dataViewName, refEntity);
-                            if (refEntity.embeddable === false)
-                                field.foreignKey = type + "." + refEntity.pkFieldName;
                         } else if (f.type.dataViewId != null) {
-                            type = model.dataViews[f.type.dataViewId].id + "DS";
-                            field.foreignKey = type + "." + refEntity.pkFieldName; 
+                            var dv = model.dataViews[f.type.dataViewId];
+                            if (dv == null)
+                                throw "specified davaview does not exist";
+                            type = dv.id + "DS";
+                            if (f.type.lazy === true && !f.type.inverse)
+                                field.foreignKey = type + "." + refEntity.pkFieldName; 
                         } else {
                             skip = true;
                         }

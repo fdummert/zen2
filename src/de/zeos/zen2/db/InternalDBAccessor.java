@@ -4,9 +4,12 @@ import java.util.List;
 
 import de.zeos.zen2.app.model.Application;
 import de.zeos.zen2.app.model.DataView;
+import de.zeos.zen2.app.model.DataViewScriptHandler;
 import de.zeos.zen2.app.model.Entity;
 import de.zeos.zen2.app.model.Enumeration;
 import de.zeos.zen2.app.model.ScriptHandler;
+import de.zeos.zen2.app.model.ScriptHandlerConsoleEntry;
+import de.zeos.zen2.app.model.ScriptHandlerError;
 
 public interface InternalDBAccessor {
     public List<Application> getApplications();
@@ -19,7 +22,11 @@ public interface InternalDBAccessor {
 
     public ScriptHandler getScriptHandler(Object id);
 
-    public void updateScriptHandler(ScriptHandler scriptHandler);
+    public void addScriptHandlerLogEntry(Object id, ScriptHandlerConsoleEntry entry);
+
+    public void addScriptHandlerError(Object id, ScriptHandlerError error);
+
+    public List<DataViewScriptHandler> getScriptHandlers(DataView dataView);
 
     public Enumeration getEnumeration(String name);
 

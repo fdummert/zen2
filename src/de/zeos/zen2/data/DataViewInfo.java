@@ -21,6 +21,10 @@ public class DataViewInfo {
         return this.dataView.getId();
     }
 
+    public boolean isSystem() {
+        return this.dataView.isSystem();
+    }
+
     public String getScope() {
         return this.dataView.getScope();
     }

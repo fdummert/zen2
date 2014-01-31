@@ -90,8 +90,11 @@ public class DataViewService {
     private void process(ServerSession remote, Mutable message, String app, String dataView, String scope) {
         InternalDBAccessor internalAccessor = this.appRegistry.getInternalDBAccessor(app);
         DataView view = internalAccessor.getDataView(dataView);
-
-        DBAccessor accessor = this.appRegistry.getDBAccessor(app);
+        String dbApp = app;
+        if (scope != null && app.equals(ApplicationRegistry.ZEN2) && view.isSystem() && view.getScope() != null && view.getScope().equals("application")) {
+            dbApp = scope;
+        }
+        DBAccessor accessor = this.appRegistry.getDBAccessor(dbApp);
         Map<String, Object> data = message.getDataAsMap();
         CommandMode mode = CommandMode.valueOf((String) data.get("mode"));
 
@@ -111,12 +114,12 @@ public class DataViewService {
             }
 
             ScriptEngineFacade engine = null;
-            engine = processHandler(app, TriggerPoint.BEFORE_PROCESSING, TriggerMode.ALL, availableHandlers, engine, data, null);
+            engine = processHandler(internalAccessor, dbApp, TriggerPoint.BEFORE_PROCESSING, TriggerMode.ALL, availableHandlers, engine, data, null);
 
             if (!view.getAllowedModes().contains(mode))
                 throw new IllegalStateException("errDataViewModeNotAllowed");
 
-            engine = processHandler(app, TriggerPoint.BEFORE, TriggerMode.ALL, availableHandlers, engine, data, null);
+            engine = processHandler(internalAccessor, dbApp, TriggerPoint.BEFORE, TriggerMode.ALL, availableHandlers, engine, data, null);
 
             @SuppressWarnings("unchecked")
             Map<String, Object> criteria = (Map<String, Object>) data.get("criteria");
@@ -126,20 +129,20 @@ public class DataViewService {
             Object result = null;
             switch (mode) {
                 case CREATE:
-                    engine = processHandler(app, TriggerPoint.BEFORE_PROCESSING, TriggerMode.CREATE, availableHandlers, engine, data, null);
+                    engine = processHandler(internalAccessor, dbApp, TriggerPoint.BEFORE_PROCESSING, TriggerMode.CREATE, availableHandlers, engine, data, null);
                     filterCriteria(criteria, dataViewInfo, true, true);
-                    engine = processHandler(app, TriggerPoint.BEFORE, TriggerMode.CREATE, availableHandlers, engine, criteria, null);
+                    engine = processHandler(internalAccessor, dbApp, TriggerPoint.BEFORE, TriggerMode.CREATE, availableHandlers, engine, criteria, null);
                     result = accessor.insert(criteria, entityInfo);
-                    engine = processHandler(app, TriggerPoint.AFTER, TriggerMode.CREATE, availableHandlers, engine, criteria, result);
+                    engine = processHandler(internalAccessor, dbApp, TriggerPoint.AFTER, TriggerMode.CREATE, availableHandlers, engine, criteria, result);
                     break;
                 case READ:
-                    engine = processHandler(app, TriggerPoint.BEFORE_PROCESSING, TriggerMode.READ, availableHandlers, engine, data, null);
+                    engine = processHandler(internalAccessor, dbApp, TriggerPoint.BEFORE_PROCESSING, TriggerMode.READ, availableHandlers, engine, data, null);
                     filterCriteria(criteria, dataViewInfo, false, false);
                     Integer pageFrom = (Integer) data.get("pageFrom");
                     Integer pageTo = (Integer) data.get("pageTo");
                     String[] sorts = (String[]) data.get("sorts");
                     Integer count = null;
-                    engine = processHandler(app, TriggerPoint.BEFORE, TriggerMode.READ, availableHandlers, engine, criteria, null);
+                    engine = processHandler(internalAccessor, dbApp, TriggerPoint.BEFORE, TriggerMode.READ, availableHandlers, engine, criteria, null);
                     List<Map<String, Object>> rows = accessor.select(criteria, pageFrom, pageTo, sorts, entityInfo);
                     if (pageFrom != null || pageTo != null) {
                         count = new Long(accessor.count(criteria, entityInfo)).intValue();
@@ -148,24 +151,24 @@ public class DataViewService {
                         res.put("count", count);
                     }
                     result = rows;
-                    engine = processHandler(app, TriggerPoint.AFTER, TriggerMode.READ, availableHandlers, engine, criteria, result);
+                    engine = processHandler(internalAccessor, dbApp, TriggerPoint.AFTER, TriggerMode.READ, availableHandlers, engine, criteria, result);
                     break;
                 case UPDATE:
-                    engine = processHandler(app, TriggerPoint.BEFORE_PROCESSING, TriggerMode.UPDATE, availableHandlers, engine, data, null);
+                    engine = processHandler(internalAccessor, dbApp, TriggerPoint.BEFORE_PROCESSING, TriggerMode.UPDATE, availableHandlers, engine, data, null);
                     filterCriteria(criteria, dataViewInfo, true, true);
-                    engine = processHandler(app, TriggerPoint.BEFORE, TriggerMode.UPDATE, availableHandlers, engine, criteria, null);
+                    engine = processHandler(internalAccessor, dbApp, TriggerPoint.BEFORE, TriggerMode.UPDATE, availableHandlers, engine, criteria, null);
                     result = accessor.update(criteria, entityInfo);
-                    engine = processHandler(app, TriggerPoint.AFTER, TriggerMode.UPDATE, availableHandlers, engine, criteria, result);
+                    engine = processHandler(internalAccessor, dbApp, TriggerPoint.AFTER, TriggerMode.UPDATE, availableHandlers, engine, criteria, result);
                     break;
                 case DELETE:
-                    engine = processHandler(app, TriggerPoint.BEFORE_PROCESSING, TriggerMode.DELETE, availableHandlers, engine, data, null);
+                    engine = processHandler(internalAccessor, dbApp, TriggerPoint.BEFORE_PROCESSING, TriggerMode.DELETE, availableHandlers, engine, data, null);
                     filterCriteria(criteria, dataViewInfo, false, false);
-                    engine = processHandler(app, TriggerPoint.BEFORE, TriggerMode.DELETE, availableHandlers, engine, criteria, null);
+                    engine = processHandler(internalAccessor, dbApp, TriggerPoint.BEFORE, TriggerMode.DELETE, availableHandlers, engine, criteria, null);
                     result = accessor.delete(criteria, entityInfo);
-                    engine = processHandler(app, TriggerPoint.AFTER, TriggerMode.DELETE, availableHandlers, engine, criteria, result);
+                    engine = processHandler(internalAccessor, dbApp, TriggerPoint.AFTER, TriggerMode.DELETE, availableHandlers, engine, criteria, result);
                     break;
             }
-            engine = processHandler(app, TriggerPoint.AFTER, TriggerMode.ALL, availableHandlers, engine, criteria, result);
+            engine = processHandler(internalAccessor, dbApp, TriggerPoint.AFTER, TriggerMode.ALL, availableHandlers, engine, criteria, result);
             res.put("result", result);
         } catch (InterruptedException e) {
             res.put("result", e.getResult());
@@ -222,8 +225,8 @@ public class DataViewService {
         }
     }
 
-    private ScriptEngineFacade processHandler(String app, TriggerPoint point, TriggerMode mode, HashMap<TriggerMode, HashMap<TriggerPoint, DataViewScriptHandler>> availableHandlers, ScriptEngineFacade engine, Map<String, Object> data, Object result)
-            throws Exception {
+    private ScriptEngineFacade processHandler(InternalDBAccessor internalAccessor, String app, TriggerPoint point, TriggerMode mode, HashMap<TriggerMode, HashMap<TriggerPoint, DataViewScriptHandler>> availableHandlers, ScriptEngineFacade engine,
+            Map<String, Object> data, Object result) throws Exception {
         DataViewScriptHandler handler = null;
         HashMap<TriggerPoint, DataViewScriptHandler> points = availableHandlers.get(mode);
         if (points != null)
@@ -235,7 +238,7 @@ public class DataViewService {
                 engine = this.engineCreator.createEngine();
                 engine.activateFeature("dataFeature");
             }
-            engine.activateFeature("consoleFeature", new ScriptHandlerConsole(handler, appRegistry.getInternalDBAccessor(app)));
+            engine.activateFeature("consoleFeature", new ScriptHandlerConsole(handler, internalAccessor));
             try {
                 engine.eval(handler.getSource());
                 Invocable invocable = (Invocable) engine;
@@ -258,7 +261,7 @@ public class DataViewService {
             } catch (ScriptException ex) {
                 ex = (ScriptException) engine.convertException(ex);
                 handler.setValid(false);
-                appRegistry.getInternalDBAccessor(app).addScriptHandlerError(handler.getId(), new ScriptHandlerError(new Date(), ex.getMessage(), ex.getLineNumber(), ex.getColumnNumber()));
+                internalAccessor.addScriptHandlerError(handler.getId(), new ScriptHandlerError(new Date(), ex.getMessage(), ex.getLineNumber(), ex.getColumnNumber()));
                 throw new RuntimeException("DataView handler " + point + " " + mode + " failed.");
             }
         }

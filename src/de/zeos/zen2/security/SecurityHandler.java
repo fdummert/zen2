@@ -45,7 +45,7 @@ public class SecurityHandler {
             Application application = appRegistry.getApplication(app);
             if (application.getSecurityMode() == SecurityMode.PUBLIC) {
                 final List<DataView> dataViews = appRegistry.getInternalDBAccessor(app).getDataViews();
-                return createAuthorization(app, null, Collections.singleton("**"), Collections.singleton("**"), dataViews);
+                return createAuthorization(app, null, Collections.singleton(".*"), Collections.singleton(".*"), dataViews);
             }
             handler = application.getSecurityHandler();
             if (!handler.isValid())
@@ -165,7 +165,7 @@ public class SecurityHandler {
 
     private String getScope(String prop, Map<String, Object> data) {
         String scope = "";
-        if (prop != null) {
+        if (prop != null && data != null) {
             Object d = data.get(prop);
             if (d != null)
                 scope = "/" + d.toString();

@@ -1,7 +1,9 @@
 package de.zeos.zen2.security;
 
+import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
+import java.util.regex.Pattern;
 
 import javax.inject.Inject;
 
@@ -25,6 +27,7 @@ public class AuthSecurityPolicy implements SecurityPolicy {
 
     public static final String AUTH_KEY = Configurer.ZEOS_KEY + ".security";
     public static final String APP_KEY = Configurer.ZEOS_KEY + ".application";
+    public static final String CHANNELS_KEY = Configurer.ZEOS_KEY + ".channels";
     public static final String SERVICE_CHANNEL = "/service/";
     public static final String APP_CHANNEL = "/app/";
     public static final String PUBLIC_CHANNEL = "/public/";
@@ -43,6 +46,10 @@ public class AuthSecurityPolicy implements SecurityPolicy {
             Authorization auth = this.securityHandler.authenticate(app, (Map<String, Object>) ext.get(AUTH_KEY));
             session.setAttribute(AUTH_KEY, auth);
             session.setAttribute(APP_KEY, app);
+            Set<Pattern> channelPatterns = new HashSet<Pattern>();
+            for (String s : auth.getChannels())
+                channelPatterns.add(Pattern.compile(s));
+            session.setAttribute(CHANNELS_KEY, channelPatterns);
             ServerMessage.Mutable handshakeReply = message.getAssociated();
             ext = handshakeReply.getExt(true);
             ext.put(AUTH_KEY, auth);
@@ -95,48 +102,12 @@ public class AuthSecurityPolicy implements SecurityPolicy {
         Authorization auth = (Authorization) session.getAttribute(AUTH_KEY);
         if (auth.getChannels().contains(channel))
             return true;
-        channel = getBestMatchingChannel(auth.getChannels(), channel);
-        return channel != null;
-    }
-
-    private String getBestMatchingChannel(Set<String> channels, String channel) {
-        ChannelId candidate = null;
-        String candidateScope = null;
-        for (String c : channels) {
-            int scopePos = c.indexOf("*/");
-            String scope = null;
-            if (scopePos > 0) {
-                scope = c.substring(scopePos + 1);
-                c = c.substring(0, scopePos + 1);
-            }
-            ChannelId ch = new ChannelId(c);
-            if (matches(ch, scope, new ChannelId(channel))) {
-                if (candidate == null || (!ch.isWild() && candidate.isWild()) || (ch.isWild() && candidate.isDeepWild()) || ch.depth() > candidate.depth() || depth(scope) > depth(candidateScope)) {
-                    candidate = ch;
-                    candidateScope = scope;
-                }
-            }
-        }
-        return candidate == null ? null : candidate.toString() + (candidateScope == null ? "" : candidateScope);
-    }
-
-    private boolean matches(ChannelId permissionChannel, String permissionScope, ChannelId concreteChannel) {
-        if (permissionScope != null) {
-            String concreteStr = concreteChannel.toString();
-            return concreteStr.endsWith(permissionScope) && permissionChannel.matches(new ChannelId(concreteStr.substring(0, concreteStr.length() - permissionScope.length())));
-        }
-        if (permissionChannel.matches(concreteChannel))
-            return true;
-        if (permissionChannel.isDeepWild() && concreteChannel.isWild()) {
-            String permissionPrefix = (permissionChannel.getParent() == null ? "" : permissionChannel.getParent()) + "/";
-            String concretePrefix = (concreteChannel.getParent() == null ? "" : concreteChannel.getParent()) + "/";
-            if (concretePrefix.startsWith(permissionPrefix))
+        @SuppressWarnings("unchecked")
+        Set<Pattern> patterns = (Set<Pattern>) session.getAttribute(CHANNELS_KEY);
+        for (Pattern p : patterns) {
+            if (p.matcher(channel).matches())
                 return true;
         }
         return false;
-    }
-
-    private int depth(String scope) {
-        return scope == null ? 0 : scope.split("/").length;
     }
 }

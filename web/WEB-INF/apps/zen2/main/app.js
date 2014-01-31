@@ -70,7 +70,14 @@ define(["dojo/i18n!../nls/messages", "de/zeos/cometd/sc/cometdDataSource", "requ
                                 autoFetchData: true,
                                 contextMenu: appMenu,
                                 recordClick: function(viewer, record) {
-                                    openModule("appManagement", record);
+                                    var app = record._id;
+                                    var dataViews = isc.CometDDataSource.model.dataViews;
+                                    for (var name in dataViews) {
+                                        var dv = dataViews[name];
+                                        if (dv.system && dv.scope == "application")
+                                            isc.DS.get(name + "DS").scope = app != "zen2" ? app : null;
+                                    }
+                                    openModule("appManagement", app);
                                 }
                             }),
                             isc.Button.create({title: msgs.logout, width: 250, height: 20, click: function() { cm.stop(); }})

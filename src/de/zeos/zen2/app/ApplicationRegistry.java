@@ -25,7 +25,7 @@ import de.zeos.zen2.db.InternalDBAccessor;
 
 @Component
 public class ApplicationRegistry {
-    private static String ZEN2 = "zen2";
+    public static String ZEN2 = "zen2";
     private static String ADMIN = "admin";
 
     public class Console {

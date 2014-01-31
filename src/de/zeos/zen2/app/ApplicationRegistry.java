@@ -13,15 +13,20 @@ import org.springframework.stereotype.Component;
 import de.zeos.script.ScriptEngineFacade;
 import de.zeos.zen2.app.model.Application;
 import de.zeos.zen2.app.model.Application.SecurityMode;
+import de.zeos.zen2.app.model.DataView;
 import de.zeos.zen2.app.model.DataView.CommandMode;
+import de.zeos.zen2.app.model.Entity;
 import de.zeos.zen2.app.model.ScriptHandler;
+import de.zeos.zen2.data.DataViewInfo;
 import de.zeos.zen2.data.EntityInfo;
+import de.zeos.zen2.data.ModelInfo;
 import de.zeos.zen2.db.DBAccessor;
 import de.zeos.zen2.db.DBAccessorFactory;
 import de.zeos.zen2.db.DBEvent;
 import de.zeos.zen2.db.DBEvent.Type;
 import de.zeos.zen2.db.DBListener;
 import de.zeos.zen2.db.InternalDBAccessor;
+import de.zeos.zen2.db.ScriptableDBAccessor;
 
 @Component
 public class ApplicationRegistry {
@@ -66,29 +71,30 @@ public class ApplicationRegistry {
         return this.applications.get(app);
     }
 
-    private void registerAppEventListener(DBAccessor accessor) {
-        accessor.addDBListener(new DBListener() {
-            @Override
-            public void notify(DBEvent event) {
-                if (event.getType() == Type.BEFORE && event.getMode() == CommandMode.UPDATE) {
-                    Map<String, Object> query = event.getQuery();
-                    SecurityMode mode = SecurityMode.valueOf((String) query.get("securityMode"));
-                    if (mode == SecurityMode.PUBLIC)
-                        query.put("securityHandler", null);
-                } else if (event.getType() == Type.BEFORE && event.getMode() == CommandMode.CREATE) {
-                    EntityInfo entityInfo = (EntityInfo) event.getSource();
-                    Map<String, Object> query = event.getQuery();
-                    String id = (String) query.get(entityInfo.getPkFieldName());
-                    if (getInternalDBAccessor(ZEN2).getApplication(id) == null) {
-                        if (getInternalDBAccessor(ADMIN).existsDB(id))
-                            throw new IllegalStateException("errAppAlreadyExistsInDB");
-                    }
-                } else if (event.getType() == Type.AFTER && event.getMode() != CommandMode.READ) {
-                    EntityInfo entityInfo = (EntityInfo) event.getSource();
-                    Application app;
-                    Map<String, Object> query = event.getQuery();
-                    String id = (String) query.get(entityInfo.getPkFieldName());
-                    switch (event.getMode()) {
+    private void registerAppEventListener(String app, DBAccessor accessor) {
+        if (app.equals(ZEN2)) {
+            accessor.addDBListener(new DBListener() {
+                @Override
+                public void notify(DBEvent event) {
+                    if (event.getType() == Type.BEFORE && event.getMode() == CommandMode.UPDATE) {
+                        Map<String, Object> query = event.getQuery();
+                        SecurityMode mode = SecurityMode.valueOf((String) query.get("securityMode"));
+                        if (mode == SecurityMode.PUBLIC)
+                            query.put("securityHandler", null);
+                    } else if (event.getType() == Type.BEFORE && event.getMode() == CommandMode.CREATE) {
+                        EntityInfo entityInfo = (EntityInfo) event.getSource();
+                        Map<String, Object> query = event.getQuery();
+                        String id = (String) query.get(entityInfo.getPkFieldName());
+                        if (getInternalDBAccessor(ZEN2).getApplication(id) == null) {
+                            if (getInternalDBAccessor(ADMIN).existsDB(id))
+                                throw new IllegalStateException("errAppAlreadyExistsInDB");
+                        }
+                    } else if (event.getType() == Type.AFTER && event.getMode() != CommandMode.READ) {
+                        EntityInfo entityInfo = (EntityInfo) event.getSource();
+                        Application app;
+                        Map<String, Object> query = event.getQuery();
+                        String id = (String) query.get(entityInfo.getPkFieldName());
+                        switch (event.getMode()) {
                         case CREATE: {
                             id = (String) event.getResult();
                             app = getInternalDBAccessor(ZEN2).getApplication(id);
@@ -105,16 +111,16 @@ public class ApplicationRegistry {
                             applications.put(id, app);
                             break;
                         default:
+                        }
                     }
                 }
-            }
 
-            @Override
-            public String getEntityName() {
-                return "application";
-            }
-        });
-
+                @Override
+                public String getEntityName() {
+                    return "application";
+                }
+            });
+        }
         abstract class ScriptHandlerListener implements DBListener {
             @Override
             public void notify(DBEvent event) {
@@ -144,6 +150,51 @@ public class ApplicationRegistry {
                 return "dataViewScriptHandler";
             }
         });
+
+        if (!app.equals(ZEN2)) {
+            accessor.addDBListener(new DBListener() {
+                @Override
+                public void notify(DBEvent event) {
+                    if (event.getType() == Type.BEFORE) {
+                        Map<String, Object> query = event.getQuery();
+                        query.put("system", false);
+                    }
+                }
+
+                @Override
+                public String getEntityName() {
+                    return "entity";
+                }
+            });
+            accessor.addDBListener(new DBListener() {
+                @Override
+                public void notify(DBEvent event) {
+                    if (event.getType() == Type.BEFORE) {
+                        Map<String, Object> query = event.getQuery();
+                        query.put("system", false);
+                    }
+                }
+
+                @Override
+                public String getEntityName() {
+                    return "enumeration";
+                }
+            });
+            accessor.addDBListener(new DBListener() {
+                @Override
+                public void notify(DBEvent event) {
+                    if (event.getType() == Type.BEFORE) {
+                        Map<String, Object> query = event.getQuery();
+                        query.put("system", false);
+                    }
+                }
+
+                @Override
+                public String getEntityName() {
+                    return "dataView";
+                }
+            });
+        }
     }
 
     public DBAccessor getDBAccessor(String app) {
@@ -151,18 +202,23 @@ public class ApplicationRegistry {
         if (accessor == null) {
             accessor = dbAccessorFactory.createDBAccessor(app);
             this.dbAccessors.put(app, accessor);
-            if (app.equals(ZEN2)) {
-                registerAppEventListener(accessor);
-            }
+            registerAppEventListener(app, accessor);
         }
         return accessor;
     }
 
-    public DBAccessor getDBAccessor(String app, ScriptEngineFacade facade) {
-        DBAccessor accessor = dbAccessorFactory.createScriptableDBAccessor(app, facade);
-        if (app.equals(ZEN2)) {
-            registerAppEventListener(accessor);
+    public ScriptableDBAccessor getDBAccessor(String app, ScriptEngineFacade facade) {
+        ModelInfo modelInfo = new ModelInfo();
+        HashMap<String, EntityInfo> entities = new HashMap<>();
+        for (Entity e : getInternalDBAccessor(app).getRootEntities()) {
+            DataView dv = new DataView();
+            dv.setId("global");
+            dv.setEntity(e);
+            new DataViewInfo(modelInfo, getInternalDBAccessor(app), dv);
+            entities.put(e.getId(), modelInfo.getEntities().get("global:" + e.getId()));
         }
+        ScriptableDBAccessor accessor = dbAccessorFactory.createScriptableDBAccessor(app, entities, facade);
+        registerAppEventListener(app, (DBAccessor) accessor);
         return accessor;
     }
 

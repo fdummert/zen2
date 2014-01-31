@@ -38,4 +38,6 @@ public interface InternalDBAccessor {
 
     public Entity getEntity(String refEntityId);
 
+    public List<Entity> getRootEntities();
+
 }

@@ -78,6 +78,11 @@ public class MongoInternalDBAccessor implements InternalDBAccessor {
     }
 
     @Override
+    public List<Entity> getRootEntities() {
+        return this.operations.find(Query.query(Criteria.where("embeddable").ne(true)), Entity.class);
+    }
+
+    @Override
     public void addScriptHandlerLogEntry(Object id, ScriptHandlerConsoleEntry entry) {
         this.operations.updateFirst(Query.query(Criteria.where("_id").is(id)), new Update().push("consoleEntries", entry), ScriptHandler.class);
     }

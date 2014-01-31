@@ -29,7 +29,7 @@ define(["dojo/i18n!../../nls/messages", "require"], function(msgs, require) {
                                      recordClick: function(viewer, record, recordNum, field, fieldNum) {
                                          var oldRecord = isc.addProperties({}, record);
                                          function scriptHandlerLoaded(handler, scriptHandler) {
-                                             var def = "function process(data, " + (scriptHandler.triggerPoint == "AFTER" ? "result, " : "") + "db) {\n    $\n}";
+                                             var def = "function process(data, scope, " + (scriptHandler.triggerPoint == "AFTER" ? "result, " : "") + "db) {\n    $\n}";
                                              handler.show(viewer.cm, viewer.msgs.dataViewHandler + ": " + scriptHandler.triggerPoint + " " + scriptHandler.triggerModes, scriptHandler, def, function(updatedHandler) {
                                                  record._changed = !isc.DynamicForm.compareValues(oldRecord, updatedHandler);
                                                  updatedHandler.valid = true;

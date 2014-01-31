@@ -7,8 +7,6 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.data.mongodb.MongoDbFactory;
 import org.springframework.data.mongodb.core.MongoExceptionTranslator;
 
@@ -60,8 +58,6 @@ public class MongoAccessor implements DBAccessor {
     private final MongoExceptionTranslator exceptionTranslator = new MongoExceptionTranslator();
 
     private HashMap<String, ArrayList<DBListener>> listeners = new HashMap<>();
-
-    private Logger logger = LoggerFactory.getLogger(getClass());
 
     public MongoAccessor(MongoDbFactory factory) {
         this.factory = factory;
@@ -265,14 +261,16 @@ public class MongoAccessor implements DBAccessor {
     }
 
     @Override
-    public Map<String, Object> update(Map<String, Object> query, EntityInfo entityInfo) {
+    public Map<String, Object> update(Map<String, Object> query, boolean refetch, EntityInfo entityInfo) {
         notifyListeners(CommandMode.UPDATE, Type.BEFORE, entityInfo, query, null);
-        boolean success = updateInternal(queryConverter.convert(query, new EntityInDB(factory.getDb(), entityInfo)), entityInfo, false);
-        notifyListeners(CommandMode.UPDATE, Type.AFTER, entityInfo, query, success);
-        return success ? query : null;
+        DBObject result = updateInternal(queryConverter.convert(query, new EntityInDB(factory.getDb(), entityInfo)), refetch, entityInfo, false);
+        notifyListeners(CommandMode.UPDATE, Type.AFTER, entityInfo, query, result);
+        if (result == null)
+            return null;
+        return convert(result, entityInfo);
     }
 
-    private boolean updateInternal(DBObject queryObj, EntityInfo entityInfo, boolean notify) {
+    private DBObject updateInternal(DBObject queryObj, boolean refetch, EntityInfo entityInfo, boolean notify) {
         try {
             DBCollection coll = getCollection(entityInfo);
             if (notify)
@@ -281,11 +279,18 @@ public class MongoAccessor implements DBAccessor {
             DBObject update = new BasicDBObject();
             Object id = queryObj.removeField(entityInfo.getPkFieldName());
             update.put("$set", queryObj);
-            WriteResult result = coll.update(new BasicDBObject(Collections.singletonMap(entityInfo.getPkFieldName(), id)), update);
-            boolean success = result.getError() == null;
+            WriteResult writeResult = coll.update(new BasicDBObject(Collections.singletonMap(entityInfo.getPkFieldName(), id)), update);
+            boolean success = writeResult.getError() == null;
+            DBObject result = null;
+            if (success) {
+                if (refetch)
+                    result = selectSingleById(id, entityInfo);
+                else
+                    result = queryObj;
+            }
             if (notify)
-                notifyListeners(CommandMode.UPDATE, Type.AFTER, entityInfo, new DBObjectMapFacade(queryObj), success);
-            return success;
+                notifyListeners(CommandMode.UPDATE, Type.AFTER, entityInfo, new DBObjectMapFacade(queryObj), result);
+            return result;
         } catch (RuntimeException e) {
             throw potentiallyConvertRuntimeException(e);
         }
@@ -401,7 +406,7 @@ public class MongoAccessor implements DBAccessor {
                 if (insert)
                     throw new IllegalStateException("Nonlazy reference does already exist: " + entityInfo.getId() + "." + fi.getName() + " -> " + refEntity.getId() + " with ID " + id);
                 if (fi.getType().isCascade())
-                    updateInternal(refObj, refEntity, true);
+                    updateInternal(refObj, false, refEntity, true);
             } else {
                 if (!fi.getType().isCascade())
                     throw new IllegalStateException("Noncascading reference does not exist yet: " + entityInfo.getId() + "." + fi.getName() + " -> " + refEntity.getId() + " with ID " + id);

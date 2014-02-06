@@ -167,8 +167,13 @@ public class SecurityHandler {
         String scope = "";
         if (prop != null && data != null) {
             Object d = data.get(prop);
-            if (d != null)
-                scope = "/" + d.toString();
+            if (d != null) {
+                scope = d.toString();
+                if (!scope.startsWith("!"))
+                    scope = "/" + scope;
+                else
+                    scope = scope.substring(1);
+            }
         }
         return scope;
     }

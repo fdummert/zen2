@@ -39,7 +39,7 @@ define(["dojo/i18n!../../nls/messages", "require"], function(msgs, require) {
                                     if (req.operationType == "add") {
                                         applications.invalidateCache();
                                     }
-                                }); 
+                                }, {params: {refetch: true}}); 
                             }
                         })
                     ]

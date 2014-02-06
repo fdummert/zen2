@@ -2,6 +2,7 @@ package de.zeos.zen2.db.mongo;
 
 import java.io.IOException;
 import java.nio.charset.Charset;
+import java.util.Map;
 
 import javax.annotation.PostConstruct;
 import javax.inject.Inject;
@@ -16,9 +17,11 @@ import com.mongodb.Mongo;
 import com.mongodb.WriteConcern;
 
 import de.zeos.script.ScriptEngineFacade;
+import de.zeos.zen2.data.EntityInfo;
 import de.zeos.zen2.db.DBAccessor;
 import de.zeos.zen2.db.DBAccessorFactory;
 import de.zeos.zen2.db.InternalDBAccessor;
+import de.zeos.zen2.db.ScriptableDBAccessor;
 import de.zeos.zen2.script.ScriptMongoAccessor;
 
 public class MongoAccessorFactory implements DBAccessorFactory {
@@ -53,8 +56,8 @@ public class MongoAccessorFactory implements DBAccessorFactory {
     }
 
     @Override
-    public DBAccessor createScriptableDBAccessor(String app, ScriptEngineFacade facade) {
-        return new ScriptMongoAccessor(new SimpleMongoDbFactory(mongo, app, new UserCredentials(app, app)), facade);
+    public ScriptableDBAccessor createScriptableDBAccessor(String app, Map<String, EntityInfo> entities, ScriptEngineFacade facade) {
+        return new ScriptMongoAccessor(new SimpleMongoDbFactory(mongo, app, new UserCredentials(app, app)), entities, facade);
     }
 
     @Override

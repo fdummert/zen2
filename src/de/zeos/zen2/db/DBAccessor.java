@@ -20,7 +20,7 @@ public interface DBAccessor {
 
     public Map<String, Object> insert(Map<String, Object> query, EntityInfo entityInfo);
 
-    public Map<String, Object> update(Map<String, Object> query, EntityInfo entityInfo);
+    public Map<String, Object> update(Map<String, Object> query, boolean refetch, EntityInfo entityInfo);
 
     public Map<String, Object> delete(Map<String, Object> query, EntityInfo entityInfo);
 

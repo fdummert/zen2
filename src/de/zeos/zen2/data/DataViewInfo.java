@@ -5,6 +5,7 @@ import java.util.List;
 
 import de.zeos.zen2.app.model.DataView;
 import de.zeos.zen2.app.model.FieldView;
+import de.zeos.zen2.app.model.DataView.OverwriteMode;
 import de.zeos.zen2.db.InternalDBAccessor;
 
 public class DataViewInfo {
@@ -19,6 +20,10 @@ public class DataViewInfo {
 
     public String getId() {
         return this.dataView.getId();
+    }
+
+    public OverwriteMode getOverwriteMode() {
+        return this.dataView.getOverwriteMode();
     }
 
     public boolean isSystem() {

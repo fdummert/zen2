@@ -10,8 +10,6 @@
     <bean id="jacksonObjectMapper" factory-bean="jacksonJSONContext" factory-method="getObjectMapper"/>
 	<mvc:annotation-driven>
         <mvc:message-converters>
-            <bean class="org.springframework.http.converter.StringHttpMessageConverter"/>
-            <bean class="org.springframework.http.converter.ByteArrayHttpMessageConverter"/>
             <bean class="org.springframework.http.converter.json.MappingJackson2HttpMessageConverter">
                 <property name="objectMapper" ref="jacksonObjectMapper" />
             </bean>        

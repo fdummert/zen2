@@ -4,6 +4,7 @@ import javax.inject.Inject;
 
 import org.cometd.bayeux.server.BayeuxServer;
 import org.cometd.bayeux.server.ServerSession;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -33,10 +34,10 @@ public class DataViewController {
     public ModelInfo getDataViews(@PathVariable String app, @PathVariable String id) throws JsonProcessingException {
         ServerSession session = this.bayeuxServer.getSession(id);
         if (session == null)
-            throw new IllegalStateException("Invalid session");
+            throw new ControllerException(HttpStatus.UNAUTHORIZED, "Invalid session");
         String sessionApp = (String) session.getAttribute(AuthSecurityPolicy.APP_KEY);
         if (!sessionApp.equals(app))
-            throw new IllegalStateException("Invalid application");
+            throw new ControllerException(HttpStatus.FORBIDDEN, "Invalid application");
         Authorization auth = (Authorization) session.getAttribute(AuthSecurityPolicy.AUTH_KEY);
         ModelInfo modelInfo = new ModelInfo();
         InternalDBAccessor accessor = appRegistry.getInternalDBAccessor(app);

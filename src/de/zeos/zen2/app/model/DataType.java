@@ -6,6 +6,7 @@ public class DataType {
     private String enumerationId;
     private String refEntityId;
     private String dataViewId;
+    private String resourceId;
     private boolean lazy = true;
     private boolean inverse;
     private String backRef;
@@ -49,6 +50,14 @@ public class DataType {
 
     public void setDataViewId(String dataViewId) {
         this.dataViewId = dataViewId;
+    }
+
+    public String getResourceId() {
+        return this.resourceId;
+    }
+
+    public void setResourceId(String resourceId) {
+        this.resourceId = resourceId;
     }
 
     public boolean isLazy() {

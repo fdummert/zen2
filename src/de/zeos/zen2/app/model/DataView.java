@@ -9,8 +9,13 @@ public class DataView {
         CREATE, READ, UPDATE, DELETE
     }
 
+    public enum OverwriteMode {
+        REDEFINITION, WHITELIST
+    }
+
     private String id;
     private Entity entity;
+    private OverwriteMode overwriteMode;
     private List<FieldView> fields;
 
     private String scope;
@@ -34,6 +39,14 @@ public class DataView {
 
     public void setEntity(Entity entity) {
         this.entity = entity;
+    }
+
+    public OverwriteMode getOverwriteMode() {
+        return this.overwriteMode;
+    }
+
+    public void setOverwriteMode(OverwriteMode overwriteMode) {
+        this.overwriteMode = overwriteMode;
     }
 
     public List<FieldView> getFields() {

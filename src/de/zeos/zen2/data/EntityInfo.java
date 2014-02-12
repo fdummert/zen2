@@ -7,6 +7,7 @@ import java.util.List;
 import java.util.Map;
 
 import de.zeos.zen2.app.model.DataClass;
+import de.zeos.zen2.app.model.DataView.OverwriteMode;
 import de.zeos.zen2.app.model.Entity;
 import de.zeos.zen2.app.model.Field;
 import de.zeos.zen2.app.model.FieldView;
@@ -55,7 +56,7 @@ public class EntityInfo {
                         break;
                     }
                 }
-                if (fieldView == null)
+                if ((fieldView == null && dataViewInfo.getOverwriteMode() == OverwriteMode.WHITELIST) || (fieldView != null && fieldView.getHidden() != null && fieldView.getHidden()))
                     add = false;
             }
             if (add) {

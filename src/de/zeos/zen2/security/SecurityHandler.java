@@ -21,10 +21,10 @@ import de.zeos.script.ScriptEngineCreator;
 import de.zeos.script.ScriptEngineFacade;
 import de.zeos.zen2.app.ApplicationRegistry;
 import de.zeos.zen2.app.model.Application;
-import de.zeos.zen2.app.model.Application.SecurityMode;
 import de.zeos.zen2.app.model.DataView;
 import de.zeos.zen2.app.model.ScriptHandler;
 import de.zeos.zen2.app.model.ScriptHandlerError;
+import de.zeos.zen2.app.model.SecurityMode;
 import de.zeos.zen2.db.InternalDBAccessor;
 import de.zeos.zen2.script.ScriptHandlerConsole;
 

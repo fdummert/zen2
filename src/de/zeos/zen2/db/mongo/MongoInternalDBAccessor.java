@@ -14,6 +14,7 @@ import de.zeos.zen2.app.model.DataView;
 import de.zeos.zen2.app.model.DataViewScriptHandler;
 import de.zeos.zen2.app.model.Entity;
 import de.zeos.zen2.app.model.Enumeration;
+import de.zeos.zen2.app.model.Resource;
 import de.zeos.zen2.app.model.ScriptHandler;
 import de.zeos.zen2.app.model.ScriptHandlerConsoleEntry;
 import de.zeos.zen2.app.model.ScriptHandlerError;
@@ -70,6 +71,11 @@ public class MongoInternalDBAccessor implements InternalDBAccessor {
     @Override
     public Enumeration getEnumeration(String name) {
         return this.operations.findById(name, Enumeration.class);
+    }
+
+    @Override
+    public Resource getResource(String name) {
+        return this.operations.findById(name, Resource.class);
     }
 
     @Override

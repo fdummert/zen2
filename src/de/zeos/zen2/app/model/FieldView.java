@@ -5,6 +5,7 @@ public class FieldView {
     private String dataViewId;
     private Boolean mandatory;
     private Boolean readOnly;
+    private Boolean hidden;
     private Boolean lazy;
     private Boolean cascade;
 
@@ -38,6 +39,14 @@ public class FieldView {
 
     public void setReadOnly(Boolean readOnly) {
         this.readOnly = readOnly;
+    }
+
+    public Boolean getHidden() {
+        return this.hidden;
+    }
+
+    public void setHidden(Boolean hidden) {
+        this.hidden = hidden;
     }
 
     public Boolean getLazy() {

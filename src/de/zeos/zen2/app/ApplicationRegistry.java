@@ -12,11 +12,11 @@ import org.springframework.stereotype.Component;
 
 import de.zeos.script.ScriptEngineFacade;
 import de.zeos.zen2.app.model.Application;
-import de.zeos.zen2.app.model.Application.SecurityMode;
 import de.zeos.zen2.app.model.DataView;
 import de.zeos.zen2.app.model.DataView.CommandMode;
 import de.zeos.zen2.app.model.Entity;
 import de.zeos.zen2.app.model.ScriptHandler;
+import de.zeos.zen2.app.model.SecurityMode;
 import de.zeos.zen2.data.DataViewInfo;
 import de.zeos.zen2.data.EntityInfo;
 import de.zeos.zen2.data.ModelInfo;
@@ -95,22 +95,22 @@ public class ApplicationRegistry {
                         Map<String, Object> query = event.getQuery();
                         String id = (String) query.get(entityInfo.getPkFieldName());
                         switch (event.getMode()) {
-                        case CREATE: {
-                            id = (String) event.getResult();
-                            app = getInternalDBAccessor(ZEN2).getApplication(id);
-                            applications.put(id, app);
-                            getInternalDBAccessor(ADMIN).createApplication(app);
-                            break;
-                        }
-                        case DELETE:
-                            applications.remove(id);
-                            getInternalDBAccessor(ADMIN).deleteApplication(id);
-                            break;
-                        case UPDATE:
-                            app = getInternalDBAccessor(ZEN2).getApplication(id);
-                            applications.put(id, app);
-                            break;
-                        default:
+                            case CREATE: {
+                                id = (String) event.getResult();
+                                app = getInternalDBAccessor(ZEN2).getApplication(id);
+                                applications.put(id, app);
+                                getInternalDBAccessor(ADMIN).createApplication(app);
+                                break;
+                            }
+                            case DELETE:
+                                applications.remove(id);
+                                getInternalDBAccessor(ADMIN).deleteApplication(id);
+                                break;
+                            case UPDATE:
+                                app = getInternalDBAccessor(ZEN2).getApplication(id);
+                                applications.put(id, app);
+                                break;
+                            default:
                         }
                     }
                 }
@@ -210,6 +210,7 @@ public class ApplicationRegistry {
     public ScriptableDBAccessor getDBAccessor(String app, ScriptEngineFacade facade) {
         ModelInfo modelInfo = new ModelInfo();
         HashMap<String, EntityInfo> entities = new HashMap<>();
+        // provide access to entities from script
         for (Entity e : getInternalDBAccessor(app).getRootEntities()) {
             DataView dv = new DataView();
             dv.setId("global");

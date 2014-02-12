@@ -1,10 +1,12 @@
 db.enumeration.insert( { _id: "securityModes", system: true, constants: [ "PUBLIC", "PROTECTED" ], _class: "de.zeos.zen2.app.model.Enumeration" } );
 db.enumeration.insert( { _id: "pkTypes", system: true, constants: [ "AUTO", "ASSIGNED" ], _class: "de.zeos.zen2.app.model.Enumeration" } );
-db.enumeration.insert( { _id: "dataClasses", system: true, constants: [ "SCALAR", "ENUM", "LIST", "ENTITY" ], _class: "de.zeos.zen2.app.model.Enumeration" } );
-db.enumeration.insert( { _id: "scalarDataTypes", system: true, constants: [ "BOOL", "INT", "FLOAT", "DATE", "DATETIME", "TIME", "PASSWORD", "STRING" ], _class: "de.zeos.zen2.app.model.Enumeration" } );
+db.enumeration.insert( { _id: "dataClasses", system: true, constants: [ "SCALAR", "ENUM", "LIST", "ENTITY", "BINARY" ], _class: "de.zeos.zen2.app.model.Enumeration" } );
+db.enumeration.insert( { _id: "scalarDataTypes", system: true, constants: [ "BOOL", "INT", "FLOAT", "DATE", "DATETIME", "TIME", "PASSWORD", "STRING", "BINARY" ], _class: "de.zeos.zen2.app.model.Enumeration" } );
+db.enumeration.insert( { _id: "overwriteModes", system: true, constants: [ "REDEFINITION", "WHITELIST" ], _class: "de.zeos.zen2.app.model.Enumeration" } );
 db.enumeration.insert( { _id: "commandModes", system: true, constants: [ "CREATE", "READ", "UPDATE", "DELETE" ], _class: "de.zeos.zen2.app.model.Enumeration" } );
 db.enumeration.insert( { _id: "triggerModes", system: true, constants: [ "ALL", "CREATE", "READ", "UPDATE", "DELETE" ], _class: "de.zeos.zen2.app.model.Enumeration" } );
 db.enumeration.insert( { _id: "triggerPoints", system: true, constants: [ "BEFORE_PROCESSING", "BEFORE", "AFTER" ], _class: "de.zeos.zen2.app.model.Enumeration" } );
+db.enumeration.insert( { _id: "resourceTypes", system: true, constants: [ "PNG", "HTML", "JS", "CSS", "CUSTOM" ], _class: "de.zeos.zen2.app.model.Enumeration" } );
 
 db.entity.insert( { _id: "application", embeddable: false, system: true, fields: [
       { name: "_id", pk: true, pkType: "ASSIGNED", mandatory: true, type: { dataClass: "SCALAR", type: "STRING" } }, 
@@ -36,6 +38,7 @@ db.entity.insert( { _id: "dataType", embeddable: true, system: true, fields: [
       { name: "enumerationId", type: { dataClass: "SCALAR", type: "STRING" } },
       { name: "refEntityId", type: { dataClass: "SCALAR", type: "STRING" } },
       { name: "dataViewId", type: { dataClass: "SCALAR", type: "STRING" } },
+      { name: "resourceId", type: { dataClass: "SCALAR", type: "STRING" } },
       { name: "lazy", type: { dataClass: "SCALAR", type: "BOOL" } },
       { name: "inverse", type: { dataClass: "SCALAR", type: "BOOL" } },
       { name: "backRef", type: { dataClass: "SCALAR", type: "STRING" } },
@@ -82,6 +85,7 @@ db.entity.insert( { _id: "dataView", embeddable: false, system: true, fields: [
        { name: "_id", pk: true, pkType: "ASSIGNED", mandatory: true, type: { dataClass: "SCALAR", type: "STRING" } },
        { name: "system", mandatory: true, type: { dataClass: "SCALAR", type: "BOOL" } },
        { name: "entity", mandatory: true, type: { dataClass: "ENTITY", refEntityId: "entity" } },
+       { name: "overwriteMode", type: { dataClass: "ENUM", enumerationId: "overwriteModes" } },
        { name: "fields", type: { dataClass: "LIST", refEntityId: "fieldView" } },
        { name: "scope", type: { dataClass: "SCALAR", type: "STRING" } },
        { name: "pushScopes", type: { dataClass: "LIST", type: "STRING" } },
@@ -99,12 +103,22 @@ db.entity.insert( { _id: "fieldView", embeddable: true, system: true, fields: [
      { name: "cascade", type: { dataClass: "SCALAR", type: "BOOL" } }
 ], _class: "de.zeos.zen2.app.model.Entity" } );
 
-db.dataView.insert( { _id: "app", system: true, entity: { $ref: "entity", $id: "application"}, fields: [{name: "_id"}], allowedModes: ["READ"], _class: "de.zeos.zen2.app.model.DataView" } );
+db.entity.insert( { _id: "resource", embeddable: false, system: true, fields: [
+    { name: "_id", pk: true, pkType: "ASSIGNED", mandatory: true, type: { dataClass: "SCALAR", type: "STRING" } },
+    { name: "type", mandatory: true, type: { dataClass: "ENUM", enumerationId: "resourceTypes" } },
+    { name: "customType", type: { dataClass: "SCALAR", type: "STRING" } },
+    { name: "visibility", mandatory: true, type: { dataClass: "ENUM", enumerationId: "securityModes" } },
+    { name: "description", type: { dataClass: "SCALAR", type: "STRING" } },
+    { name: "preview", type: { dataClass: "SCALAR", type: "BINARY" } },
+    { name: "content", mandatory: true, type: { dataClass: "SCALAR", type: "BINARY" } }
+], _class: "de.zeos.zen2.app.model.Entity" } );
+
+db.dataView.insert( { _id: "app", system: true, entity: { $ref: "entity", $id: "application"}, overwriteMode: "WHITELIST", fields: [{name: "_id"}], allowedModes: ["READ"], _class: "de.zeos.zen2.app.model.DataView" } );
 db.dataView.insert( { _id: "appManage", system: true, entity: { $ref: "entity", $id: "application"}, allowedModes: ["CREATE", "READ", "UPDATE", "DELETE"], _class: "de.zeos.zen2.app.model.DataView" } );
 db.dataView.insert( { _id: "scriptHandlerRead", system: true, scope: "application", entity: { $ref: "entity", $id: "scriptHandler"}, allowedModes: ["READ"], _class: "de.zeos.zen2.app.model.DataView" } );
-db.dataView.insert( { _id: "scriptHandlerSourceUpdate", system: true, scope: "application", entity: { $ref: "entity", $id: "scriptHandler"}, fields: [{name: "_id"}, {name: "source"}], allowedModes: ["UPDATE"], _class: "de.zeos.zen2.app.model.DataView" } );
-db.dataView.insert( { _id: "scriptHandlerConsoleUpdate", system: true, scope: "application", entity: { $ref: "entity", $id: "scriptHandler"}, fields: [{name: "_id"}, {name: "consoleEntries", readOnly: false}], allowedModes: ["UPDATE"], _class: "de.zeos.zen2.app.model.DataView" } );
-db.dataView.insert( { _id: "scriptHandlerErrorUpdate", system: true, scope: "application", entity: { $ref: "entity", $id: "scriptHandler"}, fields: [{name: "_id"}, {name: "errors", readOnly: false}], allowedModes: ["UPDATE"], _class: "de.zeos.zen2.app.model.DataView" } );
+db.dataView.insert( { _id: "scriptHandlerSourceUpdate", system: true, scope: "application", entity: { $ref: "entity", $id: "scriptHandler"}, overwriteMode: "WHITELIST", fields: [{name: "_id"}, {name: "source"}], allowedModes: ["UPDATE"], _class: "de.zeos.zen2.app.model.DataView" } );
+db.dataView.insert( { _id: "scriptHandlerConsoleUpdate", system: true, scope: "application", entity: { $ref: "entity", $id: "scriptHandler"}, overwriteMode: "WHITELIST", fields: [{name: "_id"}, {name: "consoleEntries", readOnly: false}], allowedModes: ["UPDATE"], _class: "de.zeos.zen2.app.model.DataView" } );
+db.dataView.insert( { _id: "scriptHandlerErrorUpdate", system: true, scope: "application", entity: { $ref: "entity", $id: "scriptHandler"}, overwriteMode: "WHITELIST", fields: [{name: "_id"}, {name: "errors", readOnly: false}], allowedModes: ["UPDATE"], _class: "de.zeos.zen2.app.model.DataView" } );
 db.dataView.insert( { _id: "dataViewScriptHandlerRead", system: true, scope: "application", entity: { $ref: "entity", $id: "dataViewScriptHandler"}, allowedModes: ["READ"], _class: "de.zeos.zen2.app.model.DataView" } );
 db.dataView.insert( { _id: "entityManage", system: true, scope: "application", entity: { $ref: "entity", $id: "entity"}, allowedModes: ["CREATE", "READ", "UPDATE", "DELETE"], _class: "de.zeos.zen2.app.model.DataView" } );
 db.dataView.insert( { _id: "enumerationManage", system: true, scope: "application", entity: { $ref: "entity", $id: "enumeration"}, allowedModes: ["CREATE", "READ", "UPDATE", "DELETE"], _class: "de.zeos.zen2.app.model.DataView" } );

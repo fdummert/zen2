@@ -8,8 +8,9 @@ import javax.servlet.ServletContext;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
-import org.springframework.core.io.ByteArrayResource;
-import org.springframework.core.io.Resource;
+import org.springframework.http.HttpEntity;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Controller;
 import org.springframework.util.StreamUtils;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -29,25 +30,26 @@ public class FsController {
 
     @RequestMapping(value = "/{app}", method = RequestMethod.GET)
     @ResponseBody
-    public Resource getIndex(@PathVariable String app, HttpServletResponse res) throws IOException {
+    public HttpEntity<byte[]> getIndex(@PathVariable String app, HttpServletResponse res) throws IOException {
         return getFile(app + "/index.html", res);
     }
 
     @RequestMapping(value = "/{app}/**/{resource}.{ext}", method = RequestMethod.GET)
     @ResponseBody
-    public Resource download(@PathVariable String app, @PathVariable String resource, @PathVariable String ext, HttpServletRequest req, HttpServletResponse res) throws IOException {
+    public HttpEntity<byte[]> download(@PathVariable String app, @PathVariable String resource, @PathVariable String ext, HttpServletRequest req, HttpServletResponse res) throws IOException {
         String path = (String) RequestContextHolder.getRequestAttributes().getAttribute(HandlerMapping.PATH_WITHIN_HANDLER_MAPPING_ATTRIBUTE, RequestAttributes.SCOPE_REQUEST);
         return getFile(path.substring(path.indexOf(app)), res);
     }
 
-    private Resource getFile(String file, HttpServletResponse res) throws IOException {
+    private HttpEntity<byte[]> getFile(String file, HttpServletResponse res) throws IOException {
         InputStream stream = this.servletContext.getResourceAsStream("/WEB-INF/apps/" + file);
-        if (stream == null) {
-            res.sendError(HttpServletResponse.SC_NOT_FOUND);
-            return null;
-        }
+        if (stream == null)
+            throw new ControllerException(HttpStatus.NOT_FOUND, "Resource not found");
         byte[] content = StreamUtils.copyToByteArray(stream);
-        return new ByteArrayResource(content);
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentLength(content.length);
+        headers.setContentType(ActivationMediaTypeFactory.getMediaType(file));
+        return new HttpEntity<byte[]>(content, headers);
 
     }
 }

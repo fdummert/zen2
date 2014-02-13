@@ -32,6 +32,10 @@ define(["dojo/i18n!../../nls/messages", "require"], function(msgs, require) {
                         isc.Button.create({
                             title: msgs.dataViews,
                             click: function() { openModule("dataViewManagement", app); }
+                        }),
+                        isc.Button.create({
+                            title: msgs.resources,
+                            click: function() { openModule("resourceManagement", app); }
                         })
                     ]
                 }),

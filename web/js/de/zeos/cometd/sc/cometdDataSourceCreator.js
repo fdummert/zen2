@@ -9,7 +9,8 @@ define(["./cometdDataSource"], function() {
             PASSWORD: "password",
             DATE: "date",
             DATETIME: "datetime",
-            TIME: "time"
+            TIME: "time",
+            BINARY: "binary"
         };
         
         function createNestedDS(model, dataViewName, refEntity) {

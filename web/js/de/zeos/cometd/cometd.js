@@ -215,11 +215,12 @@ define(["dojo/_base/unload", "dojox/cometd", "dojo/_base/lang", "dojox/cometd/ac
                     }
                 };
             }
-            cometD.init({
+            cometD.configure({
                 url : "http://localhost:8080/zen2/cometd",
                 logLevel : "info",
                 autoBatch : true
-            }, handshakeProps);
+            });
+            cometD.handshake(handshakeProps);
         };
         
         this.subscribe = function(channel, subscriptionListener) {
@@ -230,7 +231,7 @@ define(["dojo/_base/unload", "dojox/cometd", "dojo/_base/lang", "dojox/cometd/ac
                 throw "already subscribed to " + channel;
             subscriptionHandles[channel] = cometD.subscribe(channel, function(msg) {
                 if (subscriptionListener && isFunction(subscriptionListener))
-                    subscriptionListener(channel, msg.data);
+                    subscriptionListener(msg.channel, msg.data);
             });
         };
         

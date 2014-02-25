@@ -1,12 +1,22 @@
 package de.zeos.zen2.app.model;
 
 public class Resource {
-    public enum Type {
-        PNG("image/png"), HTML("text/html"), JS("text/javascript"), CSS("text/css"), CUSTOM(null);
-        private String mimeType;
+    public enum ResourceClass {
+        BINARY, TEXT;
+    }
 
-        private Type(String mimeType) {
+    public enum Type {
+        PNG("image/png", ResourceClass.BINARY), HTML("text/html", ResourceClass.TEXT), JS("text/javascript", ResourceClass.TEXT), CSS("text/css", ResourceClass.TEXT), CUSTOM_BINARY(null, ResourceClass.BINARY), CUSTOM_TEXT(null, ResourceClass.TEXT);
+        private String mimeType;
+        private ResourceClass resourceClass;
+
+        private Type(String mimeType, ResourceClass resourceClass) {
             this.mimeType = mimeType;
+            this.resourceClass = resourceClass;
+        }
+
+        public ResourceClass getResourceClass() {
+            return this.resourceClass;
         }
 
         public String toMimeType() {
@@ -21,6 +31,7 @@ public class Resource {
     private String description;
     private byte[] preview;
     private byte[] content;
+    private String textContent;
 
     public String getId() {
         return this.id;
@@ -47,7 +58,7 @@ public class Resource {
     }
 
     public String getContentType() {
-        return this.type == Type.CUSTOM ? this.customType : this.type.toMimeType();
+        return (this.type == Type.CUSTOM_BINARY || this.type == Type.CUSTOM_TEXT) ? this.customType : this.type.toMimeType();
     }
 
     public SecurityMode getVisibility() {
@@ -80,5 +91,13 @@ public class Resource {
 
     public void setContent(byte[] content) {
         this.content = content;
+    }
+
+    public String getTextContent() {
+        return textContent;
+    }
+
+    public void setTextContent(String textContent) {
+        this.textContent = textContent;
     }
 }

@@ -17,6 +17,7 @@ import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.ResponseBody;
 
 import de.zeos.zen2.app.ApplicationRegistry;
+import de.zeos.zen2.app.model.Resource.ResourceClass;
 import de.zeos.zen2.app.model.SecurityMode;
 import de.zeos.zen2.db.InternalDBAccessor;
 import de.zeos.zen2.security.AuthSecurityPolicy;
@@ -42,7 +43,7 @@ public class ResController {
         InternalDBAccessor accessor = appRegistry.getInternalDBAccessor(app);
         de.zeos.zen2.app.model.Resource r = accessor.getResource(id);
         if (r != null) {
-            byte[] content = r.getContent();
+            byte[] content = r.getType().getResourceClass() == ResourceClass.BINARY ? r.getContent() : r.getTextContent().getBytes();
             HttpHeaders headers = new HttpHeaders();
             headers.setContentLength(content.length);
             headers.setContentType(MediaType.valueOf(r.getContentType()));
@@ -65,7 +66,7 @@ public class ResController {
             throw new ControllerException(HttpStatus.NOT_FOUND, "Resource not accessible");
         if (r.getVisibility() != SecurityMode.PUBLIC)
             throw new ControllerException(HttpStatus.FORBIDDEN, "Resource not accessible");
-        byte[] content = r.getContent();
+        byte[] content = r.getType().getResourceClass() == ResourceClass.BINARY ? r.getContent() : r.getTextContent().getBytes();
         HttpHeaders headers = new HttpHeaders();
         headers.setContentLength(content.length);
         headers.setContentType(MediaType.valueOf(r.getContentType()));

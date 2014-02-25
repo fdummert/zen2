@@ -22,6 +22,7 @@ define({
         name: "Name",
         password: "Passwort",
         remove: "Löschen",
+        resources: "Ressourcen",
         save: "Speichern",
         securityHandler: "Sicherheitsbehandlung",
         securityMode: "Sicherheit",

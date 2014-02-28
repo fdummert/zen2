@@ -1,5 +1,5 @@
 define(["require"], function(require) {
-    isc.ClassFactory.defineClass("GridEditorItem", "CanvasItem");
+    isc.defineClass("GridEditorItem", "CanvasItem");
     isc.GridEditorItem.addProperties({
        height:"*", width:"*",
        rowSpan:"*", colSpan:"*",
@@ -49,6 +49,24 @@ define(["require"], function(require) {
            if (this.grid == null) return;
            this.grid.setData(dataValue);
        }
+    });
+    
+    isc.defineClass("CustomFileItem", "CanvasItem");
+    isc.CustomFileItem.addProperties({
+        shouldSaveValue: true,
+        createCanvas: function () {
+            var fileCanvas = null;
+            fileCanvas = isc.Canvas.create({getInnerHTML: function() { return "<input type=\"file\" id=\"" + fileCanvas.ID + "_file\" style=\"display:none\">"; }});
+            return isc.VStack.create({
+                members: [
+                    fileCanvas,
+                    isc.Button.create({title: "test", click: function() {document.getElementById(fileCanvas.ID + "_file").click();}})
+                ]
+            });
+        },
+        showValue : function (displayValue, dataValue) {
+            console.log("file values:", displayValue, dataValue);
+        }
     });
 });
 

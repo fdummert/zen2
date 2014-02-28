@@ -10,7 +10,7 @@ define(["./cometdDataSource"], function() {
             DATE: "date",
             DATETIME: "datetime",
             TIME: "time",
-            BINARY: "binary"
+            BINARY: "custom"
         };
         
         function createNestedDS(model, dataViewName, refEntity) {
@@ -50,6 +50,8 @@ define(["./cometdDataSource"], function() {
                 switch (f.type.dataClass) {
                 case "SCALAR":
                     type = scalarTypeMapping[f.type.type];
+                    if (f.type.type == "BINARY")
+                        field.editorType = "CustomFileItem";
                     break;
                 case "ENUM":
                     type = "enum";

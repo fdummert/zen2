@@ -1,9 +1,10 @@
-define(["./cometd"], function(CometD) {
-    var CometDManager = function(credentials, communicationListener) {
+define(["dojo/_base/unload", "dojox/cometd", "dojo/_base/lang", "dojox/cometd/ack", "dojo/domReady!"], function(unloader, cometDInstance, lang) {
+    var CometDManager = null;
+    CometDManager = function(credentials, communicationListener) {
         if ((this instanceof CometDManager) === false)
             throw "CometDManager must be instantiated: new CometDManager()";
         
-        var cometD = new CometD();
+        var cometD = cometDInstance;
         var status = CometDManager.Status.DISCONNECTED;
         
         var clientId = null;
@@ -13,66 +14,27 @@ define(["./cometd"], function(CometD) {
         var connectionListeners = [];
         var msgId = 1;
         var queue = [];
+        var connected = false;
         var manualReconnect = false;
         var manualDisconnect = false;
         var cm = this;
         
-        cometD.configure({
-            initialized: function(successful, clientId, error, msg) {
-                if (successful) {
-                    var auth = getAuthorization(msg);
-                    var app = getApplication(msg);
-                    initialize(clientId, auth, app);
-                } else {
-                    status = CometDManager.Status.DISCONNECTED;
-                }
-                if (communicationListener && communicationListener.initialized && isFunction(communicationListener.initialized))
-                    communicationListener.initialized(successful, clientId, error, msg);
-            },
-            subscription: function(successful, channel, error) {
-                if (successful)
-                    subscriptionActive(channel);
-                else
-                    subscriptionBroken(channel, error);
-                if (communicationListener && communicationListener.subscription && isFunction(communicationListener.subscription))
-                    communicationListener.subscription(successful, channel, error);
-            },
-            published: function(successful, error, msg) {
-                if (communicationListener && communicationListener.published && isFunction(communicationListener.published))
-                    communicationListener.published(successful, error, msg);
-            },
-            connected: function() {
-                status = CometDManager.Status.CONNECTED;
-                connectionAvailable();
-                if (communicationListener && communicationListener.connected && isFunction(communicationListener.connected))
-                    communicationListener.connected();
-                if (manualDisconnect) {
-                    manualDisconnect = false;
-                    setTimeout(function() {
-                        status = CometDManager.Status.DISCONNECTING;
-                        cometD.disconnect();
-                    }, 1);
-                }
-            },
-            disconnected: function() {
-                status = CometDManager.Status.DISCONNECTED;
-                connectionUnavailable(true);
-                if (communicationListener && communicationListener.disconnected && isFunction(communicationListener.disconnected))
-                    communicationListener.disconnected();
-                if (manualReconnect) {
-                    manualReconnect = false;
-                    setTimeout(function() {cometD.connect(credentials);}, 1);
-                }
-            },
-            broken: function(sessionLost, wasConnected, error, msg) {
-                status = CometDManager.Status.BROKEN;
-                if (wasConnected) {
-                    connectionUnavailable(false);
-                }
-                if (communicationListener && communicationListener.broken && isFunction(communicationListener.broken))
-                    communicationListener.broken(sessionLost, wasConnected, error, msg);
-            }
+        cometD.onListenerException = function(ex) {
+            console.log("uncaught exception:", ex);
+        };
+
+        unloader.addOnUnload(function() {
+            cometD.disconnect(true);
         });
+        
+        cometD.addListener("/meta/handshake", initListener);
+        cometD.addListener("/meta/subscribe", subscriptionListener);
+        cometD.addListener("/meta/connect", connectListener);
+        cometD.addListener("/meta/disconnect", disconnectListener);
+        
+        function isFunction(f) {
+            return Object.prototype.toString.call(f) === '[object Function]';
+        }
         
         function ScopedTopic(topic, scope) {
             var stringRep = topic;
@@ -86,37 +48,165 @@ define(["./cometd"], function(CometD) {
             return this.stringRep;
         };
         
-        function isFunction(f) {
-            return Object.prototype.toString.call(f) === '[object Function]';
-        }
-        
-        function getApplication(msg) {
-            var ext = msg.ext;
-            var app = null;
-            if (ext != null) {
-                app = ext["de.zeos.zen2.application"];
+        function resolveError(msg) {
+            var failure = msg.failure;
+            if (failure != null) {
+                var args = "";
+                var reason = null;
+                if (failure.connectionType) {
+                    args += failure.connectionType;
+                }
+                var websocketCode = failure.webSocketCode;
+                var httpCode = failure.httpCode;
+                if (websocketCode != null || httpCode != null) {
+                    if (args.length > 0)
+                        args += ",";
+                    args += websocketCode != null ? websocketCode : httpCode;
+                }
+                if (failure.reason)
+                    reason = failure.reason;
+                else if (failure.exception) {
+                    var exception = failure.exception;
+                    if (exception instanceof String)
+                        reason = exception;
+                    else if (exception.message) {
+                        reason = exception.message;
+                    }
+                }
+                if (reason == null || reason.length == 0)
+                    reason = "server error";
+                return "901:" + args + ":" + reason;;       
             }
-            return app;
+            return null;
         }
         
-        function getAuthorization(msg) {
-            var ext = msg.ext;
-            var auth = null;
-            if (ext != null) {
-                auth = ext["de.zeos.zen2.security"];
+        function initListener(msg) {
+            var error = null;
+            var publish = true;
+            if (msg.successful !== true) {
+                error = msg.error;
+                if (error == null) {
+                    var failure = msg.failure;
+                    if (failure != null) {
+                        if (failure.websocketCode) {
+                            publish = false;
+                        } else {
+                            var statusCode = failure.httpCode;
+                            if (statusCode == null || statusCode == 0)
+                                error = "900::no connection to server";
+                            else
+                                error = resolveError(msg);
+                        }
+                    }
+                }
             }
-            return auth;
+            if (publish) {
+                if (msg.successful) {
+                    clientId = msg.clientId;
+                    var ext = msg.ext;
+                    if (ext != null) {
+                        application = ext["de.zeos.zen2.application"];
+                        appProperties = ext["de.zeos.zen2.security"];
+                    }
+                    initialized();
+                } else {
+                    cometD.disconnect();
+                    status = CometDManager.Status.DISCONNECTED;
+                }
+                if (communicationListener && communicationListener.initialized && isFunction(communicationListener.initialized))
+                    communicationListener.initialized(msg.successful, clientId, error, msg);
+            }
         }
         
-        function initialize(id, props, app) {
-            clientId = id;
-            appProperties = props;
-            application = app;
+        function subscriptionListener(msg) {
+            var error = null;
+            if (msg.successful !== true) {
+                topicSubscriptions[msg.subscription].handle = null;
+                error = msg.error;
+                if (error == null)
+                    error = resolveError(msg);
+            }
+            if (msg.successful)
+                subscriptionActive(msg.subscription);
+            else
+                subscriptionBroken(msg.subscription, error);
+            if (communicationListener && communicationListener.subscription && isFunction(communicationListener.subscription))
+                communicationListener.subscription(msg.successful, msg.subscription, error);
         }
         
-        function connectionAvailable() {
+        function connectListener(msg) {
+            if (cometD.isDisconnected()) {
+                connected = false;
+                return;
+            }
+            var wasConnected = connected;
+            connected = msg.successful;
+            if (!wasConnected && msg.successful) {
+                status = CometDManager.Status.CONNECTED;
+                connectionAvailable();
+                if (communicationListener && communicationListener.connected && isFunction(communicationListener.connected))
+                    communicationListener.connected();
+                if (manualDisconnect) {
+                    manualDisconnect = false;
+                    setTimeout(function() {
+                        status = CometDManager.Status.DISCONNECTING;
+                        cometD.disconnect();
+                    }, 1);
+                }
+            } else if (!msg.successful) {
+                var sessionLost = false;
+                var error = null;
+                if (msg.error) {
+                    error = msg.error;
+                    if (error != null && error.indexOf("402::") == 0) {
+                        sessionLost = true;
+                    }
+                } else {
+                    error = resolveError(msg);
+                }
+                status = CometDManager.Status.BROKEN;
+                if (wasConnected) {
+                    connectionUnavailable(false);
+                }
+                if (communicationListener && communicationListener.broken && isFunction(communicationListener.broken))
+                    communicationListener.broken(sessionLost, wasConnected, error, msg);
+            }
+        }
+        
+        function disconnectListener(msg) {
+            connected = false;
+            if (msg.successful === true) {
+                status = CometDManager.Status.DISCONNECTED;
+                connectionUnavailable(true);
+                if (communicationListener && communicationListener.disconnected && isFunction(communicationListener.disconnected))
+                    communicationListener.disconnected();
+                if (manualReconnect) {
+                    manualReconnect = false;
+                    setTimeout(function() {cm.start(credentials);}, 1);
+                }
+            }
+        }
+        
+        function publish(channel, msg) {
+            var confirmation = null;
+            if (communicationListener && communicationListener.published && isFunction(communicationListener.published)) {
+                confirmation = function(res) {
+                    var error = null;
+                    if (!res.successful) {
+                        error = res.error;
+                        if (error == null)
+                            error = resolveError(res);
+                    }
+                    communicationListener.published(res.successful, error, msg, res);
+                };
+            }
+            cometD.publish(channel, msg, confirmation);
+        }
+        
+        function initialized() {
             for (var key in topicSubscriptions) {
                 var desc = topicSubscriptions[key];
+                desc.handle = null;
                 var scopedTopic = desc.scopedTopic;
                 var currentTopicStr = scopedTopic.topic;
                 if (scopedTopic.scope != null)
@@ -130,17 +220,18 @@ define(["./cometd"], function(CometD) {
                     subscribe(scopedTopic);
                 }
             }
-            
+        }
+        
+        function connectionAvailable() {
             for (var i = 0; i < connectionListeners.length; i++) {
                 connectionListeners[i].connected();
             }
-            
             var channel;
-            while (queue.length > 0 && cometD.isConnected()) {
+            while (queue.length > 0 && !cometD.isDisconnected()) {
                 channel = queue[0].scopedTopic.topic;
                 if (queue[0].scopedTopic.scope != null)
                     channel += "/" + queue[0].scopedTopic.scope;
-                cometD.publish(channel, queue[0].msg);
+                publish(channel, queue[0].msg);
                 queue.shift();
             }
         }
@@ -212,24 +303,18 @@ define(["./cometd"], function(CometD) {
         
         function subscribe(scopedTopic) {
             var topic = scopedTopic.toString();
-            if (cometD.isConnected()) {
-                if (!cometD.isSubscribed(topic)) {
-                    cometD.subscribe(topic, function(topic, msg) {
+            if (!cometD.isDisconnected()) {
+                if (topicSubscriptions[topic].handle == null) {
+                    topicSubscriptions[topic].handle = cometD.subscribe(topic, function(msg) {
+                        var topic = msg.channel;
                         var listeners = findListeners(new ScopedTopic(topic));
                         for (var i = 0; i < listeners.length; i++) {
-                            listeners[i].messageReceived(topic, msg);
+                            listeners[i].messageReceived(topic, msg.data);
                         }
                     });
                 } else {
                     subscriptionActive(scopedTopic);
                 }
-            }
-        }
-        
-        function unsubscribe(scopedTopic) {
-            var topic = scopedTopic.toString();
-            if (cometD.isSubscribed(topic)) {
-                cometD.unsubscribe(topic);
             }
         }
         
@@ -274,7 +359,7 @@ define(["./cometd"], function(CometD) {
         this.registerMessageListener = function(topic, scope, listener) {
             var scopedTopic = new ScopedTopic(topic, scope);
             if (!topicSubscriptions[scopedTopic]) {
-                topicSubscriptions[scopedTopic] = {scopedTopic: scopedTopic, messageListeners: []};
+                topicSubscriptions[scopedTopic] = {handle: null, scopedTopic: scopedTopic, messageListeners: []};
             }
             topicSubscriptions[scopedTopic].messageListeners.push(listener);
             subscribe(scopedTopic);
@@ -283,8 +368,10 @@ define(["./cometd"], function(CometD) {
         this.unregisterMessageListener = function(topic, scope, listener) {
             var scopedTopic = new ScopedTopic(topic, scope);
             if (listener == null) {
+                var handle = topicSubscriptions[scopedTopic].handle;
                 delete topicSubscriptions[scopedTopic];
-                unsubscribe(scopedTopic);
+                if (handle != null)
+                    cometD.unsubscribe(handle);
             } else {
                 var desc = topicSubscriptions[scopedTopic];
                 var idx = desc.messageListeners.indexOf(listener);
@@ -305,8 +392,8 @@ define(["./cometd"], function(CometD) {
         
         this.sendMessage = function(topic, scope, msg) {
             var scopedTopic = new ScopedTopic(topic, scope);
-            if (cometD.isConnected()) {
-                cometD.publish(scopedTopic.toString(), msg);
+            if (!cometD.isDisconnected()) {
+                publish(scopedTopic.toString(), msg);
                 return 0;
             } else {
                 var id = msgId++;
@@ -333,12 +420,36 @@ define(["./cometd"], function(CometD) {
             return false;
         };
         
-        this.start = function(cred) {
+        this.start = function(credentialsOrApplication) {
             if (status == CometDManager.Status.DISCONNECTED) {
-                if (cred)
-                    credentials = cred;
                 status = CometDManager.Status.CONNECTING;
-                cometD.connect(credentials);
+                var handshakeProps = null;
+                if (credentialsOrApplication) {
+                    credentials = credentialsOrApplication;
+                    var app = "zen2";
+                    var cred = {};
+                    if (typeof credentialsOrApplication === "string") {
+                        app = credentialsOrApplication;
+                    } else {
+                        lang.mixin(cred, credentialsOrApplication);
+                        if (cred.application) {
+                            app = cred.application;
+                            delete cred.application;
+                        }
+                    }
+                    handshakeProps = {
+                        ext : {
+                            "de.zeos.zen2.security" : cred,
+                            "de.zeos.zen2.application": app
+                        }
+                    };
+                }
+                cometD.configure({
+                    url : "http://localhost:8080/zen2/cometd",
+                    logLevel : "info",
+                    autoBatch : true
+                });
+                cometD.handshake(handshakeProps);
             }
             else if (status == CometDManager.Status.DISCONNECTING) {
                 manualReconnect = true;

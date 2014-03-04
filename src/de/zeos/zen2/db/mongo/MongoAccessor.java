@@ -285,8 +285,10 @@ public class MongoAccessor implements DBAccessor {
             if (success) {
                 if (refetch)
                     result = selectSingleById(id, entityInfo);
-                else
+                else {
+                    queryObj.put(entityInfo.getPkFieldName(), id);
                     result = queryObj;
+                }
             }
             if (notify)
                 notifyListeners(CommandMode.UPDATE, Type.AFTER, entityInfo, new DBObjectMapFacade(queryObj), result);
@@ -299,7 +301,8 @@ public class MongoAccessor implements DBAccessor {
     private DBObject getFields(EntityInfo entityInfo) {
         DBObject dbObj = new BasicDBObject();
         for (String fieldName : entityInfo.getFieldNames(true)) {
-            dbObj.put(fieldName, 1);
+            if (entityInfo.getField(fieldName).getType().getDataClass() != DataClass.BINARY)
+                dbObj.put(fieldName, 1);
         }
         return dbObj;
     }

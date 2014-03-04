@@ -1,4 +1,4 @@
-define(["require"], function(require) {
+define(["dojo/i18n!../../nls/messages", "require"], function(msgs, require) {
     isc.defineClass("GridEditorItem", "CanvasItem");
     isc.GridEditorItem.addProperties({
        height:"*", width:"*",
@@ -38,7 +38,7 @@ define(["require"], function(require) {
            return isc.VStack.create({
                members: [
                    this.grid,
-                   isc.Button.create({title: this.msgs.add, click: function() {that.grid.startEditingNew();}})
+                   isc.Button.create({title: msgs.add, click: function() {that.grid.startEditingNew();}})
                ]
            });
        },
@@ -54,18 +54,71 @@ define(["require"], function(require) {
     isc.defineClass("CustomFileItem", "CanvasItem");
     isc.CustomFileItem.addProperties({
         shouldSaveValue: true,
+        handleFiles: function(input) {
+            var file = null;
+            if (input.files.length > 0)
+                file = input.files[0];
+            this.file = file;
+            if (this.validate()) {
+                var reader = new FileReader();
+                var that = this;
+                reader.onloadend = function() {
+                    that.saveValue(reader.result);
+                    if (that.changed)
+                        that.changed(that.form, that, reader.result);
+                };
+                reader.readAsDataURL(file);
+            }
+        },
         createCanvas: function () {
+            var that = this;
             var fileCanvas = null;
-            fileCanvas = isc.Canvas.create({getInnerHTML: function() { return "<input type=\"file\" id=\"" + fileCanvas.ID + "_file\" style=\"display:none\">"; }});
+            fileCanvas = isc.Canvas.create({width: 1, height: 1, getInnerHTML: function() {
+                var accept = "";
+                if (that.accept)
+                    accept = "accept=\"" + that.accept + "\" ";
+                return "<input type=\"file\" id=\"" + fileCanvas.ID + "_file\" " + accept + "style=\"display:none\">"; 
+            }});
+            function handleFiles() {
+                that.handleFiles(this);
+            }
+            var stack = isc.HStack.create({
+                height: 22,
+                membersMargin: 5,
+                members: [
+                    isc.Button.create({title: msgs.upload, click: function() {
+                        var fileUpload = document.getElementById(fileCanvas.ID + "_file");
+                        if (fileUpload._handler == null) {
+                            fileUpload.addEventListener("change", handleFiles, false);
+                            fileUpload._handler = true;
+                        }
+                        fileUpload.click();
+                    }})
+                ]
+            });
+            this.setInfo = function(element) {
+                if (stack.members.length == 2) {
+                    stack.removeMember(that.getInfo());
+                }
+                stack.addMember(element);
+            };
+            this.getInfo = function() {
+                return stack.getMember(1);
+            };
+            if (this.info) {
+                this.setInfo(this.info);
+            }
             return isc.VStack.create({
                 members: [
                     fileCanvas,
-                    isc.Button.create({title: "test", click: function() {document.getElementById(fileCanvas.ID + "_file").click();}})
+                    stack
                 ]
             });
         },
-        showValue : function (displayValue, dataValue) {
-            console.log("file values:", displayValue, dataValue);
+        showValue : function (displayValue) {
+            if (this.changed) {
+                this.changed(this.form, this, displayValue);
+            }
         }
     });
 });

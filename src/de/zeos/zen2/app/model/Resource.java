@@ -29,7 +29,7 @@ public class Resource {
     private String customType;
     private SecurityMode visibility;
     private String description;
-    private byte[] preview;
+    private String preview;
     private byte[] content;
     private String textContent;
 
@@ -77,11 +77,11 @@ public class Resource {
         this.description = description;
     }
 
-    public byte[] getPreview() {
+    public String getPreview() {
         return this.preview;
     }
 
-    public void setPreview(byte[] preview) {
+    public void setPreview(String preview) {
         this.preview = preview;
     }
 

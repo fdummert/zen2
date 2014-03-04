@@ -66,7 +66,9 @@ public class Configurer implements DestructionAwareBeanPostProcessor, ServletCon
         BayeuxServerImpl bayeux = new BayeuxServerImpl();
         bayeux.setOption(BayeuxServerImpl.LOG_LEVEL, "3");
         bayeux.setOption(BayeuxServerImpl.JSON_CONTEXT, jacksonJSONContext());
-        bayeux.setTransports(new ArrayList<ServerTransport>(Arrays.asList(new WebSocketTransport(bayeux), new JSONTransport(bayeux))));
+        WebSocketTransport wsTransport = new WebSocketTransport(bayeux);
+        wsTransport.setOption(WebSocketTransport.MAX_MESSAGE_SIZE_OPTION, 16000000);
+        bayeux.setTransports(new ArrayList<ServerTransport>(Arrays.asList(wsTransport, new JSONTransport(bayeux))));
         return bayeux;
     }
 

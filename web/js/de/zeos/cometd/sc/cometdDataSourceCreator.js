@@ -53,6 +53,10 @@ define(["./cometdDataSource"], function() {
                     if (f.type.type == "BINARY")
                         field.editorType = "CustomFileItem";
                     break;
+                case "BINARY":
+                    type = "custom";
+                    field.editorType = "CustomFileItem";
+                    break;
                 case "ENUM":
                     type = "enum";
                     field.valueMap = createEnum(model, f);

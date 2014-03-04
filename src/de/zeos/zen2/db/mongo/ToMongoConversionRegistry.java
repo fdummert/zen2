@@ -1,7 +1,12 @@
 package de.zeos.zen2.db.mongo;
 
+import java.io.ByteArrayInputStream;
+import java.io.IOException;
+import java.io.InputStream;
 import java.util.Map;
 
+import javax.mail.MessagingException;
+import javax.mail.internet.MimeUtility;
 import javax.xml.bind.DatatypeConverter;
 
 import org.bson.types.ObjectId;
@@ -30,14 +35,33 @@ public class ToMongoConversionRegistry extends DefaultConversionRegistry {
                         return new ObjectId(source);
                     }
                     switch (fieldInfo.getType().getType()) {
-                        case DATE:
-                            return DatatypeConverter.parseDate(source).getTime();
-                        case DATETIME:
-                            return DatatypeConverter.parseDateTime(source).getTime();
-                        case TIME:
-                            return DatatypeConverter.parseTime(source).getTime();
-                        default:
+                    case DATE:
+                        return DatatypeConverter.parseDate(source).getTime();
+                    case DATETIME:
+                        return DatatypeConverter.parseDateTime(source).getTime();
+                    case TIME:
+                        return DatatypeConverter.parseTime(source).getTime();
+                    default:
                     }
+                } else if (fieldInfo.getType().getDataClass() == DataClass.BINARY) {
+                    source = source.substring(source.indexOf(",") + 1);
+                    ByteArrayInputStream bais = new ByteArrayInputStream(source.getBytes());
+                    InputStream b64is;
+                    try {
+                        b64is = MimeUtility.decode(bais, "base64");
+                    } catch (MessagingException e) {
+                        throw new RuntimeException(e);
+                    }
+                    byte[] tmp = new byte[source.length()];
+                    int n = 0;
+                    try {
+                        n = b64is.read(tmp);
+                    } catch (IOException e) {
+                        throw new RuntimeException(e);
+                    }
+                    byte[] res = new byte[n];
+                    System.arraycopy(tmp, 0, res, 0, n);
+                    return res;
                 } else if (fieldInfo.isComplex()) {
                     EntityInfo refEntity = fieldInfo.getType().resolveRefEntity();
                     if (!refEntity.isEmbeddable() && fieldInfo.getType().isLazy()) {

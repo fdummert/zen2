@@ -1,12 +1,6 @@
 define(["dojo/i18n!../../nls/messages", "require"], function(msgs, require) {
     return {
         create: function(cm, app) {
-            var categories = {
-                "image/png": { type: "PNG", cat: "binary" },
-                "text/html": { type: "HTML", cat: "text" },
-                "text/javascript": { type: "JS", cat: "text" }, 
-                "text/css": { type: "CSS", cat: "text" }
-            };
             var list = [
                 isc.ListGrid.create({
                     dataSource: resourceManageDS,
@@ -72,18 +66,43 @@ define(["dojo/i18n!../../nls/messages", "require"], function(msgs, require) {
                                 item.getInfo().setContents(item.file.name + " (" + size + ")");
                             }
                         }, info: isc.Label.create({width: 200, contents: "---"}), showIf: "form.getValue('type') == 'PNG' || form.getValue('type') == 'CUSTOM_BINARY'" },
-                        { name: "textContent", showIf: "form.getValue('type') != null && form.getValue('type') != 'PNG' && form.getValue('type') != 'CUSTOM_BINARY'" }
+                        { name: "textContent", type: "canvas", shouldSaveValue: true, showIf: "form.getValue('type') != null && form.getValue('type') != 'PNG' && form.getValue('type') != 'CUSTOM_BINARY'", canvasConstructor: "Button", 
+                            canvasProperties: { title: "...", 
+                                click: function() {
+                                    require(["./textEditor"], function(editor) {
+                                        var types = {
+                                            "HTML": "text/html",
+                                            "JS": "text/javascript", 
+                                            "CSS": "text/css"
+                                        };
+                                        var mimeType = types[resourceManageForm.getValue("type")] || resourceManageForm.getValue("customType");
+                                        editor.show(resourceManageForm.getValue("_id"), resourceManageForm.getValue("type"), mimeType, resourceManageForm.getValue("textContent"), function(updatedValue) {
+                                            resourceManageForm.setValue("textContent", updatedValue);
+                                            resourceManageForm.getField("textContent").canvas.setBorder("1px solid orange");
+                                        });
+                                    });
+                                }
+                            } 
+                        }
                     ]
                 }),
                 isc.HStack.create({
                     members: [
                         isc.Button.create({
                             title: msgs.add,
-                            click: function() { resourceManageForm.editNewRecord({_class: "de.zeos.zen2.app.model.Resource"}); }
+                            click: function() { 
+                                resourceManageForm.getField("textContent").canvas.setBorder(null);
+                                resourceManageForm.editNewRecord({_class: "de.zeos.zen2.app.model.Resource"});
+                            }
                         }),
                         isc.Button.create({
                             title: msgs.save,
-                            click: function() { resourceManageForm.saveData(); }
+                            click: function() { 
+                                resourceManageForm.saveData(function(res, data, req) {
+                                    if (res.status == isc.DSResponse.STATUS_SUCCESS)
+                                        resourceManageForm.getField("textContent").canvas.setBorder("1px solid green");
+                                });
+                            }
                         })
                     ]
                 })

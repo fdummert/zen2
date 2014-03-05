@@ -6,7 +6,7 @@ public class DataType {
     private String enumerationId;
     private String refEntityId;
     private String dataViewId;
-    private String resourceId;
+    private String mimeType;
     private boolean lazy = true;
     private boolean inverse;
     private String backRef;
@@ -52,12 +52,12 @@ public class DataType {
         this.dataViewId = dataViewId;
     }
 
-    public String getResourceId() {
-        return this.resourceId;
+    public String getMimeType() {
+        return this.mimeType;
     }
 
-    public void setResourceId(String resourceId) {
-        this.resourceId = resourceId;
+    public void setMimeType(String mimeType) {
+        this.mimeType = mimeType;
     }
 
     public boolean isLazy() {

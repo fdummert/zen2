@@ -36,7 +36,12 @@ public class ScriptMongoAccessor extends MongoAccessor implements ScriptableDBAc
 
     @Override
     public Map<String, Object> selectSingle(Map<String, Object> query, String entityInfo) {
-        return selectSingle(query, this.entities.get(entityInfo));
+        return selectSingle(query, this.entities.get(entityInfo), false);
+    }
+
+    @Override
+    public Map<String, Object> selectSingle(Map<String, Object> query, String entityInfo, boolean includeBinary) {
+        return selectSingle(query, this.entities.get(entityInfo), includeBinary);
     }
 
     @Override

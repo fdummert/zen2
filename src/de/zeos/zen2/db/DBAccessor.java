@@ -12,7 +12,7 @@ public interface DBAccessor {
 
     public boolean exists(Map<String, Object> query, EntityInfo entityInfo);
 
-    public Map<String, Object> selectSingle(Map<String, Object> query, EntityInfo entityInfo);
+    public Map<String, Object> selectSingle(Map<String, Object> query, EntityInfo entityInfo, boolean includeBinary);
 
     public List<Map<String, Object>> select(Map<String, Object> query, Integer pageFrom, Integer pageTo, String[] sortCols, EntityInfo entityInfo);
 

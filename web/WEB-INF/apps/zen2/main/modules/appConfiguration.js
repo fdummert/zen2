@@ -13,7 +13,7 @@ define(["dojo/i18n!../../nls/messages", "require"], function(msgs, require) {
                                 click: function() {
                                     require(["./scriptHandler"], function(handler) {
                                         var def = "function authenticate(credentials, db, digester) {\n    $\n}";
-                                        handler.show(cm, msgs.securityHandler, appConfigForm.getValue("securityHandler"), def, function(updatedHandler) {
+                                        handler.show(msgs.securityHandler, appConfigForm.getValue("securityHandler"), def, function(updatedHandler) {
                                             updatedHandler.valid = true;
                                             var secHandler = appConfigForm.getValue("securityHandler");
                                             if (secHandler == null)

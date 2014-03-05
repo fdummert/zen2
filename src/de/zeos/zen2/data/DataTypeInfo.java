@@ -16,7 +16,6 @@ public class DataTypeInfo {
     private FieldView fieldView;
     private String refEntityId;
     private String enumerationId;
-    private String resourceId;
 
     public DataTypeInfo(ModelInfo modelInfo, DataViewInfo dataViewInfo, InternalDBAccessor accessor, DataType dataType, FieldView fieldView, String prefix, String fieldName, List<FieldView> fieldViews) {
         this.modelInfo = modelInfo;
@@ -24,7 +23,6 @@ public class DataTypeInfo {
         this.dataType = dataType;
         this.fieldView = fieldView;
         this.enumerationId = dataType.getEnumerationId();
-        this.resourceId = dataType.getResourceId();
         if (enumerationId != null && modelInfo.getEnumerations().get(enumerationId) == null)
             modelInfo.addEnumeration(accessor.getEnumeration(enumerationId));
         this.refEntityId = dataType.getRefEntityId();
@@ -57,10 +55,6 @@ public class DataTypeInfo {
         return this.dataType.getDataViewId();
     }
 
-    public String getResourceId() {
-        return this.resourceId;
-    }
-
     public EntityInfo resolveRefEntity() {
         return this.modelInfo.getEntity(this.dataViewInfo.getId(), refEntityId);
     }
@@ -83,5 +77,9 @@ public class DataTypeInfo {
 
     public boolean isInverse() {
         return this.dataType.isInverse();
+    }
+
+    public String getMimeType() {
+        return this.dataType.getMimeType();
     }
 }

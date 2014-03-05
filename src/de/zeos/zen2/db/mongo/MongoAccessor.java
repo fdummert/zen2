@@ -91,9 +91,9 @@ public class MongoAccessor implements DBAccessor {
         return selectSingleInternal(dbObj, null, entityInfo) != null;
     }
 
-    public Map<String, Object> selectSingle(Map<String, Object> query, EntityInfo entityInfo) {
+    public Map<String, Object> selectSingle(Map<String, Object> query, EntityInfo entityInfo, boolean includeBinary) {
         notifyListeners(CommandMode.READ, Type.BEFORE, entityInfo, query, null);
-        DBObject resultObj = selectSingleInternal(queryConverter.convert(query, new EntityInDB(factory.getDb(), entityInfo)), getFields(entityInfo), entityInfo);
+        DBObject resultObj = selectSingleInternal(queryConverter.convert(query, new EntityInDB(factory.getDb(), entityInfo)), getFields(entityInfo, includeBinary), entityInfo);
         Map<String, Object> result = null;
         if (resultObj != null)
             result = convert(resultObj, entityInfo);
@@ -119,7 +119,7 @@ public class MongoAccessor implements DBAccessor {
         try {
             DBCollection coll = getCollection(entityInfo);
             notifyListeners(CommandMode.READ, Type.BEFORE, entityInfo, query, null);
-            DBCursor cursor = coll.find(queryConverter.convert(query, new EntityInDB(factory.getDb(), entityInfo)), getFields(entityInfo));
+            DBCursor cursor = coll.find(queryConverter.convert(query, new EntityInDB(factory.getDb(), entityInfo)), getFields(entityInfo, false));
             if (pageFrom != null)
                 cursor = cursor.skip(pageFrom);
             if (pageTo != null)
@@ -150,7 +150,7 @@ public class MongoAccessor implements DBAccessor {
 
     private List<DBObject> selectInternal(DBObject query, EntityInfo entityInfo) {
         DBCollection coll = getCollection(entityInfo);
-        DBCursor cursor = coll.find(query, getFields(entityInfo));
+        DBCursor cursor = coll.find(query, getFields(entityInfo, false));
         return cursor.toArray();
     }
 
@@ -298,10 +298,10 @@ public class MongoAccessor implements DBAccessor {
         }
     }
 
-    private DBObject getFields(EntityInfo entityInfo) {
+    private DBObject getFields(EntityInfo entityInfo, boolean includeBinary) {
         DBObject dbObj = new BasicDBObject();
         for (String fieldName : entityInfo.getFieldNames(true)) {
-            if (entityInfo.getField(fieldName).getType().getDataClass() != DataClass.BINARY)
+            if (includeBinary || entityInfo.getField(fieldName).getType().getDataClass() != DataClass.BINARY)
                 dbObj.put(fieldName, 1);
         }
         return dbObj;

@@ -30,7 +30,7 @@ define(["dojo/i18n!../../nls/messages", "require"], function(msgs, require) {
                                          var oldRecord = isc.addProperties({}, record);
                                          function scriptHandlerLoaded(handler, scriptHandler) {
                                              var def = "function process(data, scope, " + (scriptHandler.triggerPoint == "AFTER" ? "result, " : "") + "db) {\n    $\n}";
-                                             handler.show(viewer.cm, viewer.msgs.dataViewHandler + ": " + scriptHandler.triggerPoint + " " + scriptHandler.triggerModes, scriptHandler, def, function(updatedHandler) {
+                                             handler.show(viewer.msgs.dataViewHandler + ": " + scriptHandler.triggerPoint + " " + scriptHandler.triggerModes, scriptHandler, def, function(updatedHandler) {
                                                  record._changed = !isc.DynamicForm.compareValues(oldRecord, updatedHandler);
                                                  updatedHandler.valid = true;
                                                  viewer.refreshCell(recordNum, viewer.getFieldNum("valid"));

@@ -38,7 +38,7 @@ db.entity.insert( { _id: "dataType", embeddable: true, system: true, fields: [
       { name: "enumerationId", type: { dataClass: "SCALAR", type: "STRING" } },
       { name: "refEntityId", type: { dataClass: "SCALAR", type: "STRING" } },
       { name: "dataViewId", type: { dataClass: "SCALAR", type: "STRING" } },
-      { name: "resourceId", type: { dataClass: "SCALAR", type: "STRING" } },
+      { name: "mimeType", type: { dataClass: "SCALAR", type: "STRING" } },
       { name: "lazy", type: { dataClass: "SCALAR", type: "BOOL" } },
       { name: "inverse", type: { dataClass: "SCALAR", type: "BOOL" } },
       { name: "backRef", type: { dataClass: "SCALAR", type: "STRING" } },

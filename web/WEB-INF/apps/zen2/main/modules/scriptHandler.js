@@ -2,7 +2,18 @@ define(["dojo/i18n!../../nls/messages"], function(msgs) {
     return {
         origColor: null,
         editor: null,
-        show: function(cm, type, scriptHandler, def, applyCallback, saveCallback) {
+        findClass: function(name) {
+            for (var i = 0; i < document.styleSheets.length; i++) {
+                var classes = document.styleSheets[i].cssRules;
+                for(var j = 0; j < classes.length; j++) {
+                    if (classes[j].selectorText === name) {
+                        return classes[j];
+                    }            
+                }        
+            }        
+            return null;             
+        },
+        show: function(type, scriptHandler, def, applyCallback, saveCallback) {
             var that = this;
             isc.Window.create({
                 ID: "scriptHandlerWin",
@@ -130,6 +141,12 @@ define(["dojo/i18n!../../nls/messages"], function(msgs) {
             this.editor.setTheme("ace/theme/eclipse");
             this.editor.getSession().setMode("ace/mode/javascript");
             this.editor.setFontSize(10);
+            ace.require("ace/ext/language_tools");
+            this.editor.setOptions({
+                enableBasicAutocompletion: true,
+                enableSnippets: true
+            });
+            this.findClass(".ace_autocomplete").style.zIndex = scriptHandlerWin.zIndex + 100;
             this.origColor = this.editor.renderer.content.style.backgroundColor;
             aceContainer.containerResized();
             

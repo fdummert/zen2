@@ -28,7 +28,7 @@ define({
         securityMode: "Sicherheit",
         securityModes_PUBLIC: "öffentlich",
         securityModes_PROTECTED: "geschützt",
-        upload: "Hochladen",
+        selectFile: "Datei auswählen",
         username: "Login",
         welcome: "Willkommen",
         

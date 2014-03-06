@@ -86,7 +86,7 @@ define(["dojo/i18n!../../nls/messages", "require"], function(msgs, require) {
                 height: 22,
                 membersMargin: 5,
                 members: [
-                    isc.Button.create({title: msgs.upload, click: function() {
+                    isc.Button.create({title: msgs.selectFile, click: function() {
                         var fileUpload = document.getElementById(fileCanvas.ID + "_file");
                         if (fileUpload._handler == null) {
                             fileUpload.addEventListener("change", handleFiles, false);
@@ -100,10 +100,13 @@ define(["dojo/i18n!../../nls/messages", "require"], function(msgs, require) {
                 if (stack.members.length == 2) {
                     stack.removeMember(that.getInfo());
                 }
-                stack.addMember(element);
+                if (element != null)
+                    stack.addMember(element);
             };
             this.getInfo = function() {
-                return stack.getMember(1);
+                if (stack.members.length == 2)
+                    return stack.getMember(1);
+                return null;
             };
             if (this.info) {
                 this.setInfo(this.info);

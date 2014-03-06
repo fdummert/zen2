@@ -30,6 +30,7 @@ public class Resource {
     private SecurityMode visibility;
     private String description;
     private String preview;
+    private int size;
     private byte[] content;
     private String textContent;
 
@@ -83,6 +84,14 @@ public class Resource {
 
     public void setPreview(String preview) {
         this.preview = preview;
+    }
+
+    public int getSize() {
+        return this.size;
+    }
+
+    public void setSize(int size) {
+        this.size = size;
     }
 
     public byte[] getContent() {

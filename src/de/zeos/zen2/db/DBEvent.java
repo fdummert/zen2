@@ -9,7 +9,7 @@ public class DBEvent extends EventObject {
     private static final long serialVersionUID = -2761057561740666284L;
 
     public enum Type {
-        BEFORE, AFTER
+        BEFORE_PROCESSING, BEFORE, AFTER
     }
 
     private String app;

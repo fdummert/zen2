@@ -92,8 +92,10 @@ public class MongoAccessor implements DBAccessor {
     }
 
     public Map<String, Object> selectSingle(Map<String, Object> query, EntityInfo entityInfo, boolean includeBinary) {
-        notifyListeners(CommandMode.READ, Type.BEFORE, entityInfo, query, null);
-        DBObject resultObj = selectSingleInternal(queryConverter.convert(query, new EntityInDB(factory.getDb(), entityInfo)), getFields(entityInfo, includeBinary), entityInfo);
+        notifyListeners(CommandMode.READ, Type.BEFORE_PROCESSING, entityInfo, query, null);
+        DBObject convObj = queryConverter.convert(query, new EntityInDB(factory.getDb(), entityInfo));
+        notifyListeners(CommandMode.READ, Type.BEFORE, entityInfo, convObj, null);
+        DBObject resultObj = selectSingleInternal(convObj, getFields(entityInfo, includeBinary), entityInfo);
         Map<String, Object> result = null;
         if (resultObj != null)
             result = convert(resultObj, entityInfo);
@@ -118,8 +120,10 @@ public class MongoAccessor implements DBAccessor {
     public List<Map<String, Object>> select(Map<String, Object> query, Integer pageFrom, Integer pageTo, String[] sortCols, EntityInfo entityInfo) {
         try {
             DBCollection coll = getCollection(entityInfo);
-            notifyListeners(CommandMode.READ, Type.BEFORE, entityInfo, query, null);
-            DBCursor cursor = coll.find(queryConverter.convert(query, new EntityInDB(factory.getDb(), entityInfo)), getFields(entityInfo, false));
+            notifyListeners(CommandMode.READ, Type.BEFORE_PROCESSING, entityInfo, query, null);
+            DBObject convObj = queryConverter.convert(query, new EntityInDB(factory.getDb(), entityInfo));
+            notifyListeners(CommandMode.READ, Type.BEFORE, entityInfo, convObj, null);
+            DBCursor cursor = coll.find(convObj, getFields(entityInfo, false));
             if (pageFrom != null)
                 cursor = cursor.skip(pageFrom);
             if (pageTo != null)
@@ -167,8 +171,10 @@ public class MongoAccessor implements DBAccessor {
 
     @Override
     public Map<String, Object> delete(Map<String, Object> query, EntityInfo entityInfo) {
-        notifyListeners(CommandMode.DELETE, Type.BEFORE, entityInfo, query, null);
-        boolean success = deleteInternal(queryConverter.convert(query, new EntityInDB(factory.getDb(), entityInfo)), entityInfo, false, true);
+        notifyListeners(CommandMode.DELETE, Type.BEFORE_PROCESSING, entityInfo, query, null);
+        DBObject convObj = queryConverter.convert(query, new EntityInDB(factory.getDb(), entityInfo));
+        notifyListeners(CommandMode.DELETE, Type.BEFORE, entityInfo, convObj, null);
+        boolean success = deleteInternal(convObj, entityInfo, false, true);
         notifyListeners(CommandMode.DELETE, Type.AFTER, entityInfo, query, success);
         return success ? query : null;
     }
@@ -177,7 +183,7 @@ public class MongoAccessor implements DBAccessor {
         try {
             DBCollection coll = getCollection(entityInfo);
             if (notify)
-                notifyListeners(CommandMode.DELETE, Type.BEFORE, entityInfo, new DBObjectMapFacade(dbObj), null);
+                notifyListeners(CommandMode.DELETE, Type.BEFORE_PROCESSING, entityInfo, dbObj, null);
             DBObject dbObjToDel = fetchFromDB ? selectSingleById(dbObj.get(entityInfo.getPkFieldName()), entityInfo) : dbObj;
             boolean success = false;
             if (dbObjToDel != null) {
@@ -186,7 +192,7 @@ public class MongoAccessor implements DBAccessor {
                 success = result.getError() == null;
             }
             if (notify)
-                notifyListeners(CommandMode.DELETE, Type.AFTER, entityInfo, new DBObjectMapFacade(dbObj), success);
+                notifyListeners(CommandMode.DELETE, Type.AFTER, entityInfo, dbObj, success);
             return success;
         } catch (RuntimeException e) {
             throw potentiallyConvertRuntimeException(e);
@@ -235,25 +241,27 @@ public class MongoAccessor implements DBAccessor {
 
     @Override
     public Map<String, Object> insert(Map<String, Object> query, EntityInfo entityInfo) {
-        notifyListeners(CommandMode.CREATE, Type.BEFORE, entityInfo, query, null);
-        Object id = insertInternal(queryConverter.convert(query, new EntityInDB(factory.getDb(), entityInfo)), entityInfo, false);
-        query.put(entityInfo.getPkFieldName(), id);
-        notifyListeners(CommandMode.CREATE, Type.AFTER, entityInfo, query, id);
-        return query;
+        notifyListeners(CommandMode.CREATE, Type.BEFORE_PROCESSING, entityInfo, query, null);
+        DBObject convObj = queryConverter.convert(query, new EntityInDB(factory.getDb(), entityInfo));
+        notifyListeners(CommandMode.CREATE, Type.BEFORE, entityInfo, convObj, null);
+        insertInternal(convObj, entityInfo, false);
+        Map<String, Object> result = convert(convObj, entityInfo);
+        notifyListeners(CommandMode.CREATE, Type.AFTER, entityInfo, query, result);
+        return result;
     }
 
     private Object insertInternal(DBObject dbObj, EntityInfo entityInfo, boolean notify) {
         try {
             DBCollection coll = getCollection(entityInfo);
             if (notify)
-                notifyListeners(CommandMode.CREATE, Type.BEFORE, entityInfo, new DBObjectMapFacade(dbObj), null);
+                notifyListeners(CommandMode.CREATE, Type.BEFORE_PROCESSING, entityInfo, dbObj, null);
             persistRefs(dbObj, entityInfo, true);
             WriteResult writeResult = coll.insert(dbObj);
             Object result = null;
             if (writeResult.getError() == null)
                 result = dbObj.get(entityInfo.getPkFieldName());
             if (notify)
-                notifyListeners(CommandMode.CREATE, Type.AFTER, entityInfo, new DBObjectMapFacade(dbObj), result);
+                notifyListeners(CommandMode.CREATE, Type.AFTER, entityInfo, dbObj, result);
             return result;
         } catch (RuntimeException e) {
             throw potentiallyConvertRuntimeException(e);
@@ -262,8 +270,10 @@ public class MongoAccessor implements DBAccessor {
 
     @Override
     public Map<String, Object> update(Map<String, Object> query, boolean refetch, EntityInfo entityInfo) {
-        notifyListeners(CommandMode.UPDATE, Type.BEFORE, entityInfo, query, null);
-        DBObject result = updateInternal(queryConverter.convert(query, new EntityInDB(factory.getDb(), entityInfo)), refetch, entityInfo, false);
+        notifyListeners(CommandMode.UPDATE, Type.BEFORE_PROCESSING, entityInfo, query, null);
+        DBObject convObj = queryConverter.convert(query, new EntityInDB(factory.getDb(), entityInfo));
+        notifyListeners(CommandMode.UPDATE, Type.BEFORE, entityInfo, convObj, null);
+        DBObject result = updateInternal(convObj, refetch, entityInfo, false);
         notifyListeners(CommandMode.UPDATE, Type.AFTER, entityInfo, query, result);
         if (result == null)
             return null;
@@ -274,7 +284,7 @@ public class MongoAccessor implements DBAccessor {
         try {
             DBCollection coll = getCollection(entityInfo);
             if (notify)
-                notifyListeners(CommandMode.UPDATE, Type.BEFORE, entityInfo, new DBObjectMapFacade(queryObj), null);
+                notifyListeners(CommandMode.UPDATE, Type.BEFORE_PROCESSING, entityInfo, queryObj, null);
             persistRefs(queryObj, entityInfo, false);
             DBObject update = new BasicDBObject();
             Object id = queryObj.removeField(entityInfo.getPkFieldName());
@@ -291,7 +301,7 @@ public class MongoAccessor implements DBAccessor {
                 }
             }
             if (notify)
-                notifyListeners(CommandMode.UPDATE, Type.AFTER, entityInfo, new DBObjectMapFacade(queryObj), result);
+                notifyListeners(CommandMode.UPDATE, Type.AFTER, entityInfo, queryObj, result);
             return result;
         } catch (RuntimeException e) {
             throw potentiallyConvertRuntimeException(e);
@@ -442,6 +452,12 @@ public class MongoAccessor implements DBAccessor {
             for (DBListener l : entityListeners)
                 l.notify(event);
         }
+    }
+
+    private void notifyListeners(CommandMode mode, DBEvent.Type type, EntityInfo entity, DBObject dbObj, Object result) {
+        if (listeners.get(null) == null && listeners.get(entity.getId()) == null)
+            return;
+        notifyListeners(mode, type, entity, new DBObjectMapFacade(dbObj), result);
     }
 
     protected Map<String, Object> convert(DBObject dbObject, EntityInfo entityInfo) {

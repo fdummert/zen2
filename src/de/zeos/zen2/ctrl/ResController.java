@@ -72,6 +72,16 @@ public class ResController {
     @RequestMapping(value = "/{app}/{sessionId}/{id}", method = RequestMethod.GET)
     @ResponseBody
     public HttpEntity<byte[]> getPrivate(@PathVariable String app, @PathVariable String sessionId, @PathVariable String id) throws IOException {
+        return preparePrivate(app, sessionId, id, false);
+    }
+
+    @RequestMapping(value = "/{app}/{sessionId}/download/{id}", method = RequestMethod.GET)
+    @ResponseBody
+    public HttpEntity<byte[]> download(@PathVariable String app, @PathVariable String sessionId, @PathVariable String id) throws IOException {
+        return preparePrivate(app, sessionId, id, true);
+    }
+
+    private HttpEntity<byte[]> preparePrivate(String app, String sessionId, String id, boolean download) throws IOException {
         ServerSession session = this.bayeuxServer.getSession(sessionId);
         if (session == null)
             throw new ControllerException(HttpStatus.UNAUTHORIZED, "Invalid session");
@@ -79,10 +89,13 @@ public class ResController {
         if (!sessionApp.equals(app))
             throw new ControllerException(HttpStatus.FORBIDDEN, "Invalid application");
         InternalDBAccessor accessor = appRegistry.getInternalDBAccessor(app);
-        de.zeos.zen2.app.model.Resource r = accessor.getResource(resolve("/" + app + "/" + sessionId + "/" + id, id));
+        de.zeos.zen2.app.model.Resource r = accessor.getResource(resolve("/" + app + "/" + sessionId + "/" + (download ? "download/" : "") + id, id));
         if (r != null) {
             byte[] content = r.getType().getResourceClass() == ResourceClass.BINARY ? r.getContent() : r.getTextContent().getBytes();
             HttpHeaders headers = new HttpHeaders();
+            if (download) {
+                headers.add("Content-Disposition", "attachment; filename=" + r.getId());
+            }
             headers.setContentLength(content.length);
             headers.setContentType(MediaType.valueOf(r.getContentType()));
             return new HttpEntity<byte[]>(content, headers);

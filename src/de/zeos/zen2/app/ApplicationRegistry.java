@@ -1,5 +1,6 @@
 package de.zeos.zen2.app;
 
+import java.util.EnumSet;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -15,6 +16,8 @@ import de.zeos.zen2.app.model.Application;
 import de.zeos.zen2.app.model.DataView;
 import de.zeos.zen2.app.model.DataView.CommandMode;
 import de.zeos.zen2.app.model.Entity;
+import de.zeos.zen2.app.model.Resource;
+import de.zeos.zen2.app.model.Resource.ResourceClass;
 import de.zeos.zen2.app.model.ScriptHandler;
 import de.zeos.zen2.app.model.SecurityMode;
 import de.zeos.zen2.data.DataViewInfo;
@@ -74,14 +77,15 @@ public class ApplicationRegistry {
     private void registerAppEventListener(String app, DBAccessor accessor) {
         if (app.equals(ZEN2)) {
             accessor.addDBListener(new DBListener() {
+                @SuppressWarnings("unchecked")
                 @Override
                 public void notify(DBEvent event) {
-                    if (event.getType() == Type.BEFORE && event.getMode() == CommandMode.UPDATE) {
+                    if (event.getType() == Type.BEFORE_PROCESSING && event.getMode() == CommandMode.UPDATE) {
                         Map<String, Object> query = event.getQuery();
                         SecurityMode mode = SecurityMode.valueOf((String) query.get("securityMode"));
                         if (mode == SecurityMode.PUBLIC)
                             query.put("securityHandler", null);
-                    } else if (event.getType() == Type.BEFORE && event.getMode() == CommandMode.CREATE) {
+                    } else if (event.getType() == Type.BEFORE_PROCESSING && event.getMode() == CommandMode.CREATE) {
                         EntityInfo entityInfo = (EntityInfo) event.getSource();
                         Map<String, Object> query = event.getQuery();
                         String id = (String) query.get(entityInfo.getPkFieldName());
@@ -96,7 +100,7 @@ public class ApplicationRegistry {
                         String id = (String) query.get(entityInfo.getPkFieldName());
                         switch (event.getMode()) {
                             case CREATE: {
-                                id = (String) event.getResult();
+                                id = (String) ((Map<String, Object>) event.getResult()).get(entityInfo.getPkFieldName());
                                 app = getInternalDBAccessor(ZEN2).getApplication(id);
                                 applications.put(id, app);
                                 getInternalDBAccessor(ADMIN).createApplication(app);
@@ -120,11 +124,35 @@ public class ApplicationRegistry {
                     return "application";
                 }
             });
+
+            accessor.addDBListener(new DBListener() {
+                @Override
+                public void notify(DBEvent event) {
+                    if (event.getType() == Type.BEFORE && (EnumSet.of(CommandMode.UPDATE, CommandMode.CREATE).contains(event.getMode()))) {
+                        Map<String, Object> query = event.getQuery();
+                        Resource.Type type = Resource.Type.valueOf((String) query.get("type"));
+                        if (type.getResourceClass() == ResourceClass.BINARY) {
+                            byte[] data = (byte[]) query.get("content");
+                            if (data != null)
+                                query.put("size", data.length);
+                        } else {
+                            String content = (String) query.get("textContent");
+                            if (content != null)
+                                query.put("size", content.length());
+                        }
+                    }
+                }
+
+                @Override
+                public String getEntityName() {
+                    return "resource";
+                }
+            });
         }
         abstract class ScriptHandlerListener implements DBListener {
             @Override
             public void notify(DBEvent event) {
-                if (event.getType() == Type.BEFORE && (event.getMode() == CommandMode.CREATE || event.getMode() == CommandMode.UPDATE)) {
+                if (event.getType() == Type.BEFORE_PROCESSING && (event.getMode() == CommandMode.CREATE || event.getMode() == CommandMode.UPDATE)) {
                     EntityInfo entityInfo = (EntityInfo) event.getSource();
                     Map<String, Object> query = event.getQuery();
                     Object id = query.get(entityInfo.getPkFieldName());
@@ -155,7 +183,7 @@ public class ApplicationRegistry {
             accessor.addDBListener(new DBListener() {
                 @Override
                 public void notify(DBEvent event) {
-                    if (event.getType() == Type.BEFORE) {
+                    if (event.getType() == Type.BEFORE_PROCESSING) {
                         Map<String, Object> query = event.getQuery();
                         query.put("system", false);
                     }
@@ -169,7 +197,7 @@ public class ApplicationRegistry {
             accessor.addDBListener(new DBListener() {
                 @Override
                 public void notify(DBEvent event) {
-                    if (event.getType() == Type.BEFORE) {
+                    if (event.getType() == Type.BEFORE_PROCESSING) {
                         Map<String, Object> query = event.getQuery();
                         query.put("system", false);
                     }
@@ -183,7 +211,7 @@ public class ApplicationRegistry {
             accessor.addDBListener(new DBListener() {
                 @Override
                 public void notify(DBEvent event) {
-                    if (event.getType() == Type.BEFORE) {
+                    if (event.getType() == Type.BEFORE_PROCESSING) {
                         Map<String, Object> query = event.getQuery();
                         query.put("system", false);
                     }

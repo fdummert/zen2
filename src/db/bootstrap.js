@@ -110,6 +110,7 @@ db.entity.insert( { _id: "resource", embeddable: false, system: true, fields: [
     { name: "visibility", mandatory: true, type: { dataClass: "ENUM", enumerationId: "securityModes" } },
     { name: "description", type: { dataClass: "SCALAR", type: "STRING" } },
     { name: "preview", type: { dataClass: "SCALAR", type: "BINARY" } },
+    { name: "size", type: { dataClass: "SCALAR", type: "INT" }, readOnly: true },
     { name: "content", type: { dataClass: "BINARY" } },
     { name: "textContent", type: { dataClass: "SCALAR", type: "STRING" } }
 ], _class: "de.zeos.zen2.app.model.Entity" } );

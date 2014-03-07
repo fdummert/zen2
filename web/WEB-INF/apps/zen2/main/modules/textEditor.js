@@ -12,7 +12,7 @@ define(["dojo/i18n!../../nls/messages"], function(msgs) {
             }        
             return null;             
         },
-        show: function(name, type, mimeType, value, applyCallback) {
+        show: function(name, type, mimeType, value, loadTemplates, applyCallback) {
             var that = this;
             isc.Window.create({
                 ID: "textEditorWin",
@@ -22,6 +22,7 @@ define(["dojo/i18n!../../nls/messages"], function(msgs) {
                 canDragReposition: true,
                 canDragResize: true,
                 showMinimizeButton: false,
+                showMaximizeButton: true,
                 dragAppearance: "target",
                 items: [
                     isc.VLayout.create({
@@ -86,10 +87,30 @@ define(["dojo/i18n!../../nls/messages"], function(msgs) {
                 enableBasicAutocompletion: true,
                 enableSnippets: true
             });
+            if (loadTemplates && (type == "HTML" || type == "JS")) {
+                var snippetManager = ace.require("ace/snippets").snippetManager;
+                ace.config.loadModule("ace/snippets/" + modes[mimeType], function(m) {
+                    if (m) {
+                        snippetManager.files["ace/mode/" + modes[mimeType]] = m;
+                        var snippetText = m.snippetText;
+                        templateManageDS.fetchData({type: type}, function(res, data) {
+                            for (var i = 0; i < data.length; i++) {
+                                var name = data[i]._id;
+                                var content = data[i].content;
+                                snippetText += "snippet zen2:" + name + "\n" + content.replace(/^(.*)/gm, "\t$1") + "\n";
+                            }
+                            m.snippets = snippetManager.parseSnippetFile(snippetText);
+                            snippetManager.register(m.snippets, m.scope);
+                        });
+                    }
+                });
+            }
+
             this.editor.setFontSize(10);
             textEditorAceContainer.containerResized();
             this.editor.setValue(value);
             this.findClass(".ace_autocomplete").style.zIndex = textEditorWin.zIndex + 100;
+            
         }
     };
 });

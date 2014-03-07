@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <script>
+            dojoConfig = {
+                parseOnLoad: false,
+                async: 1,
+                paths: {
+                    "js": "../../js",
+                    "res": "../../ctrl/res",
+                    "dv": "../../ctrl/dv"
+                }
+            };
+        </script>
+        <script src="../../../js/dojo/dojo.js.uncompressed.js"></script>
+    </head>
+    <body>
+        <script>
+            require([ "js/de/zeos/cometd/cometdManager", "require"], function(CometDManager, require) {
+                var cm = new CometDManager(null, {
+                    initialized : function(success, clientId, err, msg) {
+                        console.log("init", success, clientId, err, msg);
+                    },
+                    disconnected : function() {
+                        console.log("disconnected");
+                    },
+                    connected: function() {
+                        console.log("connected");
+                    },
+                    broken : function(sessionLost, wasConnected, err, msg) {
+                        if (wasConnected) {
+                            console.log("broken");
+                        }
+                    }
+                });
+                cm.start();
+            });            
+        </script>
+        <iframe name="binFrame" frameborder="0" style="height:0px;width:0px"></iframe>
+    </body>
+</html>

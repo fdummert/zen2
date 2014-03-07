@@ -126,7 +126,7 @@ define(["dojo/i18n!../../nls/messages", "require"], function(msgs, require) {
                                             "CSS": "text/css"
                                         };
                                         var mimeType = types[resourceManageForm.getValue("type")] || resourceManageForm.getValue("customType");
-                                        editor.show(resourceManageForm.getValue("_id"), resourceManageForm.getValue("type"), mimeType, resourceManageForm.getValue("textContent"), function(updatedValue) {
+                                        editor.show(resourceManageForm.getValue("_id"), resourceManageForm.getValue("type"), mimeType, resourceManageForm.getValue("textContent"), true, function(updatedValue) {
                                             resourceManageForm.setValue("textContent", updatedValue);
                                             resourceManageForm.getField("textContent").canvas.setBorder("1px solid orange");
                                         });

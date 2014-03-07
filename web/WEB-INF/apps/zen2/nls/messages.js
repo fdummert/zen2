@@ -29,6 +29,7 @@ define({
         securityModes_PUBLIC: "öffentlich",
         securityModes_PROTECTED: "geschützt",
         selectFile: "Datei auswählen",
+        templates: "Templates",
         username: "Login",
         welcome: "Willkommen",
         

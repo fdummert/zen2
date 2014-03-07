@@ -423,27 +423,24 @@ define(["dojo/_base/unload", "dojox/cometd", "dojo/_base/lang", "dojox/cometd/ac
         this.start = function(credentialsOrApplication) {
             if (status == CometDManager.Status.DISCONNECTED) {
                 status = CometDManager.Status.CONNECTING;
-                var handshakeProps = null;
-                if (credentialsOrApplication) {
-                    credentials = credentialsOrApplication;
-                    var app = "zen2";
-                    var cred = {};
-                    if (typeof credentialsOrApplication === "string") {
-                        app = credentialsOrApplication;
-                    } else {
-                        lang.mixin(cred, credentialsOrApplication);
-                        if (cred.application) {
-                            app = cred.application;
-                            delete cred.application;
-                        }
+                credentials = credentialsOrApplication;
+                var cred = {};
+                var app = "zen2";
+                if (typeof credentialsOrApplication === "string") {
+                    app = credentialsOrApplication;
+                } else {
+                    lang.mixin(cred, credentialsOrApplication);
+                    if (cred.application) {
+                        app = cred.application;
+                        delete cred.application;
                     }
-                    handshakeProps = {
-                        ext : {
-                            "de.zeos.zen2.security" : cred,
-                            "de.zeos.zen2.application": app
-                        }
-                    };
                 }
+                var handshakeProps = {
+                    ext : {
+                        "de.zeos.zen2.security" : cred,
+                        "de.zeos.zen2.application": app
+                    }
+                };
                 cometD.configure({
                     url : "http://localhost:8080/zen2/cometd",
                     logLevel : "info",

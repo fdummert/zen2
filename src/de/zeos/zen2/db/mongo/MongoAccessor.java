@@ -310,7 +310,7 @@ public class MongoAccessor implements DBAccessor {
 
     private DBObject getFields(EntityInfo entityInfo, boolean includeBinary) {
         DBObject dbObj = new BasicDBObject();
-        for (String fieldName : entityInfo.getFieldNames(true)) {
+        for (String fieldName : entityInfo.getFieldNames(false)) {
             if (includeBinary || entityInfo.getField(fieldName).getType().getDataClass() != DataClass.BINARY)
                 dbObj.put(fieldName, 1);
         }

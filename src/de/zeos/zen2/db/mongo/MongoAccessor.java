@@ -188,7 +188,7 @@ public class MongoAccessor implements DBAccessor {
             boolean success = false;
             if (dbObjToDel != null) {
                 deleteCascadeRefs(dbObjToDel, entityInfo);
-                WriteResult result = coll.remove(dbObj);
+                WriteResult result = coll.remove(dbObjToDel);
                 success = result.getError() == null;
             }
             if (notify)

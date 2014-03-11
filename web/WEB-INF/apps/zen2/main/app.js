@@ -75,7 +75,7 @@ define(["dojo/i18n!../nls/messages", "de/zeos/cometd/sc/cometdDataSource", "requ
                                     for (var name in dataViews) {
                                         var dv = dataViews[name];
                                         if (dv.system && dv.scope == "application")
-                                            isc.DS.get(name + "DS").scope = app != "zen2" ? app : null;
+                                            isc.DS.get(name + "DS").scope = app;
                                     }
                                     openModule("appManagement", app);
                                 }

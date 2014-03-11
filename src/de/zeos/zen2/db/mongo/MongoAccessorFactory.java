@@ -69,7 +69,7 @@ public class MongoAccessorFactory implements DBAccessorFactory {
 
     @Override
     public InternalDBAccessor createInternalDBAccessor(String app) {
-        MongoTemplate template = new MongoTemplate(mongo, app, new UserCredentials(user, password));
+        MongoTemplate template = new MongoTemplate(mongo, app, new UserCredentials(app, app));
         template.setWriteConcern(writeConcern);
         return new MongoInternalDBAccessor(template, loadedBootstrapScript);
     }

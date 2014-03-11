@@ -423,13 +423,14 @@ define(["dojo/_base/unload", "dojox/cometd", "dojo/_base/lang", "dojox/cometd/ac
         this.start = function(credentialsOrApplication) {
             if (status == CometDManager.Status.DISCONNECTED) {
                 status = CometDManager.Status.CONNECTING;
-                credentials = credentialsOrApplication;
+                if (credentialsOrApplication)
+                    credentials = credentialsOrApplication;
                 var cred = {};
                 var app = "zen2";
-                if (typeof credentialsOrApplication === "string") {
-                    app = credentialsOrApplication;
+                if (typeof credentials === "string") {
+                    app = credentials;
                 } else {
-                    lang.mixin(cred, credentialsOrApplication);
+                    lang.mixin(cred, credentials);
                     if (cred.application) {
                         app = cred.application;
                         delete cred.application;

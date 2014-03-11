@@ -45,7 +45,11 @@ public class SecurityHandler {
             Application application = appRegistry.getApplication(app);
             if (application.getSecurityMode() == SecurityMode.PUBLIC) {
                 final List<DataView> dataViews = appRegistry.getInternalDBAccessor(app).getDataViews();
-                return createAuthorization(app, null, Collections.singleton(".*"), Collections.singleton(".*"), dataViews);
+                Map<String, Object> data = null;
+                //FIXME: replace with security handler!
+                if (app.equals(ApplicationRegistry.ZEN2))
+                    data = Collections.singletonMap("application", (Object) ".*");
+                return createAuthorization(app, data, Collections.singleton(".*"), Collections.singleton(".*"), dataViews);
             }
             handler = application.getSecurityHandler();
             if (!handler.isValid())

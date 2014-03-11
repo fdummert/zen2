@@ -108,7 +108,7 @@ define(["dojo/i18n!../../nls/messages", "require"], function(msgs, require) {
                                     } else {
                                         item.setInfo(isc.ImgButton.create({src: "[SKIN]/actions/view.png", width: 16, height: 16, showRollOver: false, showDown: false, 
                                             click: function() {
-                                                window.binFrame.location.href = "ctrl/res/zen2/" + cm.getClientId() + "/download/" + form.getValue("_id");
+                                                window.binFrame.location.href = "ctrl/zen2/" + form.getValue("_id") + "?sessionId=" + cm.getClientId() + "&download=true";
                                             }
                                         }));
                                     }

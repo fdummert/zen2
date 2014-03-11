@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <script>
+            var isomorphicDir = "../../js/isomorphic/";
+            isc_useSimpleNames = false;
+            dojoConfig = {
+                parseOnLoad: false,
+                async: 1,
+                paths: {
+                    "js": "../../js",
+                    "${1:application}": "../../ctrl/${1}",
+                    "fs": "../../ctrl/fs",
+                    "dv": "../../ctrl/dv"
+                }
+            };
+        </script>
+        <script src=../../js/isomorphic/system/modules-debug/ISC_Core.js></script>
+        <script src=../../js/isomorphic/system/modules-debug/ISC_Foundation.js></script>
+        <script src=../../js/isomorphic/system/modules-debug/ISC_Containers.js></script>
+        <script src=../../js/isomorphic/system/modules-debug/ISC_Grids.js></script>
+        <script src=../../js/isomorphic/system/modules-debug/ISC_Forms.js></script>
+        <script src=../../js/isomorphic/system/modules-debug/ISC_DataBinding.js></script> 
+        <script src=../../js/isomorphic/skins/Enterprise/load_skin.js></SCRIPT> 
+        <script src="../../js/dojo/dojo.js.uncompressed.js"></script>
+    </head>
+    <body>
+        <script>
+            isc.setAutoDraw(false);
+            require([ "js/de/zeos/cometd/cometdManager", "require", "js/dojo/i18n!${1}/nls/messages" ], function(CometDManager, require, msgs) {
+                var mainApp = null;
+                var warnImg = isc.Img.create({ size: 32, src: "[SKIN]Dialog/warn.png", autoDraw: true, left: -1000 });
+                
+                function hideBroken() {
+                    var brokenWin = isc.Canvas.getById("brokenWin");
+                    if (brokenWin) {
+                        warnImg.deparent();
+                        brokenWin.destroy();
+                    }
+                }
+                var cm = new CometDManager("${1}", {
+                    initialized : function(success, clientId, err, msg) {
+                        console.log("init", success, clientId, err, msg);
+                        hideBroken();
+                        if (!success) {
+                            if (msg.exception && msgs[msg.exception])
+                                err = msgs[msg.exception];
+                            else if (err && err.indexOf("403:") == 0)
+                                err = msgs.errLogin;
+                            isc.warn("<span style='color:red'>" + err + "</span>");                                
+                        } else {
+                            if (!mainApp) {
+                                require(["./menu.js?sessionId=" + clientId, "js/de/zeos/cometd/sc/cometdDataSourceCreator", "js/dojo/text!dv/${1}?sessionId=" + clientId], function(app, dsCreator, dataViewDescriptors) {
+                                    dsCreator(cm, msgs, JSON.parse(dataViewDescriptors));
+                                    mainApp = app.start(cm);
+                                });
+                            }
+                        }
+                    },
+                    disconnected : function() {
+                        console.log("disconnected");
+                    },
+                    connected: function() {
+                        hideBroken();
+                    },
+                    broken : function(sessionLost, wasConnected, err, msg) {
+                        if (wasConnected) {
+                            isc.Window.create({
+                                ID: "brokenWin",
+                                height: 80,
+                                width: 300,
+                                autoCenter: true,
+                                isModal: true,
+                                canDragReposition: false,
+                                showMinimizeButton: false,
+                                showCloseButton: false,
+                                showTitle: false,
+                                showHeaderIcon: false,
+                                items: 
+                                    isc.HLayout.create({
+                                        margin: 10,
+                                        height: 32,
+                                        membersMargin: 10,
+                                        members: [
+                                            warnImg,
+                                            isc.Label.create({height: 32, width: "*", contents: msgs.errConnection})
+                                        ]
+                                    })
+                                
+                            });
+                            brokenWin.show();
+                        }
+                    }
+                });
+                cm.start();
+            });            
+        </script>
+        <iframe name="binFrame" frameborder="0" style="height:0px;width:0px"></iframe>
+    </body>
+</html>

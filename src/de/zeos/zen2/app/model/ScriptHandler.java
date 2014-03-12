@@ -3,6 +3,9 @@ package de.zeos.zen2.app.model;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.springframework.data.mongodb.core.mapping.Document;
+
+@Document(collection = "zen2.scriptHandler")
 public class ScriptHandler {
     private String id;
     private String source;

@@ -121,7 +121,7 @@ public class ApplicationRegistry {
 
                 @Override
                 public String getEntityName() {
-                    return "application";
+                    return "zen2.application";
                 }
             });
 
@@ -145,7 +145,53 @@ public class ApplicationRegistry {
 
                 @Override
                 public String getEntityName() {
-                    return "resource";
+                    return "zen2.resource";
+                }
+            });
+
+            accessor.addDBListener(new DBListener() {
+                @Override
+                public void notify(DBEvent event) {
+                    if (event.getType() == Type.BEFORE && event.getMode() != CommandMode.READ) {
+                        Map<String, Object> query = event.getQuery();
+                        if (((String) query.get("_id")).startsWith("zen2."))
+                            throw new IllegalStateException("errSystemObject");
+                    }
+                }
+
+                @Override
+                public String getEntityName() {
+                    return "zen2.entity";
+                }
+            });
+            accessor.addDBListener(new DBListener() {
+                @Override
+                public void notify(DBEvent event) {
+                    if (event.getType() == Type.BEFORE && event.getMode() != CommandMode.READ) {
+                        Map<String, Object> query = event.getQuery();
+                        if (((String) query.get("_id")).startsWith("zen2."))
+                            throw new IllegalStateException("errSystemObject");
+                    }
+                }
+
+                @Override
+                public String getEntityName() {
+                    return "zen2.enumeration";
+                }
+            });
+            accessor.addDBListener(new DBListener() {
+                @Override
+                public void notify(DBEvent event) {
+                    if (event.getType() == Type.BEFORE && event.getMode() != CommandMode.READ) {
+                        Map<String, Object> query = event.getQuery();
+                        if (((String) query.get("_id")).startsWith("zen2."))
+                            throw new IllegalStateException("errSystemObject");
+                    }
+                }
+
+                @Override
+                public String getEntityName() {
+                    return "zen2.dataView";
                 }
             });
         }
@@ -168,14 +214,14 @@ public class ApplicationRegistry {
         accessor.addDBListener(new ScriptHandlerListener() {
             @Override
             public String getEntityName() {
-                return "scriptHandler";
+                return "zen2.scriptHandler";
             }
         });
 
         accessor.addDBListener(new ScriptHandlerListener() {
             @Override
             public String getEntityName() {
-                return "dataViewScriptHandler";
+                return "zen2.dataViewScriptHandler";
             }
         });
 
@@ -185,13 +231,13 @@ public class ApplicationRegistry {
                 public void notify(DBEvent event) {
                     if (event.getType() == Type.BEFORE_PROCESSING) {
                         Map<String, Object> query = event.getQuery();
-                        query.put("system", false);
+                        query.put("_system", false);
                     }
                 }
 
                 @Override
                 public String getEntityName() {
-                    return "entity";
+                    return "zen2.entity";
                 }
             });
             accessor.addDBListener(new DBListener() {
@@ -199,13 +245,13 @@ public class ApplicationRegistry {
                 public void notify(DBEvent event) {
                     if (event.getType() == Type.BEFORE_PROCESSING) {
                         Map<String, Object> query = event.getQuery();
-                        query.put("system", false);
+                        query.put("_system", false);
                     }
                 }
 
                 @Override
                 public String getEntityName() {
-                    return "enumeration";
+                    return "zen2.enumeration";
                 }
             });
             accessor.addDBListener(new DBListener() {
@@ -213,13 +259,13 @@ public class ApplicationRegistry {
                 public void notify(DBEvent event) {
                     if (event.getType() == Type.BEFORE_PROCESSING) {
                         Map<String, Object> query = event.getQuery();
-                        query.put("system", false);
+                        query.put("_system", false);
                     }
                 }
 
                 @Override
                 public String getEntityName() {
-                    return "dataView";
+                    return "zen2.dataView";
                 }
             });
         }

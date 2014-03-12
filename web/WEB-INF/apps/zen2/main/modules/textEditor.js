@@ -93,7 +93,7 @@ define(["dojo/i18n!../../nls/messages"], function(msgs) {
                     if (m) {
                         snippetManager.files["ace/mode/" + modes[mimeType]] = m;
                         var snippetText = m.snippetText;
-                        templateManageDS.fetchData({type: type}, function(res, data) {
+                        zen2_templateManageDS.fetchData({type: type}, function(res, data) {
                             for (var i = 0; i < data.length; i++) {
                                 var name = data[i]._id;
                                 var content = data[i].content;

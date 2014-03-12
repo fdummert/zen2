@@ -3,7 +3,7 @@ define(["dojo/i18n!../../nls/messages", "require"], function(msgs, require) {
         create: function(cm, app) {
             var list = [
                 isc.ListGrid.create({
-                    dataSource: entityManageDS,
+                    dataSource: zen2_entityManageDS,
                     autoFetchData: true,
                     canRemoveRecords: true,
                     warnOnRemoval: true,
@@ -12,15 +12,17 @@ define(["dojo/i18n!../../nls/messages", "require"], function(msgs, require) {
                     fields: [
                          { name: "_id" },
                          { name: "embeddable" },
-                         { name: "system" }
+                         { name: "_system" }
                     ],
                     recordClick: function(viewer, rec) {
+                        if (rec._canEdit === false)
+                            entityManageSaveButton.setDisabled(true);
                         entityManageForm.editRecord(rec);
                     }
                 }),
                 isc.DynamicForm.create({
                     ID: "entityManageForm",
-                    dataSource: entityManageDS,
+                    dataSource: zen2_entityManageDS,
                     useAllDataSourceFields: true,
                     showComplexFieldsRecursively: true
                 }),
@@ -28,9 +30,10 @@ define(["dojo/i18n!../../nls/messages", "require"], function(msgs, require) {
                     members: [
                         isc.Button.create({
                             title: msgs.add,
-                            click: function() { entityManageForm.editNewRecord({_class: "de.zeos.zen2.app.model.Entity"}); }
+                            click: function() { entityManageSaveButton.setDisabled(false); entityManageForm.editNewRecord({_class: "de.zeos.zen2.app.model.Entity"}); }
                         }),
                         isc.Button.create({
+                            ID: "entityManageSaveButton",
                             title: msgs.save,
                             click: function() { entityManageForm.saveData(); }
                         })

@@ -39,6 +39,14 @@ define(["../cometdReqRes"], function(CometDRequestResponse) {
                     } else if (dsResponse.result) {
                         dsResponse.status = 0;
                         dsResponse.data = ds.recordsFromObjects(dsResponse.result);
+                        for (var i = 0; i < dsResponse.data.length; i++) {
+                            var d = dsResponse.data[i]; 
+                            if (d._system === true) {
+                                d._canEdit = false;
+                                d._canRemove = false;
+                            }
+                            d._persistent = true;
+                        }
                     }
                     this.finished();
                     ds.processResponse(requestId, dsResponse);

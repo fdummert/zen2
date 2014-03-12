@@ -3,7 +3,7 @@ define(["dojo/i18n!../../nls/messages", "require"], function(msgs, require) {
         create: function(cm, app) {
             var list = [
                 isc.ListGrid.create({
-                    dataSource: templateManageDS,
+                    dataSource: zen2_templateManageDS,
                     autoFetchData: true,
                     canRemoveRecords: true,
                     warnOnRemoval: true,
@@ -20,7 +20,7 @@ define(["dojo/i18n!../../nls/messages", "require"], function(msgs, require) {
                 }),
                 isc.DynamicForm.create({
                     ID: "templateManageForm",
-                    dataSource: templateManageDS,
+                    dataSource: zen2_templateManageDS,
                     useAllDataSourceFields: true,
                     fields: [
                         { name: "type", defaultToFirstOption: true },

@@ -13,8 +13,12 @@ define(["./cometdDataSource"], function() {
             BINARY: "custom"
         };
         
+        function deriveDSName(dataViewName) {
+            return dataViewName.replaceAll(".", "_");
+        }
+        
         function createNestedDS(model, dataViewName, refEntity) {
-            var nestedDSID = dataViewName + "_" + refEntity.id + "DS";
+            var nestedDSID = deriveDSName(dataViewName) + "_" + refEntity.id + "DS";
             isc.DataSource.create({
                 ID: nestedDSID,
                 fields: createDataSourceFields(model, dataViewName, refEntity),
@@ -42,8 +46,14 @@ define(["./cometdDataSource"], function() {
                     name: f.name,
                     title: msgs[entity.id + "_" + f.name] || msgs[f.name]
                 };
-                if (f.pk === true) field.primaryKey = true;
-                if (f.pk === true && f.pkType == "AUTO") field.hidden = true;
+                if (f.pk === true) {
+                    field.primaryKey = true;
+                    if (f.pkType == "AUTO") 
+                        field.hidden = true;
+                    else if (f.pkType == "ASSIGNED") {
+                        field.editorType = "PKTextItem";
+                    }
+                }
                 if (f.mandatory === true && f.type.type !== "BOOL") field.required = true;
                 if (f.readOnly === true) field.canEdit = false;
                 var type = null;
@@ -123,7 +133,7 @@ define(["./cometdDataSource"], function() {
         for (var dataViewName in model.dataViews) {
             var dataView = model.dataViews[dataViewName];
             var props = {
-                ID: dataViewName + "DS",
+                ID: deriveDSName(dataViewName) + "DS",
                 dataView: dataViewName,
                 messageResolver: function(code) { return msgs[code]; },
                 scope: (dataView.scope == null ? null : new cm.ApplicationScope(dataView.scope)),

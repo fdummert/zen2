@@ -83,7 +83,7 @@ define(["dojo/i18n!../../nls/messages"], function(msgs) {
                                             isc.Button.create({ID: "scriptConsoleClear", height: 15, title: msgs.clear, disabled: true,
                                                 click: function() {
                                                     scriptHandler.consoleEntries = [];
-                                                    scriptHandlerConsoleUpdateDS.updateData(scriptHandler, function(res, data) {
+                                                    zen2_scriptHandlerConsoleUpdateDS.updateData(scriptHandler, function(res, data) {
                                                         scriptConsole.setData(data[0].consoleEntries);
                                                     });
                                                 }
@@ -120,7 +120,7 @@ define(["dojo/i18n!../../nls/messages"], function(msgs) {
                                             isc.Button.create({ID: "scriptErrorClear", height: 15, title: msgs.clear, disabled: true,
                                                 click: function() {
                                                     scriptHandler.errors = [];
-                                                    scriptHandlerErrorUpdateDS.updateData(scriptHandler, function(res, data) {
+                                                    zen2_scriptHandlerErrorUpdateDS.updateData(scriptHandler, function(res, data) {
                                                         scriptErrors.setData(data[0].errors);
                                                     });
                                                 }
@@ -169,7 +169,7 @@ define(["dojo/i18n!../../nls/messages"], function(msgs) {
                         isc.Button.create({height: 15, title: msgs.save,
                             click: function() {
                                 scriptHandler.source = that.editor.getValue();
-                                scriptHandlerSourceUpdateDS.updateData(scriptHandler, function(res, data) {
+                                zen2_scriptHandlerSourceUpdateDS.updateData(scriptHandler, function(res, data) {
                                     scriptHandler = data[0];
                                     that.update(scriptHandler);
                                     saveCallback(scriptHandler);

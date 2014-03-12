@@ -42,7 +42,7 @@ define(["dojo/i18n!../nls/messages", "de/zeos/cometd/sc/cometdDataSource", "requ
                             isc.confirm(msgs.warnRemoveApp, function(value) {
                                 if (value === true) {
                                     var rec = applications.getSelectedRecord();
-                                    appManageDS.removeData(rec, function() {
+                                    zen2_appManageDS.removeData(rec, function() {
                                         applications.invalidateCache();
                                     });
                                 }
@@ -66,7 +66,7 @@ define(["dojo/i18n!../nls/messages", "de/zeos/cometd/sc/cometdDataSource", "requ
                             isc.Label.create({contents: msgs.welcome}),
                             isc.ListGrid.create({
                                 ID: "applications",
-                                dataSource: appDS,
+                                dataSource: zen2_appDS,
                                 autoFetchData: true,
                                 contextMenu: appMenu,
                                 recordClick: function(viewer, record) {
@@ -75,7 +75,7 @@ define(["dojo/i18n!../nls/messages", "de/zeos/cometd/sc/cometdDataSource", "requ
                                     for (var name in dataViews) {
                                         var dv = dataViews[name];
                                         if (dv.system && dv.scope == "application")
-                                            isc.DS.get(name + "DS").scope = app;
+                                            isc.DS.get(name.replaceAll(".", "_") + "DS").scope = app;
                                     }
                                     openModule("appManagement", app);
                                 }

@@ -1,5 +1,8 @@
 package de.zeos.zen2.app.model;
 
+import org.springframework.data.mongodb.core.mapping.Document;
+
+@Document(collection = "zen2.application")
 public class Application {
 
     private String id;

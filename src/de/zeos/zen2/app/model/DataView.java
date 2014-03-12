@@ -3,6 +3,9 @@ package de.zeos.zen2.app.model;
 import java.util.List;
 import java.util.Set;
 
+import org.springframework.data.mongodb.core.mapping.Document;
+
+@Document(collection = "zen2.dataView")
 public class DataView {
 
     public enum CommandMode {
@@ -23,6 +26,7 @@ public class DataView {
 
     private Set<CommandMode> allowedModes;
     private boolean pushable;
+    @org.springframework.data.mongodb.core.mapping.Field("_system")
     private boolean system;
 
     public String getId() {

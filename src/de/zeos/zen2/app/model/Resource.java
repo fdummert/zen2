@@ -1,5 +1,8 @@
 package de.zeos.zen2.app.model;
 
+import org.springframework.data.mongodb.core.mapping.Document;
+
+@Document(collection = "zen2.resource")
 public class Resource {
     public enum ResourceClass {
         BINARY, TEXT;

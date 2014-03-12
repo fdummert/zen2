@@ -4,7 +4,7 @@ define(["dojo/i18n!../../nls/messages", "require"], function(msgs, require) {
             var list = [
                 isc.DynamicForm.create({
                     ID: "appConfigForm",
-                    dataSource: appManageDS,
+                    dataSource: zen2_appManageDS,
                     fields: [
                         { name: "_id", canEdit: app == null },
                         { name: "securityMode", redrawOnChange: true, defaultToFirstOption: true },
@@ -48,7 +48,7 @@ define(["dojo/i18n!../../nls/messages", "require"], function(msgs, require) {
             if (app == null)
                 appConfigForm.editNewRecord();
             else {
-                appManageDS.fetchData({_id: app._id}, function(res, data) {
+                zen2_appManageDS.fetchData({_id: app._id}, function(res, data) {
                     appConfigForm.editRecord(data[0]);
                     if (data[0].securityHandler != null) {
                         appConfigForm.getField("securityHandlerButton").canvas.setBorder("1px solid green");

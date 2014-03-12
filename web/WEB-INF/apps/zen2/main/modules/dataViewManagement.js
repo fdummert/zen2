@@ -3,26 +3,27 @@ define(["dojo/i18n!../../nls/messages", "require"], function(msgs, require) {
         create: function(cm, app) {
             var list = [
                 isc.ListGrid.create({
-                    dataSource: dataViewManageDS,
+                    dataSource: zen2_dataViewManageDS,
                     autoFetchData: true,
                     canRemoveRecords: true,
                     warnOnRemoval: true,
                     warnOnRemovalMessage: msgs.warnRemove,
                     showResizeBar: true,
                     recordClick: function(viewer, rec) {
-                        dataViewScriptHandlerReadDS.fetchData({dataViewId: rec._id}, function(res, data) {
-                            console.log("fetch data", data);
+                        zen2_dataViewScriptHandlerReadDS.fetchData({dataViewId: rec._id}, function(res, data) {
                             rec.scriptHandlers = data;
+                            if (rec._canEdit === false)
+                                dataViewManageSaveButton.setDisabled(true);
                             dataViewManageForm.editRecord(rec);
                         });
                     }
                 }),
                 isc.DynamicForm.create({
                     ID: "dataViewManageForm",
-                    dataSource: dataViewManageDS,
+                    dataSource: zen2_dataViewManageDS,
                     useAllDataSourceFields: true,
                     fields: [
-                        { name: "scriptHandlers", title: msgs.dataViewHandler, editorType: "GridEditorItem", cm: cm, msgs: msgs, gridDataSource: "dataViewScriptHandlerReadDS", 
+                        { name: "scriptHandlers", title: msgs.dataViewHandler, editorType: "GridEditorItem", cm: cm, msgs: msgs, gridDataSource: "zen2_dataViewScriptHandlerReadDS", 
                             gridFields: [
                                  {name: "triggerPoint"}, {name: "triggerModes"}, {name: "valid"}, 
                                  {name: "editField", type: "icon", title: msgs.edit, canEdit: false, cellIcon: "[SKIN]actions/edit.png", 
@@ -79,13 +80,14 @@ define(["dojo/i18n!../../nls/messages", "require"], function(msgs, require) {
                     members: [
                         isc.Button.create({
                             title: msgs.add,
-                            click: function() { dataViewManageForm.editNewRecord({_class: "de.zeos.zen2.app.model.DataView"}); }
+                            click: function() { dataViewManageSaveButton.setDisabled(false); dataViewManageForm.editNewRecord({_class: "de.zeos.zen2.app.model.DataView"}); }
                         }),
                         isc.Button.create({
+                            ID: "dataViewManageSaveButton",
                             title: msgs.save,
                             click: function() { 
                                 dataViewManageForm.saveData(function(res, data) {
-                                    dataViewScriptHandlerReadDS.fetchData({dataViewId: data._id}, function(fres, fdata) {
+                                    zen2_dataViewScriptHandlerReadDS.fetchData({dataViewId: data._id}, function(fres, fdata) {
                                         data.scriptHandlers = fdata;
                                         dataViewManageForm.editRecord(data);
                                     });

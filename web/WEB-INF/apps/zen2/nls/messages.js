@@ -1,7 +1,7 @@
 define({
     root: {
         add: "Hinzufügen",
-        application__id: "Applikation",
+        "zen2.application__id": "Applikation",
         apply: "Anwenden",
         clear: "Löschen",
         configure: "Konfigurieren",
@@ -11,7 +11,7 @@ define({
         edit: "Bearbeiten",
         embeddable: "Eingebettet",
         entities: "Klassen",
-        entity__id: "Klasse",
+        "zen2.entity__id": "Klasse",
         enumerations: "Aufzählungen",
         errors: "Fehler",
         fields: "Attribute",
@@ -26,8 +26,8 @@ define({
         save: "Speichern",
         securityHandler: "Sicherheitsbehandlung",
         securityMode: "Sicherheit",
-        securityModes_PUBLIC: "öffentlich",
-        securityModes_PROTECTED: "geschützt",
+        "zen2.securityModes_PUBLIC": "öffentlich",
+        "zen2.securityModes_PROTECTED": "geschützt",
         selectFile: "Datei auswählen",
         templates: "Templates",
         username: "Login",
@@ -44,6 +44,7 @@ define({
         errPreviewSize: "Bild ist zu groß (max 50k).",
         errSecurity: "Kein Zugriff auf diese Funktion erteilt",
         errSystem: "Systemfehler",
+        errSystemObject: "Systemobjekt darf nicht modifiziert werden",
         
         warnRemove: "Soll dieser Eintrag wirklich gelöscht werden?",
         warnRemoveApp: "Soll wirklich die gesamte Anwendung mit allen Daten gelöscht werden?"

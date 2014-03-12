@@ -124,5 +124,13 @@ define(["dojo/i18n!../../nls/messages", "require"], function(msgs, require) {
             }
         }
     });
+    
+    isc.defineClass("PKTextItem", "TextItem");
+    isc.PKTextItem.addProperties({
+        showIf: function(item, value, form, record) {
+            item.setDisabled(record._persistent === true);
+            return true;
+        }
+    });
 });
 

@@ -2,12 +2,16 @@ package de.zeos.zen2.app.model;
 
 import java.util.List;
 
+import org.springframework.data.mongodb.core.mapping.Document;
+
+@Document(collection = "zen2.entity")
 public class Entity {
     private String id;
     private String parentEntityId;
     private List<Field> fields;
     private List<Index> indexes;
     private boolean embeddable;
+    @org.springframework.data.mongodb.core.mapping.Field("_system")
     private boolean system;
 
     public String getId() {

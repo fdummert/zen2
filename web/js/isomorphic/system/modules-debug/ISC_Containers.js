@@ -2,7 +2,7 @@
 /*
 
   SmartClient Ajax RIA system
-  Version SNAPSHOT_v9.1d_2014-01-11/LGPL Deployment (2014-01-11)
+  Version v9.1p_2014-05-11/LGPL Deployment (2014-05-11)
 
   Copyright 2000 and beyond Isomorphic Software, Inc. All rights reserved.
   "SmartClient" is a trademark of Isomorphic Software, Inc.
@@ -38,9 +38,9 @@ if(isc.Log && isc.Log.logDebug)isc.Log.logDebug(isc._pTM.message,'loadTime');
 else if(isc._preLog)isc._preLog[isc._preLog.length]=isc._pTM;
 else isc._preLog=[isc._pTM]}isc.definingFramework=true;
 
-if (window.isc && isc.version != "SNAPSHOT_v9.1d_2014-01-11/LGPL Deployment") {
+if (window.isc && isc.version != "v9.1p_2014-05-11/LGPL Deployment") {
     isc.logWarn("SmartClient module version mismatch detected: This application is loading the core module from "
-        + "SmartClient version '" + isc.version + "' and additional modules from 'SNAPSHOT_v9.1d_2014-01-11/LGPL Deployment'. Mixing resources from different "
+        + "SmartClient version '" + isc.version + "' and additional modules from 'v9.1p_2014-05-11/LGPL Deployment'. Mixing resources from different "
         + "SmartClient packages is not supported and may lead to unpredictable behavior. If you are deploying resources "
         + "from a single package you may need to clear your browser cache, or restart your browser."
         + (isc.Browser.isSGWT ? " SmartGWT developers may also need to clear the gwt-unitCache and run a GWT Compile." : ""));
@@ -526,8 +526,8 @@ getCloseIconProperties : function(properties, canClose) {
         // live Tab without touching any other properties on the live object.
         override.icon = (properties.icon);
         override.iconSize = (properties.iconSize);
-        override.iconOrientation = properties.iconOrientation;
-        override.iconAlign = properties.iconAlign;
+        if (properties.iconOrientation != null) override.iconOrientation = properties.iconOrientation;
+        if (properties.iconAlign != null) override.iconAlign = properties.iconAlign;
     }
     return override;
 },
@@ -2311,7 +2311,8 @@ headerLabel_autoMaker : function () {
                                 if (this.parentElement)
                                     return this.parentElement.getCurrentCursor();
                                 return this.Super("getCurrentCursor", arguments);
-                            }
+                            },
+                            eventProxy: this.headerLabelParent
                         });
 
     // Add the headerLabel to an HStack layout to allow the label to have
@@ -2328,7 +2329,6 @@ headerLabel_autoMaker : function () {
                 return this.parentElement.getCurrentCursor();
             return this.Super("getCurrentCursor", arguments);
         }
-
     });
 
     this.headerLabelParent.addChild(rtlFix);
@@ -2963,8 +2963,8 @@ show : function (a,b,c,d) {
                         null
                 );
                 this.observeModalTarget();
-
             }
+
         // Explicitly catch the case of a developer specifying isModal on a non top-level window
         // this will be clearer than a log message about clickMasks.
         } else if (this.topElement != null) {
@@ -2973,8 +2973,11 @@ show : function (a,b,c,d) {
             this.isModal = false;
         } else {
             this.showClickMask(
-                    this.getID() + (this.dismissOnOutsideClick ? ".handleCloseClick()"
-                                                               : ".flash()"),
+                    {
+                        target: this,
+                        methodName: (this.dismissOnOutsideClick ? "handleCloseClick"
+                                                                : "flash")
+                    },
                     false,
                     // Don't mask ourselves
 
@@ -2982,7 +2985,6 @@ show : function (a,b,c,d) {
             this.makeModalMask();
         }
     }
-
 
     // If we're going to be auto-centered, draw offscreen before centering
 
@@ -3167,7 +3169,14 @@ parentResized : function () {
 // stop centering if we are moved other than by the autoCentering code itself
 handleMoved : function () {
     this.Super("handleMoved", arguments);
-    if (this.isDrawn() && !this._centering) this.autoCenter = false;
+    if (this.isDrawn() &&
+        !this._centering &&
+        // In RTL mode, handleMoved() may be called from adjust overflow. We don't want to switch
+        // off auto-centering in that case.
+        !this._inAdjustOverflow)
+    {
+        this.autoCenter = false;
+    }
 },
 
 //>    @method    Window.centerInPage()   ([A])
@@ -7147,36 +7156,50 @@ isc.Dialog.addClassProperties({
 
     LOGIN_ERROR_MESSAGE:"Invalid username or password",
 
-    //>    @type   DialogButtons
+
+    //> @type DialogButtons
     // Default buttons that you can use in your Dialogs.
-    // <P>
-    // On click these call canonical methods that you can override in your Dialog.
-    // <P>
+    // <p>
+    // <smartgwt>
+    // Each <code>DialogButtons</code> enum value has a same-named static Button on the Dialog
+    // class, and these buttons can be passed to +link{dialog.buttons,Dialog.setButtons()}:
+    // <pre>
+    //   Dialog.setButtons(Dialog.OK, Dialog.CANCEL);
+    // </pre>
+    // </smartgwt>
+    // <smartclient>
     // Refer to these buttons via the syntax <code>isc.Dialog.OK</code> when passing them into
     // +link{dialog.buttons} or into the <code>properties</code> argument of helper
     // methods such as +link{classMethod:isc.say()}.
+    // </smartclient>
+    // <p>
+    // All buttons added via <code>setButtons</code> will fire the
+    // +link{Dialog.buttonClick,buttonClick event} (whether they are built-in or custom
+    // buttons).  Built-in buttons automatically close a Dialog, with the exception of the
+    // "Apply" button.
     //
-    // @value   OK  Button object to fire dialog's "okClick()" method on click.
+    // @value   OK  Dismisses dialog<smartclient> by calling +link{Dialog.okClick()}</smartclient>.
     //              Title derived from +link{Dialog.OK_BUTTON_TITLE}.
     OK         : {getTitle:function () {return isc.Dialog.OK_BUTTON_TITLE},
                 width:75, click: function () { this.topElement.okClick() } },
-    // @value   APPLY Button object to fire dialog's "applyClick()" method on click.
+    // @value   APPLY Does not dismiss dialog.  <smartgwt>Handle via +link{Dialog.buttonClick()}</smartgwt>
+    //          <smartclient>Calls +link{Dialog.applyClick()}</smartclient>
     //              Title derived from +link{Dialog.APPLY_BUTTON_TITLE}.
     APPLY     : {getTitle:function () {return isc.Dialog.APPLY_BUTTON_TITLE},
                 width:75, click: function () { this.topElement.applyClick() } },
-    // @value   YES Button object to fire dialog's "yesClick()" method on click
+    // @value   YES Dismisses dialog<smartclient> by calling +link{Dialog.yesClick()}</smartclient>.
     //              Title derived from +link{Dialog.YES_BUTTON_TITLE}.
     YES     : {getTitle:function () {return isc.Dialog.YES_BUTTON_TITLE},
                 width:75, click: function () { this.topElement.yesClick() } },
-    // @value   NO  Button object to fire dialog's "noClick()" method on click.
+    // @value   NO  Dismisses dialog<smartclient> by calling +link{Dialog.noClick()}</smartclient>.
     //              Title derived from +link{Dialog.NO_BUTTON_TITLE}.
     NO         : {getTitle:function () {return isc.Dialog.NO_BUTTON_TITLE},
                 width:75, click: function () { this.topElement.noClick() } },
-    // @value   CANCEL  Button object to fire dialog's "cancelClick()" method on click.
+    // @value   CANCEL  Dismisses dialog<smartclient> by calling +link{Dialog.cancelClick()}</smartclient>.
     //                  Title derived from +link{Dialog.CANCEL_BUTTON_TITLE}.
     CANCEL     : {getTitle:function () {return isc.Dialog.CANCEL_BUTTON_TITLE},
                 width:75, click: function () { this.topElement.cancelClick() } },
-    // @value   DONE  Button object to fire dialog's "doneClick()" method on click.
+    // @value   DONE   Dismisses dialog<smartclient> by calling +link{Dialog.doneClick()}</smartclient>.
     //                  Title derived from +link{Dialog.DONE_BUTTON_TITLE}.
     DONE    : {getTitle:function () {return isc.Dialog.DONE_BUTTON_TITLE},
                 width:75, click: function () { this.topElement.doneClick() } }
@@ -7404,13 +7427,14 @@ isc.Dialog.addProperties({
     // Array of Buttons to show in the +link{showToolbar,toolbar}, if shown.
     // <P>
     // The set of buttons to use is typically set by calling one of the shortcuts such as
-    // +link{classMethod:isc.say()} or +link{classMethod:isc.confirm()}.  A custom set of buttons can be passed to
-    // these shortcuts methods via the "properties" argument, or to a directly created Dialog.
+    // +link{classMethod:isc.say()} or +link{classMethod:isc.confirm()}.  A custom set of
+    // buttons can be passed to these shortcuts methods via the "properties" argument, or to a
+    // directly created Dialog.
     // <P>
     // In both cases, a mixture of +link{type:DialogButtons,built-in buttons}, custom buttons,
-    // and other components (such as a +link{LayoutSpacer}) can be passed.  Built-in buttons
-    // can be referred to as <code>isc.Dialog.OK</code>, for example:
+    // and other components (such as a +link{LayoutSpacer}) can be passed.
     // <smartclient>
+    // Built-in buttons can be referred to as <code>isc.Dialog.OK</code>, for example:
     // <pre>
     // isc.Dialog.create({
     //    buttons:[
@@ -7421,8 +7445,12 @@ isc.Dialog.addProperties({
     //    ]
     // })
     // </pre>
+    // Built-in buttons will call standard methods on the Dialog itself, such as
+    // +link{dialog.cancelClick()}, as explained in the
+    // +link{type:DialogButtons,list of built-in buttons}.
     // </smartclient>
     // <smartgwt>
+    // Built-in buttons can be referred to via <code>Dialog.OK</code>, for example:
     // <pre>
     // Dialog dialog = new Dialog();
     // Canvas layoutSpacer = new LayoutSpacer();
@@ -7436,10 +7464,8 @@ isc.Dialog.addProperties({
     // dialog.setButtons(Dialog.OK, Dialog.CANCEL, layoutSpacer, notNowButton);
     // dialog.draw();
     // </pre>
+    // All buttons will fire the +link{buttonClick} handler.
     // </smartgwt>
-    // Built-in buttons will call standard methods on the Dialog itself, such as
-    // +link{dialog.cancelClick()}, as explained in the
-    // +link{type:DialogButtons,list of built-in buttons}.
     //
     // @visibility external
     //<
@@ -7472,8 +7498,9 @@ isc.Dialog.addProperties({
 
             var target = isc.EH.getTarget(),
                 index = this.getMemberNumber(target);
-            if (index == -1) return;
-            this.topElement.buttonClick(target, index);
+            if (target !== this && index !== -1 && isc.isA.StatefulCanvas(target)) {
+                this.topElement.buttonClick(target, index);
+            }
         }
     })
 
@@ -9571,7 +9598,7 @@ isc.MultiSortDialog.addClassMethods({
     askForSort : function (fieldSource, initialSort, callback) {
         var fields = isc.isAn.Array(fieldSource) ? fieldSource :
                 isc.DataSource && isc.isA.DataSource(fieldSource) ? isc.getValues(fieldSource.getFields()) :
-                isc.isA.DataBoundComponent(fieldSource) ? fieldSource.getFields() : null
+                isc.isA.DataBoundComponent(fieldSource) ? fieldSource.getAllFields() : null
         ;
         if (!fields) return;
         var props = {
@@ -13455,7 +13482,7 @@ isc.defineClass("PaneContainer", "VLayout").addMethods({
             tabSet.getTabBar().getButton(currentSelection).focus();
             return false;
         }
-        if (this.convertToMethod("keyPress")) return this.keyPress(event, eventInfo)
+        return this.Super("handleKeyPress", arguments);
     }
 });
 
@@ -13472,7 +13499,7 @@ isc._debugModules = (isc._debugModules != null ? isc._debugModules : []);isc._de
 /*
 
   SmartClient Ajax RIA system
-  Version SNAPSHOT_v9.1d_2014-01-11/LGPL Deployment (2014-01-11)
+  Version v9.1p_2014-05-11/LGPL Deployment (2014-05-11)
 
   Copyright 2000 and beyond Isomorphic Software, Inc. All rights reserved.
   "SmartClient" is a trademark of Isomorphic Software, Inc.

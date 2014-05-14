@@ -12,8 +12,7 @@ define(["dojo/i18n!../../nls/messages", "require"], function(msgs, require) {
                     recordClick: function(viewer, rec) {
                         zen2_dataViewScriptHandlerReadDS.fetchData({dataViewId: rec._id}, function(res, data) {
                             rec.scriptHandlers = data;
-                            if (rec._canEdit === false)
-                                dataViewManageSaveButton.setDisabled(true);
+                            dataViewManageSaveButton.setDisabled(rec._canEdit === false);
                             dataViewManageForm.editRecord(rec);
                         });
                     }

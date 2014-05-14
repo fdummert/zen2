@@ -74,7 +74,7 @@ public class DataViewService {
     }
 
     @Listener("/service/**")
-    protected void receiveOnDsChannel(ServerSession remote, Mutable message) {
+    public void receiveOnDsChannel(ServerSession remote, Mutable message) {
         String channel = message.getChannel();
         String[] parts = channel.substring(1).split("/", 6);
         if (parts.length >= 5 && parts[2].equals("dv") && parts[3].equals("req")) {
@@ -129,46 +129,46 @@ public class DataViewService {
             Object result = null;
 
             switch (mode) {
-            case CREATE:
-                engine = processHandler(internalAccessor, dbApp, scope, TriggerPoint.BEFORE_PROCESSING, TriggerMode.CREATE, availableHandlers, engine, data, null);
-                filterCriteria(criteria, dataViewInfo, true, true);
-                engine = processHandler(internalAccessor, dbApp, scope, TriggerPoint.BEFORE, TriggerMode.CREATE, availableHandlers, engine, criteria, null);
-                result = accessor.insert(criteria, entityInfo);
-                engine = processHandler(internalAccessor, dbApp, scope, TriggerPoint.AFTER, TriggerMode.CREATE, availableHandlers, engine, criteria, result);
-                break;
-            case READ:
-                engine = processHandler(internalAccessor, dbApp, scope, TriggerPoint.BEFORE_PROCESSING, TriggerMode.READ, availableHandlers, engine, data, null);
-                filterCriteria(criteria, dataViewInfo, false, false);
-                Integer pageFrom = (Integer) data.get("pageFrom");
-                Integer pageTo = (Integer) data.get("pageTo");
-                String[] sorts = (String[]) data.get("sorts");
-                Integer count = null;
-                engine = processHandler(internalAccessor, dbApp, scope, TriggerPoint.BEFORE, TriggerMode.READ, availableHandlers, engine, criteria, null);
-                List<Map<String, Object>> rows = accessor.select(criteria, pageFrom, pageTo, sorts, entityInfo);
-                if (pageFrom != null || pageTo != null) {
-                    count = new Long(accessor.count(criteria, entityInfo)).intValue();
-                    res.put("pageFrom", pageFrom);
-                    res.put("pageTo", pageFrom + (rows == null ? 0 : rows.size() - 1));
-                    res.put("count", count);
-                }
-                result = rows;
-                engine = processHandler(internalAccessor, dbApp, scope, TriggerPoint.AFTER, TriggerMode.READ, availableHandlers, engine, criteria, result);
-                break;
-            case UPDATE:
-                engine = processHandler(internalAccessor, dbApp, scope, TriggerPoint.BEFORE_PROCESSING, TriggerMode.UPDATE, availableHandlers, engine, data, null);
-                filterCriteria(criteria, dataViewInfo, true, true);
-                engine = processHandler(internalAccessor, dbApp, scope, TriggerPoint.BEFORE, TriggerMode.UPDATE, availableHandlers, engine, criteria, null);
+                case CREATE:
+                    engine = processHandler(internalAccessor, dbApp, scope, TriggerPoint.BEFORE_PROCESSING, TriggerMode.CREATE, availableHandlers, engine, data, null);
+                    filterCriteria(criteria, dataViewInfo, true, true);
+                    engine = processHandler(internalAccessor, dbApp, scope, TriggerPoint.BEFORE, TriggerMode.CREATE, availableHandlers, engine, criteria, null);
+                    result = accessor.insert(criteria, entityInfo);
+                    engine = processHandler(internalAccessor, dbApp, scope, TriggerPoint.AFTER, TriggerMode.CREATE, availableHandlers, engine, criteria, result);
+                    break;
+                case READ:
+                    engine = processHandler(internalAccessor, dbApp, scope, TriggerPoint.BEFORE_PROCESSING, TriggerMode.READ, availableHandlers, engine, data, null);
+                    filterCriteria(criteria, dataViewInfo, false, false);
+                    Integer pageFrom = (Integer) data.get("pageFrom");
+                    Integer pageTo = (Integer) data.get("pageTo");
+                    String[] sorts = (String[]) data.get("sorts");
+                    Integer count = null;
+                    engine = processHandler(internalAccessor, dbApp, scope, TriggerPoint.BEFORE, TriggerMode.READ, availableHandlers, engine, criteria, null);
+                    List<Map<String, Object>> rows = accessor.select(criteria, pageFrom, pageTo, sorts, entityInfo);
+                    if (pageFrom != null || pageTo != null) {
+                        count = new Long(accessor.count(criteria, entityInfo)).intValue();
+                        res.put("pageFrom", pageFrom);
+                        res.put("pageTo", pageFrom + (rows == null ? 0 : rows.size() - 1));
+                        res.put("count", count);
+                    }
+                    result = rows;
+                    engine = processHandler(internalAccessor, dbApp, scope, TriggerPoint.AFTER, TriggerMode.READ, availableHandlers, engine, criteria, result);
+                    break;
+                case UPDATE:
+                    engine = processHandler(internalAccessor, dbApp, scope, TriggerPoint.BEFORE_PROCESSING, TriggerMode.UPDATE, availableHandlers, engine, data, null);
+                    filterCriteria(criteria, dataViewInfo, true, true);
+                    engine = processHandler(internalAccessor, dbApp, scope, TriggerPoint.BEFORE, TriggerMode.UPDATE, availableHandlers, engine, criteria, null);
 
-                result = accessor.update(criteria, refetch != null && refetch, entityInfo);
-                engine = processHandler(internalAccessor, dbApp, scope, TriggerPoint.AFTER, TriggerMode.UPDATE, availableHandlers, engine, criteria, result);
-                break;
-            case DELETE:
-                engine = processHandler(internalAccessor, dbApp, scope, TriggerPoint.BEFORE_PROCESSING, TriggerMode.DELETE, availableHandlers, engine, data, null);
-                filterCriteria(criteria, dataViewInfo, false, false);
-                engine = processHandler(internalAccessor, dbApp, scope, TriggerPoint.BEFORE, TriggerMode.DELETE, availableHandlers, engine, criteria, null);
-                result = accessor.delete(criteria, entityInfo);
-                engine = processHandler(internalAccessor, dbApp, scope, TriggerPoint.AFTER, TriggerMode.DELETE, availableHandlers, engine, criteria, result);
-                break;
+                    result = accessor.update(criteria, refetch != null && refetch, entityInfo);
+                    engine = processHandler(internalAccessor, dbApp, scope, TriggerPoint.AFTER, TriggerMode.UPDATE, availableHandlers, engine, criteria, result);
+                    break;
+                case DELETE:
+                    engine = processHandler(internalAccessor, dbApp, scope, TriggerPoint.BEFORE_PROCESSING, TriggerMode.DELETE, availableHandlers, engine, data, null);
+                    filterCriteria(criteria, dataViewInfo, false, false);
+                    engine = processHandler(internalAccessor, dbApp, scope, TriggerPoint.BEFORE, TriggerMode.DELETE, availableHandlers, engine, criteria, null);
+                    result = accessor.delete(criteria, entityInfo);
+                    engine = processHandler(internalAccessor, dbApp, scope, TriggerPoint.AFTER, TriggerMode.DELETE, availableHandlers, engine, criteria, result);
+                    break;
             }
             engine = processHandler(internalAccessor, dbApp, scope, TriggerPoint.AFTER, TriggerMode.ALL, availableHandlers, engine, criteria, result);
             res.put("result", result);

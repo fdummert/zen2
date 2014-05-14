@@ -12,6 +12,7 @@ define(["dojo/i18n!../../nls/messages", "require"], function(msgs, require) {
        createCanvas : function () {
            var gridDS = isc.DS.get(this.gridDataSource);
            var that = this;
+           var values = this._convertScalar(this.getValue());
            var props = {
                autoDraw: false,
                // fill the space the form allocates to the item
@@ -21,14 +22,23 @@ define(["dojo/i18n!../../nls/messages", "require"], function(msgs, require) {
                fields: this.gridFields,
 
                // the record being edited is assumed to have a set of subrecords
-               data: this.getValue(),
+               data: values,
                canEdit: true,
                saveLocally: true,
                modalEditing: true,
 
                // update form when data changes
-               cellChanged : function () {
-                   that.saveValue(this.data);
+               editComplete : function () {
+                   var values = this.data;
+                   if (values && that.gridScalar === true) {
+                       var v = [];
+                       for (var i = 0; i < values.length; i++) {
+                           if (values[i].value)
+                               v.push(values[i].value);
+                       }
+                       values = v;
+                   }
+                   that.saveValue(values);
                    this.resort();
                }
            };
@@ -42,12 +52,23 @@ define(["dojo/i18n!../../nls/messages", "require"], function(msgs, require) {
                ]
            });
        },
+       
+       _convertScalar: function(values) {
+           if (values && this.gridScalar === true) {
+               var v = [];
+               for (var i = 0; i < values.length; i++) {
+                   v.push({value: values[i]});
+               }
+               values = v;
+           }
+           return values || [];
+       },
 
        // implement showValue to update the ListGrid data
        // Note that in this case we care about the underlying data value - an array of records
        showValue : function (displayValue, dataValue) {
            if (this.grid == null) return;
-           this.grid.setData(dataValue);
+           this.grid.setData(this._convertScalar(dataValue));
        }
     });
     

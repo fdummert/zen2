@@ -15,8 +15,7 @@ define(["dojo/i18n!../../nls/messages", "require"], function(msgs, require) {
                          { name: "_system" }
                     ],
                     recordClick: function(viewer, rec) {
-                        if (rec._canEdit === false)
-                            entityManageSaveButton.setDisabled(true);
+                        entityManageSaveButton.setDisabled(rec._canEdit === false);
                         entityManageForm.editRecord(rec);
                     }
                 }),

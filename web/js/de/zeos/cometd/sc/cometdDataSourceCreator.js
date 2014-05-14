@@ -101,6 +101,17 @@ define(["./cometdDataSource"], function() {
                     field.multiple = true;
                     if (f.type.type != null) {
                         type = scalarTypeMapping[f.type.type];
+                        field.editorType = "GridEditorItem";
+                        field.editorProperties = {
+                            gridFields: [{name: "value", type: type, title: msgs.value}],
+                            gridScalar: true,
+                            gridProperties: {
+                                canRemoveRecords: true,
+                                warnOnRemoval: true,
+                                warnOnRemovalMessage: msgs.warnRemove
+                            }
+                        };
+                        field.validateEachItem = true;
                     } else if (f.type.enumerationId != null) {
                         type = "enum";
                         field.valueMap = createEnum(model, f);

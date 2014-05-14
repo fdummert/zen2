@@ -10,8 +10,7 @@ define(["dojo/i18n!../../nls/messages", "require"], function(msgs, require) {
                     warnOnRemovalMessage: msgs.warnRemove,
                     showResizeBar: true,
                     recordClick: function(viewer, rec) {
-                        if (rec._canEdit === false)
-                            enumerationManageSaveButton.setDisabled(true);
+                        enumerationManageSaveButton.setDisabled(rec._canEdit === false);
                         enumerationManageForm.editRecord(rec);
                     }
                 }),

@@ -15,7 +15,7 @@ public class CustomService {
     private ServerSession serverSession;
 
     @Listener("/service/**")
-    protected void receiveOnCustomChannel(ServerSession remote, Mutable message) {
+    public void receiveOnCustomChannel(ServerSession remote, Mutable message) {
         String channel = message.getChannel();
         String[] parts = channel.substring(1).split("/", 3);
         if (parts.length >= 3 && parts[2].equals("custom")) {

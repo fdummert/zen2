@@ -31,6 +31,7 @@ define({
         selectFile: "Datei auswählen",
         templates: "Templates",
         username: "Login",
+        value: "Wert",
         welcome: "Willkommen",
         
         errConnection: "Der Server ist nicht erreichbar. Bitte warten...",

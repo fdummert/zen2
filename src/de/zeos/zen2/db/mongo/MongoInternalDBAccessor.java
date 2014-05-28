@@ -105,6 +105,6 @@ public class MongoInternalDBAccessor implements InternalDBAccessor {
 
     @Override
     public List<DataViewScriptHandler> getScriptHandlers(DataView dataView) {
-        return this.operations.find(Query.query(Criteria.where("dataViewId.$id").is(dataView.getId())), DataViewScriptHandler.class, "scriptHandler");
+        return this.operations.find(Query.query(Criteria.where("dataViewId.$id").is(dataView.getId())), DataViewScriptHandler.class, "zen2.scriptHandler");
     }
 }

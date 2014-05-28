@@ -101,9 +101,9 @@ define(["../cometdReqRes"], function(CometDRequestResponse) {
                 function filter(fields, dataObj) {
                     var critObj = {};
                     for (var p in dataObj) {
-                        if (fields[p] && fields[p].canEdit !== false) {
+                        if (fields[p]) {
                             var value = dataObj[p];
-                            if (params.mode == "UPDATE" || params.mode == "CREATE") {
+                            if ((params.mode == "UPDATE" || params.mode == "CREATE") && fields[p].canEdit !== false) {
                                 var type = fields[p].type;
                                 var typeDS = type != null ? isc.DataSource.get(type) : null;
                                 if (typeDS) {

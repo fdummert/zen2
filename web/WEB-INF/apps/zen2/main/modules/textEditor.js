@@ -109,7 +109,7 @@ define(["dojo/i18n!../../nls/messages"], function(msgs) {
             this.editor.setFontSize(10);
             textEditorAceContainer.containerResized();
             this.editor.setValue(value);
-            this.findClass(".ace_autocomplete").style.zIndex = textEditorWin.zIndex + 100;
+            this.findClass(".ace_editor.ace_autocomplete").style.zIndex = textEditorWin.zIndex + 100;
             
         }
     };

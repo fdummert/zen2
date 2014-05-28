@@ -146,7 +146,7 @@ define(["dojo/i18n!../../nls/messages"], function(msgs) {
                 enableBasicAutocompletion: true,
                 enableSnippets: true
             });
-            this.findClass(".ace_autocomplete").style.zIndex = scriptHandlerWin.zIndex + 100;
+            this.findClass(".ace_editor.ace_autocomplete").style.zIndex = scriptHandlerWin.zIndex + 100;
             this.origColor = this.editor.renderer.content.style.backgroundColor;
             aceContainer.containerResized();
             

@@ -9,26 +9,35 @@
     <dependencies>                          
         <dependency org="org.slf4j" name="jcl-over-slf4j" rev="1.7.7" conf="default"/>
         <dependency org="org.slf4j" name="slf4j-api" rev="1.7.7" conf="default"/>
-        <dependency org="org.slf4j" name="slf4j-log4j12" rev="1.7.7" conf="default"/>
-        <dependency org="log4j" name="log4j" rev="1.2.17" conf="default"/>
+        <dependency org="org.apache.logging.log4j" name="log4j-api" rev="2.1" conf="default"/>
+        <dependency org="org.apache.logging.log4j" name="log4j-core" rev="2.1" conf="default"/>
+        <dependency org="org.apache.logging.log4j" name="log4j-slf4j-impl" rev="2.1" conf="default"/>
     
-        <dependency org="org.cometd.java" name="cometd-java-server" rev="2.9.0" conf="default"><exclude org="org.eclipse.jetty"/></dependency>
-        <dependency org="org.cometd.java" name="cometd-java-annotations" rev="2.9.0" conf="default"><exclude org="org.eclipse.jetty"/></dependency>
-        <dependency org="org.cometd.java" name="cometd-websocket-jetty" rev="2.9.0" conf="default"><exclude org="org.eclipse.jetty"/></dependency>
+        <dependency org="org.cometd.java" name="cometd-java-server" rev="3.0.2" conf="default"></dependency>
+        <dependency org="org.cometd.java" name="cometd-java-annotations" rev="3.0.2" conf="default"></dependency>
+        <dependency org="org.cometd.java" name="cometd-java-websocket" rev="3.0.2" conf="default"></dependency>
+        <dependency org="org.cometd.java" name="cometd-java-websocket-jetty-server" rev="3.0.2" conf="default">
+            <exclude org="junit"/>
+        </dependency>
+        <dependency org="org.cometd.java" name="cometd-java-websocket-javax-server" rev="3.0.2" conf="default">
+            <exclude org="junit"/>
+        </dependency>
+        
+        <dependency org="org.eclipse.jetty.websocket" name="websocket-api" rev="9.2.3.v20140905" conf="default"></dependency>
         
         <dependency org="javax.inject" name="javax.inject" rev="1" conf="default"/>
+        <dependency org="javax.servlet" name="javax.servlet-api" rev="3.1.0" conf="default"/>
+        <dependency org="javax.websocket" name="javax.websocket-api" rev="1.1" conf="default"/>
         
-        <dependency org="org.eclipse.jetty" name="jetty-util" rev="8.1.15.v20140411" conf="default"/>
-        <dependency org="org.eclipse.jetty" name="jetty-servlets" rev="8.1.15.v20140411" conf="default"/>
+        <dependency org="com.fasterxml.jackson.core" name="jackson-databind" rev="2.4.3" conf="default"/>
         
-        <dependency org="com.fasterxml.jackson.core" name="jackson-databind" rev="2.3.2" conf="default"/>
-        
-        <dependency org="org.springframework" name="spring-context" rev="4.0.4.RELEASE" conf="default">
+        <dependency org="org.springframework" name="spring-context" rev="4.1.2.RELEASE" conf="default">
             <exclude org="commons-logging"></exclude>
         </dependency>
-        <dependency org="org.springframework" name="spring-webmvc" rev="4.0.4.RELEASE" conf="default"/>
-        <dependency org="org.springframework" name="spring-context-support" rev="4.0.4.RELEASE" conf="default"/>
-        <dependency org="org.springframework.data" name="spring-data-mongodb" rev="1.4.2.RELEASE" conf="default" />
+        <dependency org="org.springframework" name="spring-webmvc" rev="4.1.2.RELEASE" conf="default"/>
+        <dependency org="org.springframework" name="spring-context-support" rev="4.1.2.RELEASE" conf="default"/>
+        <dependency org="org.springframework.data" name="spring-data-mongodb" rev="1.6.1.RELEASE" conf="default" />
     </dependencies>
     
 </ivy-module>
+ 

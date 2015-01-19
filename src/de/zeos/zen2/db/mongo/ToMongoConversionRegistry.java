@@ -3,10 +3,9 @@ package de.zeos.zen2.db.mongo;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.Base64;
 import java.util.Map;
 
-import javax.mail.MessagingException;
-import javax.mail.internet.MimeUtility;
 import javax.xml.bind.DatatypeConverter;
 
 import org.bson.types.ObjectId;
@@ -46,12 +45,7 @@ public class ToMongoConversionRegistry extends DefaultConversionRegistry {
                 } else if (fieldInfo.getType().getDataClass() == DataClass.BINARY) {
                     source = source.substring(source.indexOf(",") + 1);
                     ByteArrayInputStream bais = new ByteArrayInputStream(source.getBytes());
-                    InputStream b64is;
-                    try {
-                        b64is = MimeUtility.decode(bais, "base64");
-                    } catch (MessagingException e) {
-                        throw new RuntimeException(e);
-                    }
+                    InputStream b64is = Base64.getMimeDecoder().wrap(bais);
                     byte[] tmp = new byte[source.length()];
                     int n = 0;
                     try {
